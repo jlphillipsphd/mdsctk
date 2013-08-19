@@ -133,21 +133,20 @@ Basic Documentation
 
 1. auto_decomp_sparse
 
-Performs self-tuning specral decomposition of the graph laplacian
-based off of ideasdeveloped in:
-Zelnik-manor, L., & Perona, P. (2005). Self-tuning spectral
-clustering. Advances in Neural Information Processing Systems 17
-(Vol. 2, pp. 1601–1608). MIT Press. Retrieved from
-http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.84.7940
+   Performs self-tuning specral decomposition of the graph laplacian
+   based off of ideasdeveloped in: Zelnik-manor, L., & Perona,
+   P. (2005). Self-tuning spectral clustering. Advances in Neural
+   Information Processing Systems 17 (Vol. 2, pp. 1601–1608). MIT
+   Press. Retrieved from
+   http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.84.7940
 
-Usage: ./auto_decomp_sparse [# eigenvalues/vectors] [k]
-   Reads the symmetric CSC format sparse matrix from the
-   files sym_distances.dat, sym_row_indices.dat, &
-   sym_col_indices.dat and computes the number of
-   requested eigenvalues/vectors of the normalized
-   laplacian using ARPACK and a gaussian kernel of
-   width sigma, where sigma is calculated using the
-   average k-smallest values in each column.
+   Usage: ./auto_decomp_sparse [# eigenvalues/vectors] [k] Reads the
+      symmetric CSC format sparse matrix from the files
+      sym_distances.dat, sym_row_indices.dat, & sym_col_indices.dat
+      and computes the number of requested eigenvalues/vectors of the
+      normalized laplacian using ARPACK and a gaussian kernel of width
+      sigma, where sigma is calculated using the average k-smallest
+      values in each column.
 
 2. auto_decomp_sparse_nystrom
 
@@ -159,154 +158,148 @@ Usage: ./auto_decomp_sparse [# eigenvalues/vectors] [k]
    
 3. bb_xtc_to_phipsi
 
-Usage: ./bb_xtc_to_phipsi [xtc file]...
-   Convert the provided xtc file to phipsi angles and
-   write the results to standard output.
+   Usage: ./bb_xtc_to_phipsi [xtc file]...  Convert the provided xtc
+      file to phipsi angles and write the results to standard output.
 
 4. check_xtc
 
-Usage: ./check_xtc [xtc file]
-   Report stats on the provided xtc file.
+   Usage: ./check_xtc [xtc file] Report stats on the provided xtc
+      file.
 
 5. clustering_histogram.r
 
-Reads the cluster assignment data from cluster.dat and the replicate
-assignment data from assignment.dat, and outputs the corresponding
-joint replicate-cluster probability histogram in histogram.dat.
+   Reads the cluster assignment data from cluster.dat and the
+   replicate assignment data from assignment.dat, and outputs the
+   corresponding joint replicate-cluster probability histogram in
+   histogram.dat.
 
 6. clustering_nmi.r
 
-Reads the joint replicate-cluster probability histogram from
-histogram.dat and prints the normalized mutual information for the
-histogram.
+   Reads the joint replicate-cluster probability histogram from
+   histogram.dat and prints the normalized mutual information for the
+   histogram.
 
 7. decomp_sparse
 
-Performs standard specral decomposition of the graph laplacian as
-developed in:
-Weiss, Y. (1999). Segmentation using eigenvectors: a unifying
-view. Proceedings of the Seventh IEEE International Conference on
-Computer Vision (pp. 975–982). IEEE. doi:10.1109/ICCV.1999.790354
+   Performs standard specral decomposition of the graph laplacian as
+   developed in: Weiss, Y. (1999). Segmentation using eigenvectors: a
+   unifying view. Proceedings of the Seventh IEEE International
+   Conference on Computer Vision
+   (pp. 975–982). IEEE. doi:10.1109/ICCV.1999.790354
 
-Usage: ./decomp_sparse [# eigenvalues/vectors] [sigma]
-   Reads the symmetric CSC format sparse matrix from the
-   files sym_distances.dat, sym_row_indices.dat, &
-   sym_col_indices.dat and computes the number of
-   requested eigenvalues/vectors of the normalized
-   laplacian using a gaussian kernal of width sigma
-   and ARPACK.
+   Usage: ./decomp_sparse [# eigenvalues/vectors] [sigma] Reads the
+      symmetric CSC format sparse matrix from the files
+      sym_distances.dat, sym_row_indices.dat, & sym_col_indices.dat
+      and computes the number of requested eigenvalues/vectors of the
+      normalized laplacian using a gaussian kernal of width sigma and
+      ARPACK.
 
 8. decomp_sparse_nystrom
 
-   Performs the same computation as decomp_sparse and takes the
-   same command-line arguments, but also uses the Nystrom method to
-   project out-of-sample points obtained from the general CSC format
-   sparse matrix in nonsym_distances.dat, nonsym_row_indices.dat, and
+   Performs the same computation as decomp_sparse and takes the same
+   command-line arguments, but also uses the Nystrom method to project
+   out-of-sample points obtained from the general CSC format sparse
+   matrix in nonsym_distances.dat, nonsym_row_indices.dat, and
    nonsym_col_indices.dat.
 
 9. kmeans.r
 
-Performs k-means clustering using the kmeans() function in R on the
-eigenvectors found in eigenvectors.dat.
+   Performs k-means clustering using the kmeans() function in R on the
+   eigenvectors found in eigenvectors.dat.
 
 10. kmeans_subset.r
 
-Performs k-means clustering using the kmeans() function in R on the
-eigenvectors found in eigenvectors.dat. Unlike kmeans.r, this script
-accepts one command-line argument: the number of clusters
-requested, k. Therefore, only the first k eigenvectors are loaded and
-used for clustering. This allows for one large computation of many
-eigenvectors, and then subsequent clustering on all possible subsets
-of these vectors. 
+    Performs k-means clustering using the kmeans() function in R on
+    the eigenvectors found in eigenvectors.dat. Unlike kmeans.r, this
+    script accepts one command-line argument: the number of clusters
+    requested, k. Therefore, only the first k eigenvectors are loaded
+    and used for clustering. This allows for one large computation of
+    many eigenvectors, and then subsequent clustering on all possible
+    subsets of these vectors.
 
 11. knn_data
 
-Usage: ./knn_data [# threads] [k] [vector size] [fitting data file]
-   Computes the k nearest neighbors of all pairs of
-   vectors in the given binary data files.
+    Usage: ./knn_data [# threads] [k] [vector size] [fitting data
+       file] Computes the k nearest neighbors of all pairs of vectors
+       in the given binary data files.
 
 12. knn_rms
 
-Usage: ./knn_rms [# threads] [k] [topology file] [fitting xtc file]
-   Computes the k nearest neighbors of all pairs of
-   structures in the given xtc file. A topology PDB file
-   should be provided for determining the mass of each atom.
+    Usage: ./knn_rms [# threads] [k] [topology file] [fitting xtc
+       file] Computes the k nearest neighbors of all pairs of
+       structures in the given xtc file. A topology PDB file should be
+       provided for determining the mass of each atom.
 
-Output is a matrix of sorted distances and matrix of corresponding
-indices for each distance.
+    Output is a matrix of sorted distances and matrix of corresponding
+    indices for each distance.
 
 13. make_sysparse
 
-A symmetric CSC matrix is constructed from the data in distances.dat
-and indices.dat. The result is placed in sym_distances.dat,
-sym_row_indices.dat, and sym_col_indices.dat.
+    A symmetric CSC matrix is constructed from the data in
+    distances.dat and indices.dat. The result is placed in
+    sym_distances.dat, sym_row_indices.dat, and sym_col_indices.dat.
 
-Usage: ./make_sysparse [k] <output k>
-   Converts the results from knn_rms into CSC format.
+    Usage: ./make_sysparse [k] <output k> Converts the results from
+       knn_rms into CSC format.
 
-   Normally, the number of nearest neighbors in the input
-   distances is used for constructing the CSC matrix.
-   However, you can set <output k> <= [k] in order to
-   subselect the number of neighbors to consider in the
-   CSC representation. This makes it easy to store a
-   large number of neighbors using knn_* but then use
-   a subset for, say, computing approximate geodesic
-   distances.
+    Normally, the number of nearest neighbors in the input distances
+    is used for constructing the CSC matrix.  However, you can set
+    <output k> <= [k] in order to subselect the number of neighbors to
+    consider in the CSC representation. This makes it easy to store a
+    large number of neighbors using knn_* but then use a subset for,
+    say, computing approximate geodesic distances.
 
 14. make_gesparse
 
-A general CSC matrix is constructed from the data in distances.dat
-and indices.dat. The result is placed in nonsym_distances.dat,
-nonsym_row_indices.dat, and nonsym_col_indices.dat.
+    A general CSC matrix is constructed from the data in distances.dat
+    and indices.dat. The result is placed in nonsym_distances.dat,
+    nonsym_row_indices.dat, and nonsym_col_indices.dat.
 
-Usage: ./make_gesparse [k] <output k>
-   Converts the results from knn_rms into CSC format.
+    Usage: ./make_gesparse [k] <output k> Converts the results from
+       knn_rms into CSC format.
 
-   Normally, the number of nearest neighbors in the input
-   distances is used for constructing the CSC matrix.
-   However, you can set <output k> <= [k] in order to
-   subselect the number of neighbors to consider in the
-   CSC representation. This makes it easy to store a
-   large number of neighbors using knn_* but then use
-   a subset for, say, computing approximate geodesic
-   distances.
+    Normally, the number of nearest neighbors in the input distances
+    is used for constructing the CSC matrix.  However, you can set
+    <output k> <= [k] in order to subselect the number of neighbors to
+    consider in the CSC representation. This makes it easy to store a
+    large number of neighbors using knn_* but then use a subset for,
+    say, computing approximate geodesic distances.
 
 15. phipsi_to_sincos
 
-Converts the angles in phipsi.dat into polar coordinate
-representation (sincos.dat), which are appropriate vectors for
-distance calculations in torsion angle space.
+    Converts the angles in phipsi.dat into polar coordinate
+    representation (sincos.dat), which are appropriate vectors for
+    distance calculations in torsion angle space.
 
 16. plot_histogram.r
 
-Reads the cluster assignment data from cluster.dat and the replicate
-assignment data from assignment.dat, and outputs the corresponding
-joint replicate-cluster probability histogram as EPS file using the
-'fields' package in R.
+    Reads the cluster assignment data from cluster.dat and the
+    replicate assignment data from assignment.dat, and outputs the
+    corresponding joint replicate-cluster probability histogram as EPS
+    file using the 'fields' package in R.
 
 17. rms_test
 
-Computes RMSD between the provided reference structure and all of the
-structures in the XTC file. This is a nice way to verify/test distance
-comparisons, but note that different codes produce slightly different
-results (usually within ~5% difference).
+    Computes RMSD between the provided reference structure and all of
+    the structures in the XTC file. This is a nice way to verify/test
+    distance comparisons, but note that different codes produce
+    slightly different results (usually within ~5% difference).
 
-Usage: ./rms_test [reference structure] [fitting xtc file]
-   Computes the RMSD of all structures for the given
-   in the xtc file. A template structure should be
-   provided as the reference structure.
+    Usage: ./rms_test [reference structure] [fitting xtc file]
+       Computes the RMSD of all structures for the given in the xtc
+       file. A template structure should be provided as the reference
+       structure.
 
 18. split_xtc
 
-A utility to sample from an XTC file, producing suitable files for
-using the Nystrom out-of-sample projection method.
+    A utility to sample from an XTC file, producing suitable files for
+    using the Nystrom out-of-sample projection method.
 
-Usage: ./split_xtc [xtc file] [n]
-   Splits the provided xtc file into two separate.
-   xtc files (landmarks.xtc and remainder.xtc) where
-   landmarks.xtc will contain every n-th frame from
-   the input xtc file, while remainder.xtc will contain
-   all other frames from the input trajectory.
+    Usage: ./split_xtc [xtc file] [n] Splits the provided xtc file
+       into two separate.  xtc files (landmarks.xtc and remainder.xtc)
+       where landmarks.xtc will contain every n-th frame from the
+       input xtc file, while remainder.xtc will contain all other
+       frames from the input trajectory.
 
 ********
 EXAMPLES
