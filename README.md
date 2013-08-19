@@ -49,9 +49,13 @@ of the pipeline which are useful for a particular task, and ignore the
 rest.
 
 Here are some of the things that MDSCTK does well:
+
 1. Parallel computation of RMSD or vector distance matrices.
+
 2. Sparse eigen decomposition on Compressed Sparse Column matrices.
+
 3. Simple Phi-Psi angle extraction from backbone coordinates.
+
 4. Nystrom approximation technique to cluster out-of-sample data.
 
 ************
@@ -111,11 +115,11 @@ INSTALLATION
     $ make
 
 (If you gave difficulties with setting up the build system using
- cmake, an auxiliary Makefile is provided with the source code
- and can be edited by hand. Sometimes, this will be easier than
- trying to get cmake to find all of the required elements using
- it's search tools. However, the provided Makefile is currently
- deprecated, and will eventually be removed from the project.)
+cmake, an auxiliary Makefile is provided with the source code
+and can be edited by hand. Sometimes, this will be easier than
+trying to get cmake to find all of the required elements using
+it's search tools. However, the provided Makefile is currently
+deprecated, and will eventually be removed from the project.)
 
 All binaries should now be built. You might consider putting the
 source directory in your PATH for ease of use.
