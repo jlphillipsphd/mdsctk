@@ -126,8 +126,8 @@ int main(int argc, char* argv[]) {
   cerr << "done." << endl;
 
   // Clean coordinates
-  delete ref_coords;
-  delete fit_coords;
+  delete [] ref_coords;
+  delete [] fit_coords;
   delete [] weights;
   
   return 0;

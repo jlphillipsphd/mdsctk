@@ -138,14 +138,14 @@ Basic Documentation
 1. auto_decomp_sparse
 
    Performs self-tuning specral decomposition of the graph laplacian
-   based off of ideasdeveloped in: Zelnik-manor, L., & Perona,
-   P. (2005). Self-tuning spectral clustering. Advances in Neural
-   Information Processing Systems 17 (Vol. 2, pp. 1601–1608). MIT
-   Press. Retrieved from
+   based off of ideas developed in:
+   Zelnik-manor, L., & Perona, P. (2005). Self-tuning spectral
+   clustering. Advances in Neural Information Processing Systems 17
+   (Vol. 2, pp. 1601–1608). MIT Press. Retrieved from
    http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.84.7940
 
-   Usage: ./auto_decomp_sparse [# eigenvalues/vectors] [k] Reads the
-      symmetric CSC format sparse matrix from the files
+   Usage: ./auto_decomp_sparse [# eigenvalues/vectors] [k_sigma]
+      Reads the symmetric CSC format sparse matrix from the files
       sym_distances.dat, sym_row_indices.dat, & sym_col_indices.dat
       and computes the number of requested eigenvalues/vectors of the
       normalized laplacian using ARPACK and a gaussian kernel of width
@@ -167,8 +167,8 @@ Basic Documentation
 
 4. check_xtc
 
-   Usage: ./check_xtc [xtc file] Report stats on the provided xtc
-      file.
+   Usage: ./check_xtc [xtc file]
+      Report stats on the provided xtc file.
 
 5. clustering_histogram.r
 
@@ -186,13 +186,13 @@ Basic Documentation
 7. decomp_sparse
 
    Performs standard specral decomposition of the graph laplacian as
-   developed in: Weiss, Y. (1999). Segmentation using eigenvectors: a
-   unifying view. Proceedings of the Seventh IEEE International
-   Conference on Computer Vision
-   (pp. 975–982). IEEE. doi:10.1109/ICCV.1999.790354
+   developed in:
+   Weiss, Y. (1999). Segmentation using eigenvectors: a unifying
+   view. Proceedings of the Seventh IEEE International Conference on
+   Computer Vision (pp. 975–982). IEEE. doi:10.1109/ICCV.1999.790354
 
-   Usage: ./decomp_sparse [# eigenvalues/vectors] [sigma] Reads the
-      symmetric CSC format sparse matrix from the files
+   Usage: ./decomp_sparse [# eigenvalues/vectors] [sigma]
+      Reads the symmetric CSC format sparse matrix from the files
       sym_distances.dat, sym_row_indices.dat, & sym_col_indices.dat
       and computes the number of requested eigenvalues/vectors of the
       normalized laplacian using a gaussian kernal of width sigma and
@@ -229,10 +229,10 @@ Basic Documentation
 
 12. knn_rms
 
-    Usage: ./knn_rms [# threads] [k] [topology file] [fitting xtc
-       file] Computes the k nearest neighbors of all pairs of
-       structures in the given xtc file. A topology PDB file should be
-       provided for determining the mass of each atom.
+    Usage: ./knn_rms [# threads] [k] [topology file] [fitting xtc file]
+       Computes the k nearest neighbors of all pairs of structures in
+       the given xtc file. A topology PDB file should be provided for
+       determining the mass of each atom.
 
     Output is a matrix of sorted distances and matrix of corresponding
     indices for each distance.
@@ -243,8 +243,8 @@ Basic Documentation
     distances.dat and indices.dat. The result is placed in
     sym_distances.dat, sym_row_indices.dat, and sym_col_indices.dat.
 
-    Usage: ./make_sysparse [k] <output k> Converts the results from
-       knn_rms into CSC format.
+    Usage: ./make_sysparse [k] <output k>
+       Converts the results from knn_rms into CSC format.
 
     Normally, the number of nearest neighbors in the input distances
     is used for constructing the CSC matrix.  However, you can set
@@ -259,8 +259,8 @@ Basic Documentation
     and indices.dat. The result is placed in nonsym_distances.dat,
     nonsym_row_indices.dat, and nonsym_col_indices.dat.
 
-    Usage: ./make_gesparse [k] <output k> Converts the results from
-       knn_rms into CSC format.
+    Usage: ./make_gesparse [k] <output k>
+       Converts the results from knn_rms into CSC format.
 
     Normally, the number of nearest neighbors in the input distances
     is used for constructing the CSC matrix.  However, you can set
@@ -299,11 +299,12 @@ Basic Documentation
     A utility to sample from an XTC file, producing suitable files for
     using the Nystrom out-of-sample projection method.
 
-    Usage: ./split_xtc [xtc file] [n] Splits the provided xtc file
-       into two separate.  xtc files (landmarks.xtc and remainder.xtc)
-       where landmarks.xtc will contain every n-th frame from the
-       input xtc file, while remainder.xtc will contain all other
-       frames from the input trajectory.
+    Usage: ./split_xtc [xtc file] [n]
+       Splits the provided xtc file into two separate.  xtc files
+       (landmarks.xtc and remainder.xtc) where landmarks.xtc will
+       contain every n-th frame from the input xtc file, while
+       remainder.xtc will contain all other frames from the input
+       trajectory.
 
 ********
 EXAMPLES

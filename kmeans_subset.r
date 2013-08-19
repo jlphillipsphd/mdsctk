@@ -41,12 +41,22 @@ nclusters <- as.integer(commandArgs(TRUE)[1])
 cat(sprintf("Number of available eigenvectors: %d\n",length(e.values)))
 cat(sprintf("Number of clusters requested: %d\n",nclusters))
 
-# myout <- pipe("cat","w")
-myout <- file("clusters.dat","w")
 set.seed(0) # Change for different results...
-write(kmeans(e.vectors[,seq(1,nclusters)],
-             nclusters,
-             iter.max=30,
-             nstart=10)$cluster,myout,ncolumns=1)
+clusters <- kmeans(e.vectors[,seq(1,nclusters)],
+                   nclusters,
+                   iter.max=30,
+                   nstart=10)$cluster
+
+myout <- file("clusters.dat","w")
+write(clusters,myout,ncolumns=1)
 close(myout)
+
+myout <- file("clusters.ndx","w")
+for (n in seq(1,ncol(e.vectors))) {
+  writeLines(sprintf("[cluster_%d]",n),con=myout)
+  write(which(clusters==n),myout,ncolumns=20)
+  writeLines("",con=myout)
+}
+close(myout)
+
 q(save="no")

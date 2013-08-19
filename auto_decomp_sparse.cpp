@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
     cerr << endl;
     cerr << "   MDSCTK " << MDSCTK_VERSION_MAJOR << "." << MDSCTK_VERSION_MINOR << endl;
     cerr << endl;
-    cerr << "Usage: " << argv[0] << " [# eigenvalues/vectors] [k]" << endl;
+    cerr << "Usage: " << argv[0] << " [# eigenvalues/vectors] [k_sigma]" << endl;
     cerr << "   Reads the symmetric CSC format sparse matrix from the" << endl;
     cerr << "   files sym_distances.dat, sym_row_indices.dat, &" << endl;
     cerr << "   sym_col_indices.dat and computes the number of" << endl;

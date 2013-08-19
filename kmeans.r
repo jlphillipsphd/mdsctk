@@ -37,12 +37,22 @@ e.values <- as.double(scan(valin,quiet=TRUE))
 e.vectors <- matrix(scan(vecin,quiet=TRUE),ncol=length(e.values))
 e.residuals <- as.double(scan(resin,quiet=TRUE))
 
-# myout <- pipe("cat","w")
-myout <- file("clusters.dat","w")
 set.seed(0) # Change for different results...
-write(kmeans(e.vectors,
-             ncol(e.vectors),
-             iter.max=30,
-             nstart=10)$cluster,myout,ncolumns=1)
+clusters <- kmeans(e.vectors,
+                   ncol(e.vectors),
+                   iter.max=30,
+                   nstart=10)$cluster
+
+myout <- file("clusters.dat","w")
+write(clusters,myout,ncolumns=1)
 close(myout)
+
+myout <- file("clusters.ndx","w")
+for (n in seq(1,ncol(e.vectors))) {
+  writeLines(sprintf("[cluster_%d]",n),con=myout)
+  write(which(clusters==n),myout,ncolumns=20)
+  writeLines("",con=myout)
+}
+close(myout)
+
 q(save="no")
