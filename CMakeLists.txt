@@ -89,7 +89,17 @@ if(NOT HAVE_BOOST_DSP_H)
   message(FATAL_ERROR "ERROR: unable to find BOOST(C++) graph library header.")
 endif(NOT HAVE_BOOST_DSP_H)
 
-# Basic library checks
+## OpenCL
+set(OPENCL_INCLUDE_PATH "/usr/include"
+  CACHE STRING "Location of CL/cl.hpp")
+unset(HAVE_OPENCL_H CACHE)
+set(CMAKE_REQUIRED_FLAGS "-I${OPENCL_INCLUDE_PATH}")
+check_include_file_cxx(CL/cl.hpp      HAVE_OPENCL_H)
+if(NOT HAVE_OPENCL_H)
+  message(FATAL_ERROR "ERROR: unable to find OpenCL header file.")
+endif(NOT HAVE_OPENCL_H)
+
+## Basic library checks
 include(CheckLibraryExists)
 
 ## C Math Library
@@ -128,6 +138,19 @@ if(HAVE_LIBDB_CXX)
 else(HAVE_LIBDB_CXX)
   message(FATAL_ERROR "ERROR: unable to find Berkeley DB C++ library.")
 endif(HAVE_LIBDB_CXX)
+
+## OpenCL
+set(OPENCL_LIBRARY_PATH "/usr/lib"
+  CACHE STRING "Location of libOpenCL.so")
+set(CMAKE_REQUIRED_FLAGS "-L${OPENCL_LIBRARY_PATH}")
+unset(HAVE_LIBOPENCL CACHE)
+check_library_exists(OpenCL clGetPlatformIDs "" HAVE_LIBOPENCL)
+if(HAVE_LIBOPENCL)
+  set(LIBS ${LIBS} OpenCL)
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${OPENCL_LIBRARY_PATH}")
+else(HAVE_LIBOPENCL)
+  message(FATAL_ERROR "ERROR: unable to find OpenCL library.")
+endif(HAVE_LIBOPENCL)
 
 # PKGCONFIG checks
 find_package(PkgConfig REQUIRED)
