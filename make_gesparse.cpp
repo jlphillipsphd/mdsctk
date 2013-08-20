@@ -99,6 +99,10 @@ int main(int argc, char *argv[]) {
   if (argc != 2 && argc != 3) {
     cerr << endl;
     cerr << "   MDSCTK " << MDSCTK_VERSION_MAJOR << "." << MDSCTK_VERSION_MINOR << endl;
+    cerr << "   Copyright (C) 2013 Joshua L. Phillips" << endl;
+    cerr << "   MDSCTK comes with ABSOLUTELY NO WARRANTY; see LICENSE for details." << endl;
+    cerr << "   This is free software, and you are welcome to redistribute it" << endl;
+    cerr << "   under certain conditions; see README.md for details." << endl;
     cerr << endl;
     cerr << "Usage: " << argv[0] << " [k] <output k>" << endl;
     cerr << "   Converts the results from knn_rms into CSC format." << endl;
