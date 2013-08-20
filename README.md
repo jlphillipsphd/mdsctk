@@ -3,7 +3,8 @@ mdsctk
 
 MDSCTK - Molecular Dynamics Spectral Clustering Toolkit
 
-Date: 2013-08-19
+Version: 1.1.2
+Date: 2013-08-20
 
 Author:
 Joshua L. Phillips <jphillips@lanl.gov>
@@ -215,28 +216,40 @@ Basic Documentation
    matrix in nonsym_distances.dat, nonsym_row_indices.dat, and
    nonsym_col_indices.dat.
 
-9. kmeans.r
 
-   Performs k-means clustering using the kmeans() function in R on the
-   eigenvectors found in eigenvectors.dat.
+9. density.r
 
-10. kmeans_subset.r
+   Usage: density.r [k] <sigma>
+      Computes the kernel density estimate for the sparse distances
+      in distances.dat. The number of k nearest neighbors is required
+      but the bandwidth of the kernel, sigma, can be supplied or
+      guesstimated based the data.
 
-    Performs k-means clustering using the kmeans() function in R on
-    the eigenvectors found in eigenvectors.dat. Unlike kmeans.r, this
-    script accepts one command-line argument: the number of clusters
-    requested, k. Therefore, only the first k eigenvectors are loaded
-    and used for clustering. This allows for one large computation of
-    many eigenvectors, and then subsequent clustering on all possible
-    subsets of these vectors.
+10. entropy.r
 
-11. knn_data
+   Usage: entropy.r [k]
+      Computes the local entropy of the given sparse
+      matrix with indices from indices.dat and the densities
+      in density.dat. The number of nearest neighbors,
+      k, is required.
+
+11. kmeans.r
+
+   Usage: kmeans.r [k]
+      Performs standard k-means clustering on the provided
+      eigenvectors from (eigenvalues.dat and eigenvectors.dat).
+      The number of clusters requested (k), can be 2>=k<=nev
+      where nev is the number of eigenvectors. The results are
+      written to clusters.dat, and a breakdown of assignments
+      by cluster is written to clusters.ndx.
+
+12. knn_data
 
     Usage: ./knn_data [# threads] [k] [vector size] [fitting data
        file] Computes the k nearest neighbors of all pairs of vectors
        in the given binary data files.
 
-12. knn_rms
+13. knn_rms
 
     Usage: ./knn_rms [# threads] [k] [topology file] [fitting xtc file]
        Computes the k nearest neighbors of all pairs of structures in
@@ -246,7 +259,7 @@ Basic Documentation
     Output is a matrix of sorted distances and matrix of corresponding
     indices for each distance.
 
-13. make_sysparse
+14. make_sysparse
 
     A symmetric CSC matrix is constructed from the data in
     distances.dat and indices.dat. The result is placed in
@@ -262,7 +275,7 @@ Basic Documentation
     large number of neighbors using knn_* but then use a subset for,
     say, computing approximate geodesic distances.
 
-14. make_gesparse
+15. make_gesparse
 
     A general CSC matrix is constructed from the data in distances.dat
     and indices.dat. The result is placed in nonsym_distances.dat,
@@ -278,20 +291,29 @@ Basic Documentation
     large number of neighbors using knn_* but then use a subset for,
     say, computing approximate geodesic distances.
 
-15. phipsi_to_sincos
+16. phipsi_to_sincos
 
     Converts the angles in phipsi.dat into polar coordinate
     representation (sincos.dat), which are appropriate vectors for
     distance calculations in torsion angle space.
 
-16. plot_histogram.r
+17. plot_histogram.r
 
     Reads the cluster assignment data from cluster.dat and the
     replicate assignment data from assignment.dat, and outputs the
     corresponding joint replicate-cluster probability histogram as EPS
     file using the 'fields' package in R.
 
-17. rms_test
+18. probability.r
+
+    Usage: density.r [k] <sigma>
+       Computes the kernel density estimate for the sparse distances
+       in distances.dat, and convert the results to estimated
+       probailities.
+       The number of k nearest neighbors is required but the bandwidth of
+       the kernel, sigma, can be supplied or guesstimated based the data.
+
+19. rms_test
 
     Computes RMSD between the provided reference structure and all of
     the structures in the XTC file. This is a nice way to verify/test
@@ -303,7 +325,7 @@ Basic Documentation
        file. A template structure should be provided as the reference
        structure.
 
-18. split_xtc
+20. split_xtc
 
     A utility to sample from an XTC file, producing suitable files for
     using the Nystrom out-of-sample projection method.
