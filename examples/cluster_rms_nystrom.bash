@@ -64,7 +64,7 @@ echo "Performing autoscaled spectral decomposition..."
 ${MDSCTK_HOME}/auto_decomp_sparse_nystrom ${NCLUSTERS} ${SCALING}
 
 echo "Clustering eigenvectors..."
-${MDSCTK_HOME}/kmeans.r
+${MDSCTK_HOME}/kmeans.r ${NCLUSTERS}
 
 # Generate trajectory assignment file,
 # 10 trajectories of 100 frames each
@@ -76,7 +76,7 @@ Rscript \
     -e 'close(myout)' > assignment.dat
 
 echo "Computing replicate-cluster assignment histogram..."
-${MDSCTK_HOME}/clustering_histogram.r
+${MDSCTK_HOME}/clustering_histogram.r assignment.dat clusters.dat
 
 echo "Plotting the histogram (fails if R package 'fields' is missing)..."
 ${MDSCTK_HOME}/plot_histogram.r

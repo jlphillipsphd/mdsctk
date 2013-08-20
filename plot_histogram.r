@@ -39,6 +39,26 @@ if (Sys.getenv("MDSCTK_HOME")=="") {
     source(paste(Sys.getenv("MDSCTK_HOME"),"/config.r",sep=""))
 }
 
+myargs <- commandArgs(TRUE)
+
+if (length(myargs) != 0) {
+  cat("\n")
+  cat(paste("   MDSCTK ",MDSCTK_VERSION_MAJOR,".",MDSCTK_VERSION_MINOR,"\n",sep=""))
+  cat("   Copyright (C) 2013 Joshua L. Phillips\n")
+  cat("   MDSCTK comes with ABSOLUTELY NO WARRANTY; see LICENSE for details.\n")
+  cat("   This is free software, and you are welcome to redistribute it\n")
+  cat("   under certain conditions; see README.md for details.\n")
+  cat("\n")
+  cat("Usage: plot_histogram.r\n")
+  cat("   Reads in a joint assignment-cluster probability distribution\n")
+  cat("   from histogram.dat and plots the distribution as a heatmap and\n")
+  cat("   prints the normalized mutual information between assignments\n")
+  cat("   and clusters in the lower-right corner. The result is written\n")
+  cat("   to histogram.eps.\n")
+  cat("\n")
+  q()
+}
+
 require(fields)
 
 normalmutualinf <- function(data) {

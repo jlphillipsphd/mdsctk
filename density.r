@@ -41,18 +41,24 @@ if (Sys.getenv("MDSCTK_HOME")=="") {
 
 myargs <- commandArgs(TRUE)
 
-if (length(myargs) != 3 & length(myargs) != 4) {
+if (length(myargs) != 1 & length(myargs) != 2) {
   cat("\n")
-  cat("Usage: density.r [distances.dat] [n] [k] <sigma>\n")
-  cat("   Computes the kernel density estimate for the\n")
-  cat("   provided sparse distance matrix.\n")
+  cat(paste("   MDSCTK ",MDSCTK_VERSION_MAJOR,".",MDSCTK_VERSION_MINOR,"\n",sep=""))
+  cat("   Copyright (C) 2013 Joshua L. Phillips\n")
+  cat("   MDSCTK comes with ABSOLUTELY NO WARRANTY; see LICENSE for details.\n")
+  cat("   This is free software, and you are welcome to redistribute it\n")
+  cat("   under certain conditions; see README.md for details.\n")
+  cat("\n")
+  cat("Usage: density.r [k] <sigma>\n")
+  cat("   Computes the kernel density estimate for the sparse distances\n")
+  cat("   in distances.dat. The number of k nearest neighbors is required\n")
+  cat("   but the bandwidth of the kernel, sigma, can be supplied or\n")
+  cat("   guesstimated based the data.\n")
   cat("\n")
   q()
 }
 
-myfile <- myargs[1]
-myn <- as.integer(myargs[2])
-myk <- as.integer(myargs[3])
+myk <- as.integer(myargs[1])
 
 dens.pointwise <- function(data,sigma) {
   p <- colSums(exp(-data^2 / (2 * sigma^2)))
@@ -67,11 +73,10 @@ read.binary <- function(filename,n) {
   return (data)
 }
 
-data <- matrix(read.binary(myfile,myn*myk),ncol=myn)
-if (length(myargs)==4) {
-    sigma <- as.double(myargs[4])
-}
-else {
+data <- matrix(read.binary("distances.dat",file.info("distances.dat")$size/8),nrow=myk)
+if (length(myargs)==2) {
+    sigma <- as.double(myargs[2])
+} else {
     sigma <- sd(as.double(data))
 }
-write(dens.pointwise(data,sigma),file=stdout(),ncolumns=1)
+write(dens.pointwise(data,sigma),file="density.dat",ncolumns=1)

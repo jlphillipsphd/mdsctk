@@ -59,7 +59,7 @@ echo "Performing autoscaled spectral decomposition..."
 ${MDSCTK_HOME}/auto_decomp_sparse_nystrom ${NCLUSTERS} ${SCALING}
 
 echo "Clustering eigenvectors..."
-${MDSCTK_HOME}/kmeans.r
+${MDSCTK_HOME}/kmeans.r ${NCLUSTERS}
 
 ## Make a plot of the results...
 Rscript \

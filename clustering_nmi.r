@@ -39,6 +39,24 @@ if (Sys.getenv("MDSCTK_HOME")=="") {
     source(paste(Sys.getenv("MDSCTK_HOME"),"/config.r",sep=""))
 }
 
+myargs <- commandArgs(TRUE)
+
+if (length(myargs) != 0) {
+  cat("\n")
+  cat(paste("   MDSCTK ",MDSCTK_VERSION_MAJOR,".",MDSCTK_VERSION_MINOR,"\n",sep=""))
+  cat("   Copyright (C) 2013 Joshua L. Phillips\n")
+  cat("   MDSCTK comes with ABSOLUTELY NO WARRANTY; see LICENSE for details.\n")
+  cat("   This is free software, and you are welcome to redistribute it\n")
+  cat("   under certain conditions; see README.md for details.\n")
+  cat("\n")
+  cat("Usage: clustering_nmi.r\n")
+  cat("   Reads in a joint assignment-cluster probability distribution\n")
+  cat("   from histogram.dat and computes the normalized mutual\n")
+  cat("   information between assignments and clusters.\n")
+  cat("\n")
+  q()
+}
+
 normalmutualinf <- function(data) {
   s <- 0
   e <- 0
@@ -53,16 +71,6 @@ normalmutualinf <- function(data) {
   return(s / -e)
 }
 
-## myargs <- commandArgs(TRUE)
-
-## if (length(myargs) != 1) {
-##   print("")
-##   print("Usage: clustering_nmi.r [cluster_histogram]")
-##   print("")
-##   q()
-## }
-
-## hist <- as.matrix(read.table(myargs[1],header=FALSE))
 hist <- as.matrix(read.table("histogram.dat",header=FALSE))
 
 myfd <- pipe("cat","wb")

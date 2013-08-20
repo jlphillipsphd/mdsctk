@@ -39,15 +39,28 @@ if (Sys.getenv("MDSCTK_HOME")=="") {
     source(paste(Sys.getenv("MDSCTK_HOME"),"/config.r",sep=""))
 }
 
-## Might utlize command-line arguments in future versions...
-## myargs <- commandArgs(TRUE)
+myargs <- commandArgs(TRUE)
 
-## if (length(myargs) != 2) {
-##   print("")
-##   print("Usage: clustering_histogram.r [traj_assignment] [cluster_assignment]")
-##   print("")
-##   q()
-## }
+if (length(myargs) != 0) {
+  cat("\n")
+  cat(paste("   MDSCTK ",MDSCTK_VERSION_MAJOR,".",MDSCTK_VERSION_MINOR,"\n",sep=""))
+  cat("   Copyright (C) 2013 Joshua L. Phillips\n")
+  cat("   MDSCTK comes with ABSOLUTELY NO WARRANTY; see LICENSE for details.\n")
+  cat("   This is free software, and you are welcome to redistribute it\n")
+  cat("   under certain conditions; see README.md for details.\n")
+  cat("\n")
+  cat("Usage: clustering_histogram.r\n")
+  cat("   Reads in a set of assignments (classes,groups,etc.) for each data\n")
+  cat("   point or structure from assignment.dat, and the cluster\n")
+  cat("   assignment data from clusters.dat in order to calculate\n")
+  cat("   a joint cluster-assignment probability distribution which\n")
+  cat("   is written to the file: histogram.dat\n")
+  cat("   Note that cluster assignments are relabeled to better\n")
+  cat("   visualize the mutual information between assignments\n")
+  cat("   and clusters.\n")
+  cat("\n")
+  q()
+}
 
 ## Utilities
 cluster.sort <- function(data,f=median) {
@@ -63,10 +76,7 @@ cluster.sort <- function(data,f=median) {
   return (data)
 }
 
-## clus.assign <- cluster.sort(scan(myargs[2],quiet=TRUE))
-## myassignment <- scan(myargs[1],quiet=TRUE)
-
-## Note that the raw cluster numbers are changed, or "resorted"
+## Note that the raw cluster numbers are "changed", or relabeled
 ## in order to make the histogram plots interpretable. These can
 ## be kept with their original labels by simply not using the
 ## cluster.sort() function, which will not change the NMI of the

@@ -39,17 +39,49 @@ if (Sys.getenv("MDSCTK_HOME")=="") {
     source(paste(Sys.getenv("MDSCTK_HOME"),"/config.r",sep=""))
 }
 
+myargs <- commandArgs(TRUE)
+
+if (length(myargs) != 1) {
+  cat("\n")
+  cat(paste("   MDSCTK ",MDSCTK_VERSION_MAJOR,".",MDSCTK_VERSION_MINOR,"\n",sep=""))
+  cat("   Copyright (C) 2013 Joshua L. Phillips\n")
+  cat("   MDSCTK comes with ABSOLUTELY NO WARRANTY; see LICENSE for details.\n")
+  cat("   This is free software, and you are welcome to redistribute it\n")
+  cat("   under certain conditions; see README.md for details.\n")
+  cat("\n")
+  cat("Usage: kmeans.r [k]\n")
+  cat("   Performs standard k-means clustering on the provided\n")
+  cat("   eigenvectors from (eigenvalues.dat and eigenvectors.dat).\n")
+  cat("   The number of clusters requested (k), can be 2>=k<=nev\n")
+  cat("   where nev is the number of eigenvectors. The results are\n")
+  cat("   written to clusters.dat, and a breakdown of assignments\n")
+  cat("   by cluster is written to clusters.ndx.\n")
+  cat("\n")
+  q()
+}
+
 valin <- "eigenvalues.dat"
 vecin <- "eigenvectors.dat"
-resin <- "residuals.dat"
+nclusters <- as.integer(myargs[1])
 
 e.values <- as.double(scan(valin,quiet=TRUE))
+
+if (nclusters > length(e.values) | nclusters < 2) {
+  cat("\n")
+  cat("   -- ERROR-- \n")
+  cat(sprintf("   Number of eigenvalues: %d\n",length(e.values)))
+  cat(sprintf("   Number of clusters requested: %d\n",nclusters))
+  cat("   The number of clusters requested must be >=2 and\n")
+  cat("   <= number of eigenvalues.\n")
+  cat("\n")
+  q()    
+}
+
 e.vectors <- matrix(scan(vecin,quiet=TRUE),ncol=length(e.values))
-e.residuals <- as.double(scan(resin,quiet=TRUE))
 
 set.seed(0) # Change for different results...
-clusters <- kmeans(e.vectors,
-                   ncol(e.vectors),
+clusters <- kmeans(e.vectors[,seq(1,nclusters)],
+                   nclusters,
                    iter.max=30,
                    nstart=10)$cluster
 
