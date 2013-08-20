@@ -94,15 +94,15 @@ if(NOT HAVE_BOOST_DSP_H)
 endif(NOT HAVE_BOOST_DSP_H)
 
 ## OpenCL
-# set(OPENCL_INCLUDE_PATH "/usr/include"
-#   CACHE STRING "Location of CL/cl.hpp")
-# unset(HAVE_OPENCL_H CACHE)
-# set(CMAKE_REQUIRED_FLAGS "-I${OPENCL_INCLUDE_PATH}")
-# check_include_file_cxx(CL/cl.hpp      HAVE_OPENCL_H)
-# if(NOT HAVE_OPENCL_H)
-#   message(STATUS "WARNING: unable to find OpenCL header file.")
-#   message(STATUS "WARNING: OpenCL accelerated tools will NOT be built.")
-# endif(NOT HAVE_OPENCL_H)
+set(OPENCL_INCLUDE_PATH "/usr/include"
+  CACHE STRING "Location of CL/cl.hpp")
+unset(HAVE_OPENCL_H CACHE)
+set(CMAKE_REQUIRED_FLAGS "-I${OPENCL_INCLUDE_PATH}")
+check_include_file_cxx(CL/cl.hpp      HAVE_OPENCL_H)
+if(NOT HAVE_OPENCL_H)
+  message(STATUS "WARNING: unable to find OpenCL header file.")
+  message(STATUS "WARNING: OpenCL accelerated tools will NOT be built.")
+endif(NOT HAVE_OPENCL_H)
 
 ## Basic library checks
 include(CheckLibraryExists)
@@ -145,20 +145,20 @@ else(HAVE_LIBDB_CXX)
 endif(HAVE_LIBDB_CXX)
 
 ## OpenCL
-# set(OPENCL_LIBRARY_PATH "/usr/lib"
-#   CACHE STRING "Location of libOpenCL.so")
-# set(CMAKE_REQUIRED_FLAGS "-L${OPENCL_LIBRARY_PATH}")
-# unset(HAVE_LIBOPENCL CACHE)
-# if(HAVE_OPENCL_H)
-# check_library_exists(OpenCL clGetPlatformIDs "" HAVE_LIBOPENCL)
-# if(HAVE_LIBOPENCL)
-#   set(LIBS ${LIBS} OpenCL)
-#   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${OPENCL_LIBRARY_PATH}")
-# else(HAVE_LIBOPENCL)
-#   message(STATUS "WARNING: unable to find OpenCL library (libOpenCL.so).")
-#   message(STATUS "WARNING: OpenCL accelerated tools will NOT be built.")
-# endif(HAVE_LIBOPENCL)
-# endif(HAVE_OPENCL_H)
+set(OPENCL_LIBRARY_PATH "/usr/lib"
+  CACHE STRING "Location of libOpenCL.so")
+unset(HAVE_LIBOPENCL CACHE)
+if(HAVE_OPENCL_H)
+set(CMAKE_REQUIRED_FLAGS "-L${OPENCL_LIBRARY_PATH}")
+check_library_exists(OpenCL clGetPlatformIDs "" HAVE_LIBOPENCL)
+if(HAVE_LIBOPENCL)
+  set(LIBS ${LIBS} OpenCL)
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${OPENCL_LIBRARY_PATH}")
+else(HAVE_LIBOPENCL)
+  message(STATUS "WARNING: unable to find OpenCL library (libOpenCL.so).")
+  message(STATUS "WARNING: OpenCL accelerated tools will NOT be built.")
+endif(HAVE_LIBOPENCL)
+endif(HAVE_OPENCL_H)
 
 # PKGCONFIG checks
 find_package(PkgConfig REQUIRED)
@@ -258,10 +258,12 @@ foreach(TOOL ${MDSCTK_TOOLS})
 endforeach(TOOL ${MDSCTK_TOOLS})
 
 ## OpenCL tools...
-# set(MDSCTK_OCL_TOOLS
-#   knn_data_ocl)
+if(HAVE_LIBOPENCL)
+set(MDSCTK_OCL_TOOLS
+  knn_data_ocl)
 
-# foreach(TOOL ${MDSCTK_OCL_TOOLS})
-#   add_executable(${TOOL} ${TOOL}.cpp ocl.o)
-#   target_link_libraries(${TOOL} ${LIBS})
-# endforeach(TOOL ${MDSCTK_OCL_TOOLS})
+foreach(TOOL ${MDSCTK_OCL_TOOLS})
+  add_executable(${TOOL} ${TOOL}.cpp ocl.cpp)
+  target_link_libraries(${TOOL} ${LIBS})
+endforeach(TOOL ${MDSCTK_OCL_TOOLS})
+endif(HAVE_LIBOPENCL)
