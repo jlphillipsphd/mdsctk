@@ -114,6 +114,23 @@ INSTALLATION
     $ cmake .
     $ make
 
+2.2 Setup environment (bash example follows...)
+    $ export MDSCTK_HOME=path to MDSCTK
+    $ export PATH=${PATH}:${MDSCTK_HOME}
+
+All binaries should now be built. You will need to set the
+environment variable MDSCTK_HOME to the main source directory. You
+might also consider putting the source directory in your PATH for ease
+of use. Setting MDSCTK_HOME is NECESSARY for some scripts/programs,
+but having the source directory in your PATH is optional.
+
+There are a lot of uni/linux configurations out there, and I am not
+familiar with all of them. If you experience problems, more than
+likely it is because a prerequisite isn't installed properly or it is
+installed in an non-standard location. You will need to modify some
+CMAKE variables using ccmake or cmake-gui to help the compiler find
+the needed library/header files.
+
 (If you gave difficulties with setting up the build system using
 cmake, an auxiliary Makefile (Makefile.old) is provided with the
 source code and can be edited by hand. Sometimes, this will be easier
@@ -122,16 +139,6 @@ it's search tools. However, the provided Makefile is currently
 deprecated, and will eventually be removed from the project. Just copy
 Makefile.old to Makefile and also config.h.old to config.h, then make
 any needed edits to Makefile.)
-
-All binaries should now be built. You might consider putting the
-source directory in your PATH for ease of use.
-
-There are a lot of uni/linux configurations out there, and I am not
-familiar with all of them. If you experience problems, more than
-likely it is because a prerequisite isn't installed properly or it is
-installed in an non-standard location. You will need to modify some
-CMAKE variables using ccmake or cmake-gui to help the compiler find
-the needed library/header files.
 
 *******************
 Basic Documentation
