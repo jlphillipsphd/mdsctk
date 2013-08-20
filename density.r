@@ -29,6 +29,16 @@
 ## 
 ##
 
+if (Sys.getenv("MDSCTK_HOME")=="") {
+    cat("\n")
+    cat("Please set the MDSCTK_HOME environment variable\n")
+    cat("before running this script.\n")
+    cat("\n")
+    q()
+} else {
+    source(paste(Sys.getenv("MDSCTK_HOME"),"/config.r",sep=""))
+}
+
 myargs <- commandArgs(TRUE)
 
 if (length(myargs) != 3 & length(myargs) != 4) {

@@ -29,6 +29,14 @@
 ## 
 ##
 
+if [[ -z "${MDSCTK_HOME}" ]]; then
+    echo
+    echo "Please set the MDSCTK_HOME environment variable"
+    echo "before running this example..."
+    echo
+    exit 1
+fi  
+
 NTHREADS=2    ## Number of threads to use
 KNN=20        ## Number of nearest neighbors to keep
 NCLUSTERS=2   ## Number of clusters to extract

@@ -29,6 +29,14 @@
 ## 
 ##
 
+if [[ -z "${MDSCTK_HOME}" ]]; then
+    echo
+    echo "Please set the MDSCTK_HOME environment variable"
+    echo "before running this example..."
+    echo
+    exit 1
+fi  
+
 ## NOTE that the XTC file contains only the
 ## N-CA-C backbone atoms. You must make sure
 ## this is true for any XTC file given to

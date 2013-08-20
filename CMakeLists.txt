@@ -43,6 +43,10 @@ configure_file (
   "${PROJECT_SOURCE_DIR}/config.h.in"
   "${PROJECT_BINARY_DIR}/config.h"
   )					
+configure_file (	
+  "${PROJECT_SOURCE_DIR}/config.r.in"
+  "${PROJECT_BINARY_DIR}/config.r"
+  )					
 
 # add the binary tree to the search path for include files
 # so that we will find config.h
@@ -96,7 +100,8 @@ unset(HAVE_OPENCL_H CACHE)
 set(CMAKE_REQUIRED_FLAGS "-I${OPENCL_INCLUDE_PATH}")
 check_include_file_cxx(CL/cl.hpp      HAVE_OPENCL_H)
 if(NOT HAVE_OPENCL_H)
-  message(FATAL_ERROR "ERROR: unable to find OpenCL header file.")
+  message(STATUS "WARNING: unable to find OpenCL header file.")
+  message(STATUS "WARNING: OpenCL accelerated tools will NOT be built.")
 endif(NOT HAVE_OPENCL_H)
 
 ## Basic library checks
@@ -144,13 +149,16 @@ set(OPENCL_LIBRARY_PATH "/usr/lib"
   CACHE STRING "Location of libOpenCL.so")
 set(CMAKE_REQUIRED_FLAGS "-L${OPENCL_LIBRARY_PATH}")
 unset(HAVE_LIBOPENCL CACHE)
+if(HAVE_OPENCL_H)
 check_library_exists(OpenCL clGetPlatformIDs "" HAVE_LIBOPENCL)
 if(HAVE_LIBOPENCL)
   set(LIBS ${LIBS} OpenCL)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${OPENCL_LIBRARY_PATH}")
 else(HAVE_LIBOPENCL)
-  message(FATAL_ERROR "ERROR: unable to find OpenCL library.")
+  message(STATUS "WARNING: unable to find OpenCL library (libOpenCL.so).")
+  message(STATUS "WARNING: OpenCL accelerated tools will NOT be built.")
 endif(HAVE_LIBOPENCL)
+endif(HAVE_OPENCL_H)
 
 # PKGCONFIG checks
 find_package(PkgConfig REQUIRED)
@@ -249,3 +257,11 @@ foreach(TOOL ${MDSCTK_TOOLS})
   target_link_libraries(${TOOL} ${LIBS})
 endforeach(TOOL ${MDSCTK_TOOLS})
 
+## OpenCL tools...
+# set(MDSCTK_OCL_TOOLS
+#   knn_data_ocl)
+
+# foreach(TOOL ${MDSCTK_OCL_TOOLS})
+#   add_executable(${TOOL} ${TOOL}.cpp ocl.o)
+#   target_link_libraries(${TOOL} ${LIBS})
+# endforeach(TOOL ${MDSCTK_OCL_TOOLS})

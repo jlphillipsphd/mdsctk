@@ -29,6 +29,14 @@
 ## 
 ##
 
+if [[ -z "${MDSCTK_HOME}" ]]; then
+    echo
+    echo "Please set the MDSCTK_HOME environment variable"
+    echo "before running this example..."
+    echo
+    exit 1
+fi  
+
 TOP=trp-cage.pdb
 XTC=trp-cage.xtc
 OSXTC=trp-cage-outofsample.xtc
