@@ -54,22 +54,22 @@ NPHIPSI=$(( (${NRES}*2) - 2 )) # Number of Phi-Psi angles
 NSINCOS=$(( ${NPHIPSI}*2 ))    # Number of polar coordinates
 
 echo "Computing Phi-Psi angles..."
-../bb_xtc_to_phipsi ${XTC}
+${MDSCTK_HOME}/bb_xtc_to_phipsi ${XTC}
 
 echo "Converting angles to polar coordinates..."
-../phipsi_to_sincos
+${MDSCTK_HOME}/phipsi_to_sincos
 
 echo "Computing Euclidean distances between all vector pairs..."
-../knn_data ${NTHREADS} ${KNN} ${NSINCOS} sincos.dat sincos.dat
+${MDSCTK_HOME}/knn_data ${NTHREADS} ${KNN} ${NSINCOS} sincos.dat sincos.dat
 
 echo "Creating CSC format sparse matrix..."
-../make_sysparse ${KNN}
+${MDSCTK_HOME}/make_sysparse ${KNN}
 
 echo "Performing autoscaled spectral decomposition..."
-../auto_decomp_sparse ${NCLUSTERS} ${SCALING}
+${MDSCTK_HOME}/auto_decomp_sparse ${NCLUSTERS} ${SCALING}
 
 echo "Clustering eigenvectors..."
-../kmeans.r
+${MDSCTK_HOME}/kmeans.r
 
 # Generate trajectory assignment file,
 # 10 trajectories of 100 frames each.
@@ -79,10 +79,12 @@ Rscript \
     -e 'close(myout)' > assignment.dat
 
 echo "Computing replicate-cluster assignment histogram..."
-../clustering_histogram.r
+${MDSCTK_HOME}/clustering_histogram.r
 
 echo "Plotting the histogram (fails if R package 'fields' is missing)..."
-../plot_histogram.r
+${MDSCTK_HOME}/plot_histogram.r
+
+echo "See histogram.eps for results (eg. evince histogram.eps)..."
 
 echo "Computing normalized mutual information..."
-../clustering_nmi.r | tee nmi.dat
+${MDSCTK_HOME}/clustering_nmi.r | tee nmi.dat

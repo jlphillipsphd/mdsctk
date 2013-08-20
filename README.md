@@ -120,7 +120,8 @@ source code and can be edited by hand. Sometimes, this will be easier
 than trying to get cmake to find all of the required elements using
 it's search tools. However, the provided Makefile is currently
 deprecated, and will eventually be removed from the project. Just copy
-Makefile.old to Makefile and make your needed edits.)
+Makefile.old to Makefile and also config.h.old to config.h, then make
+any needed edits to Makefile.)
 
 All binaries should now be built. You might consider putting the
 source directory in your PATH for ease of use.

@@ -1,6 +1,8 @@
 ## Note that this Makefile is provided for convenience, but
 ## is DEPRECATED.
-## Running cmake will overwrite this Makefile!!!
+## Copy config.h.old to config.h before using this.
+## Running cmake will overwrite Makefile, so use
+## either cmake OR this Makefile.
 CFLAGS=-I$(GMXLDLIB)/../include
 OPTIONS=-fopenmp -O3 -DHAVE_INLINE -DGSL_RANGE_CHECK_OFF -Wl,-as-needed 
 # OPTIONS=-g

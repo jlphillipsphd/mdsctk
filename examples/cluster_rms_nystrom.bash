@@ -49,22 +49,22 @@ SCALING=12    # The number of nearest-neighbors to use for
               # computing scaling factors (should be < KNN)
 
 echo "Computing RMS distances between all landmark pairs..."
-../knn_rms ${NPROCS} ${KNN} ${TOP} ${XTC} ${XTC}
+${MDSCTK_HOME}/knn_rms ${NPROCS} ${KNN} ${TOP} ${XTC} ${XTC}
 
 echo "Creating CSC format symmetric sparse matrix..."
-../make_sysparse ${KNN}
+${MDSCTK_HOME}/make_sysparse ${KNN}
 
 echo "Computing RMS distances between landmarks and out-of-sample structures..."
-../knn_rms ${NPROCS} ${KNN} ${TOP} ${XTC} ${OSXTC}
+${MDSCTK_HOME}/knn_rms ${NPROCS} ${KNN} ${TOP} ${XTC} ${OSXTC}
 
 echo "Creating CSC format non-symmetric sparse matrix..."
-../make_gesparse ${KNN}
+${MDSCTK_HOME}/make_gesparse ${KNN}
 
 echo "Performing autoscaled spectral decomposition..."
-../auto_decomp_sparse_nystrom ${NCLUSTERS} ${SCALING}
+${MDSCTK_HOME}/auto_decomp_sparse_nystrom ${NCLUSTERS} ${SCALING}
 
 echo "Clustering eigenvectors..."
-../kmeans.r
+${MDSCTK_HOME}/kmeans.r
 
 # Generate trajectory assignment file,
 # 10 trajectories of 100 frames each
@@ -76,10 +76,12 @@ Rscript \
     -e 'close(myout)' > assignment.dat
 
 echo "Computing replicate-cluster assignment histogram..."
-../clustering_histogram.r
+${MDSCTK_HOME}/clustering_histogram.r
 
 echo "Plotting the histogram (fails if R package 'fields' is missing)..."
-../plot_histogram.r
+${MDSCTK_HOME}/plot_histogram.r
+
+echo "See histogram.eps for results (eg. evince histogram.eps)..."
 
 echo "Computing normalized mutual information..."
-../clustering_nmi.r | tee nmi.dat
+${MDSCTK_HOME}/clustering_nmi.r | tee nmi.dat

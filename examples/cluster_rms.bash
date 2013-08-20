@@ -46,16 +46,16 @@ NCLUSTERS=10  ## Number of clusters to extract
 SCALING=12    ## (must be <= KNN) for calculating scaling factors...
 
 echo "Computing RMS distances between all structure pairs..."
-../knn_rms ${NTHREADS} ${KNN} ${TOP} ${XTC} ${XTC}
+${MDSCTK_HOME}/knn_rms ${NTHREADS} ${KNN} ${TOP} ${XTC} ${XTC}
 
 echo "Creating CSC format sparse matrix..."
-../make_sysparse ${KNN}
+${MDSCTK_HOME}/make_sysparse ${KNN}
 
 echo "Performing autoscaled spectral decomposition..."
-../auto_decomp_sparse ${NCLUSTERS} ${SCALING}
+${MDSCTK_HOME}/auto_decomp_sparse ${NCLUSTERS} ${SCALING}
 
 echo "Clustering eigenvectors..."
-../kmeans.r
+${MDSCTK_HOME}/kmeans.r
 
 # Generate trajectory assignment file,
 # 10 trajectories of 100 frames each.
@@ -65,10 +65,12 @@ Rscript \
     -e 'close(myout)' > assignment.dat
 
 echo "Computing replicate-cluster assignment histogram..."
-../clustering_histogram.r
+${MDSCTK_HOME}/clustering_histogram.r
 
 echo "Plotting the histogram (fails if R package 'fields' is missing)..."
-../plot_histogram.r
+${MDSCTK_HOME}/plot_histogram.r
+
+echo "See histogram.eps for results (eg. evince histogram.eps)..."
 
 echo "Computing normalized mutual information..."
-../clustering_nmi.r | tee nmi.dat
+${MDSCTK_HOME}/clustering_nmi.r | tee nmi.dat
