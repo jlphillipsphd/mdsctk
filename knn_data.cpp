@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
   po::options_description cmdline_options;
   po::options_description program_options("Program options");
   program_options.add_options()
-    ("help,h", "Display help message")
+    ("help,h", "show this help message and exit")
     ("threads,t", po::value<int>(&nthreads)->default_value(2), "Input: Number of threads to start (int)")
     ("knn,k", po::value<int>(&k), "Input:  K-nearest neighbors (int)")
     ("size,s", po::value<int>(&vector_size), "Input:  Data vector length (int)")

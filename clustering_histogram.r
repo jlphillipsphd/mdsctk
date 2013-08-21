@@ -36,31 +36,36 @@ if (Sys.getenv("MDSCTK_HOME")=="") {
     cat("\n")
     q()
 } else {
-    source(paste(Sys.getenv("MDSCTK_HOME"),"/config.r",sep=""))
+    program.name <- "clustering_histogram.r"
+    source(paste(Sys.getenv("MDSCTK_HOME"),"/mdsctk.r",sep=""))
 }
 
-myargs <- commandArgs(TRUE)
+cat("   Reads in a set of assignments (classes,groups,etc.) for each\n")
+cat("   data point or structure from an assignment file, and the cluster\n")
+cat("   assignment data from a cluster assignment file in order to calculate\n")
+cat("   a joint cluster-assignment probability distribution which\n")
+cat("   is written to the provided output file.\n")
+cat("   Note that cluster assignments are relabeled to better\n")
+cat("   visualize the mutual information between assignments\n")
+cat("   and clusters.\n")
+cat("\n")
+cat("   Use -h or --help to see the complete list of options.\n")
+cat("\n")
 
-if (length(myargs) != 0) {
-  cat("\n")
-  cat(paste("   MDSCTK ",MDSCTK_VERSION_MAJOR,".",MDSCTK_VERSION_MINOR,"\n",sep=""))
-  cat("   Copyright (C) 2013 Joshua L. Phillips\n")
-  cat("   MDSCTK comes with ABSOLUTELY NO WARRANTY; see LICENSE for details.\n")
-  cat("   This is free software, and you are welcome to redistribute it\n")
-  cat("   under certain conditions; see README.md for details.\n")
-  cat("\n")
-  cat("Usage: clustering_histogram.r\n")
-  cat("   Reads in a set of assignments (classes,groups,etc.) for each data\n")
-  cat("   point or structure from assignment.dat, and the cluster\n")
-  cat("   assignment data from clusters.dat in order to calculate\n")
-  cat("   a joint cluster-assignment probability distribution which\n")
-  cat("   is written to the file: histogram.dat\n")
-  cat("   Note that cluster assignments are relabeled to better\n")
-  cat("   visualize the mutual information between assignments\n")
-  cat("   and clusters.\n")
-  cat("\n")
-  q()
-}
+parser$add_argument("-a","--assignment",default="assignment.dat",
+                    help="Data assignment file [default %(default)s]")
+parser$add_argument("-c","--clusters",default="clusters.dat",
+                    help="Cluster assignment file [default %(default)s]")
+parser$add_argument("-o","--output",default="histogram.dat",
+                    help="(Output) Joint probability distribution file [default %(default)s]")
+
+myargs <- parser$parse_args()
+
+cat("Running with the following options:\n")
+cat(paste("assignment = ",myargs$assignment,"\n"))
+cat(paste("clusters =   ",myargs$clusters,"\n"))
+cat(paste("output =     ",myargs$output,"\n"))
+cat("\n")
 
 ## Utilities
 cluster.sort <- function(data,f=median) {
@@ -81,8 +86,8 @@ cluster.sort <- function(data,f=median) {
 ## be kept with their original labels by simply not using the
 ## cluster.sort() function, which will not change the NMI of the
 ## result, but will make the plots more difficult to interpret.
-clus.assign <- cluster.sort(scan("clusters.dat",quiet=TRUE))
-myassignment <- scan("assignment.dat",quiet=TRUE)
+clus.assign <- cluster.sort(scan(myargs$clusters,quiet=TRUE))
+myassignment <- scan(myargs$assignment,quiet=TRUE)
 nclusters <- max(clus.assign)
 ntraj <- max(myassignment)
 nframes <- length(clus.assign)
@@ -94,8 +99,7 @@ for (x in seq(1,length(myassignment))) {
 myhist <- sweep(myhist,2,colSums(myhist),FUN="/")
 myhist <- myhist / sum(myhist)
 
-myfd <- pipe("cat","wb")
-myfd <- file("histogram.dat","w")
+myfd <- file(myargs$output,"w")
 # Note that the matrix is transposed when written due
 # to column-order processing (R and Fortran).
 write(myhist,myfd,ncolumns=nclusters)

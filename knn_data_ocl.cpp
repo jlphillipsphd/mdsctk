@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
   po::options_description cmdline_options;
   po::options_description program_options("Program options");
   program_options.add_options()
-    ("help,h", "Display help message")
+    ("help,h", "show this help message and exit")
     ("knn,k", po::value<int>(&k), "Input:  K-nearest neighbors (int)")
     ("size,s", po::value<int>(&vector_size), "Input:  Data vector length (int)")
     ("reference-file,r", po::value<string>(&ref_file)->default_value("reference.pts"), "Input:  Reference data file (string:filename)")
