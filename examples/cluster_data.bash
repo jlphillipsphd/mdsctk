@@ -44,7 +44,7 @@ SCALING=10    ## (must be <= KNN) for calculating scaling factors...
 DIM=2         ## Data dimensionality
 
 echo "Computing distances between all point pairs..."
-${MDSCTK_HOME}/knn_data ${NTHREADS} ${KNN} ${DIM} rings.pts rings.pts
+${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -s ${DIM} -r rings.pts
 
 echo "Creating CSC format sparse matrix..."
 ${MDSCTK_HOME}/make_sysparse ${KNN}
@@ -53,7 +53,7 @@ echo "Performing autoscaled spectral decomposition..."
 ${MDSCTK_HOME}/auto_decomp_sparse ${NCLUSTERS} ${SCALING}
 
 echo "Clustering eigenvectors..."
-${MDSCTK_HOME}/kmeans.r ${NCLUSTERS}
+${MDSCTK_HOME}/kmeans.r -k ${NCLUSTERS}
 
 ## Make a plot of the results...
 Rscript \

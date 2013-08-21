@@ -36,48 +36,60 @@ if (Sys.getenv("MDSCTK_HOME")=="") {
     cat("\n")
     q()
 } else {
-    source(paste(Sys.getenv("MDSCTK_HOME"),"/config.r",sep=""))
+    program.name <- "kmeans.r"
+    source(paste(Sys.getenv("MDSCTK_HOME"),"/mdsctk.r",sep=""))
 }
 
-myargs <- commandArgs(TRUE)
+cat("   Performs standard k-means clustering on the provided\n")
+cat("   eigenvectors. The number of clusters requested (k), can\n")
+cat("   be 2>=k<=nev where nev is the number of eigenvectors.\n")
+cat("   The results are written to an assignment and index file.\n")
+cat("\n")
+cat("   Use -h or --help to see the complete list of options.\n")
+cat("\n")
 
-if (length(myargs) != 1) {
-  cat("\n")
-  cat(paste("   MDSCTK ",MDSCTK_VERSION_MAJOR,".",MDSCTK_VERSION_MINOR,"\n",sep=""))
-  cat("   Copyright (C) 2013 Joshua L. Phillips\n")
-  cat("   MDSCTK comes with ABSOLUTELY NO WARRANTY; see LICENSE for details.\n")
-  cat("   This is free software, and you are welcome to redistribute it\n")
-  cat("   under certain conditions; see README.md for details.\n")
-  cat("\n")
-  cat("Usage: kmeans.r [k]\n")
-  cat("   Performs standard k-means clustering on the provided\n")
-  cat("   eigenvectors from (eigenvalues.dat and eigenvectors.dat).\n")
-  cat("   The number of clusters requested (k), can be 2>=k<=nev\n")
-  cat("   where nev is the number of eigenvectors. The results are\n")
-  cat("   written to clusters.dat, and a breakdown of assignments\n")
-  cat("   by cluster is written to clusters.ndx.\n")
-  cat("\n")
-  q()
+parser$add_argument("-k","--k",type="integer",
+                    help="Number of clusters",metavar="number")
+parser$add_argument("-v","--evals",default="eigenvalues.dat",
+                    help="File containing eigenvalues [default %(default)s]")
+parser$add_argument("-e","--evecs",default="eigenvectors.dat",
+                    help="File containing eigenvectors [default %(default)s]")
+parser$add_argument("-o","--output",default="clusters.dat",
+                    help="(Output) Cluster assignments file [default %(default)s]")
+parser$add_argument("-n","--ndx",default="clusters.ndx",
+                    help="(Output) Cluster assignment index file [default %(default)s]")
+
+myargs <- parser$parse_args()
+
+if (is.null(myargs$k)) {
+    cat("ERROR: -k not supplied.\n")
+    cat("\n")
+    q()
 }
 
-valin <- "eigenvalues.dat"
-vecin <- "eigenvectors.dat"
-nclusters <- as.integer(myargs[1])
+cat("Running with the following options:\n")
+cat(paste("k =      ",myargs$k,"\n"))
+cat(paste("evals =  ",myargs$evals,"\n"))
+cat(paste("evecs =  ",myargs$evecs,"\n"))
+cat(paste("output = ",myargs$output,"\n"))
+cat(paste("ndx =    ",myargs$ndx,"\n"))
+cat("\n")
 
-e.values <- as.double(scan(valin,quiet=TRUE))
+nclusters <- myargs$k
+e.values <- as.double(scan(myargs$evals,quiet=TRUE))
 
 if (nclusters > length(e.values) | nclusters < 2) {
-  cat("\n")
-  cat("   -- ERROR-- \n")
-  cat(sprintf("   Number of eigenvalues: %d\n",length(e.values)))
-  cat(sprintf("   Number of clusters requested: %d\n",nclusters))
-  cat("   The number of clusters requested must be >=2 and\n")
-  cat("   <= number of eigenvalues.\n")
-  cat("\n")
-  q()    
+    cat("\n")
+    cat("ERROR:\n")
+    cat(sprintf("Number of eigenvalues: %d\n",length(e.values)))
+    cat(sprintf("Number of clusters requested: %d\n",nclusters))
+    cat("The number of clusters requested must be >=2 and\n")
+    cat("<= number of eigenvalues.\n")
+    cat("\n")
+    q()    
 }
 
-e.vectors <- matrix(scan(vecin,quiet=TRUE),ncol=length(e.values))
+e.vectors <- matrix(scan(myargs$evecs,quiet=TRUE),ncol=length(e.values))
 
 set.seed(0) # Change for different results...
 clusters <- kmeans(e.vectors[,seq(1,nclusters)],
@@ -85,15 +97,15 @@ clusters <- kmeans(e.vectors[,seq(1,nclusters)],
                    iter.max=30,
                    nstart=10)$cluster
 
-myout <- file("clusters.dat","w")
+myout <- file(myargs$output,"w")
 write(clusters,myout,ncolumns=1)
 close(myout)
 
-myout <- file("clusters.ndx","w")
+myout <- file(myargs$ndx,"w")
 for (n in seq(1,ncol(e.vectors))) {
-  writeLines(sprintf("[cluster_%d]",n),con=myout)
-  write(which(clusters==n),myout,ncolumns=20)
-  writeLines("",con=myout)
+    writeLines(sprintf("[cluster_%d]",n),con=myout)
+    write(which(clusters==n),myout,ncolumns=20)
+    writeLines("",con=myout)
 }
 close(myout)
 

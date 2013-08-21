@@ -41,12 +41,17 @@
 #include <stdlib.h>
 #include <math.h>
 
+// Boost
+#include <boost/program_options.hpp>
+
 // OpenMP
 #include <omp.h>
 
 // Local
 #include "config.h"
+#include "mdsctk.h"
 
+namespace po = boost::program_options;
 using namespace std;
 
 // You can change this function to utilize different
@@ -61,36 +66,83 @@ double distance(int size, double* reference, double* fitting) {
 
 int main(int argc, char* argv[]) {
 
+  const char* program_name = "knn_data";
+  bool optsOK = true;
+  copyright(program_name);
+  cerr << "   Computes the k nearest neighbors of all pairs of" << endl;
+  cerr << "   vectors in the given binary data files." << endl;
   cerr << endl;
-  cerr << "   MDSCTK " << MDSCTK_VERSION_MAJOR << "." << MDSCTK_VERSION_MINOR << endl;
-  cerr << "   Copyright (C) 2013 Joshua L. Phillips" << endl;
-  cerr << "   MDSCTK comes with ABSOLUTELY NO WARRANTY; see LICENSE for details." << endl;
-  cerr << "   This is free software, and you are welcome to redistribute it" << endl;
-  cerr << "   under certain conditions; see README.md for details." << endl;
+  cerr << "   Use -h or --help to see the complete list of options." << endl;
   cerr << endl;
-  
-  if (argc != 6) {
-    cerr << "Usage: " << argv[0] << " [# threads] [k] [vector size] [reference data file] [fitting data file]" << endl;
-    cerr << "   Computes the k nearest neighbors of all pairs of" << endl;
-    cerr << "   vectors in the given binary data files." << endl;
+
+  // Option vars...
+  int nthreads = 0;
+  int k = 0;
+  int vector_size = 0;
+  string ref_file;
+  string fit_file;
+  string d_file;
+  string i_file;
+
+  // Declare the supported options.
+  po::options_description cmdline_options;
+  po::options_description program_options("Program options");
+  program_options.add_options()
+    ("help,h", "Display help message")
+    ("threads,t", po::value<int>(&nthreads)->default_value(2), "Input: Number of threads to start (int)")
+    ("knn,k", po::value<int>(&k), "Input:  K-nearest neighbors (int)")
+    ("size,s", po::value<int>(&vector_size), "Input:  Data vector length (int)")
+    ("reference-file,r", po::value<string>(&ref_file)->default_value("reference.pts"), "Input:  Reference data file (string:filename)")
+    ("fit-file,f", po::value<string>(&fit_file), "Input:  Fitting data file (string:filename)")
+    ("distance-file,d", po::value<string>(&d_file)->default_value("distances.dat"), "Output: K-nn distances file (string:filename)")
+    ("index-file,i", po::value<string>(&i_file)->default_value("indices.dat"), "Output: K-nn indices file (string:filename)")    
+    ;
+  cmdline_options.add(program_options);
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, cmdline_options), vm);
+  po::notify(vm);    
+
+  if (vm.count("help")) {
+    cerr << "usage: " << program_name << " [options]" << endl;
     cerr << endl;
+    cerr << cmdline_options << endl;
+    return 1;
+  }
+  if (!vm.count("knn")) {
+    cerr << "ERROR: --knn not supplied." << endl;
+    cerr << endl;
+    optsOK = false;
+  }
+  if (!vm.count("size")) {
+    cerr << "ERROR: --size not supplied." << endl;
+    cerr << endl;
+    optsOK = false;
+  }
+  if (!vm.count("fit-file"))
+    fit_file = ref_file;
+
+  if (!optsOK) {
     return -1;
   }
 
+  cerr << "Running with the following options:" << endl;
+  cerr << "threads =        " << nthreads << endl;
+  cerr << "knn =            " << k << endl;
+  cerr << "size =           " << vector_size << endl;
+  cerr << "reference-file = " << ref_file << endl;
+  cerr << "fit-file =       " << fit_file << endl;
+  cerr << "distance-file =  " << d_file << endl;
+  cerr << "index-file =     " << i_file << endl;
+  cerr << endl;
+
   // Local vars
-  int nthreads = 0;
-  int vector_size = 0;
   vector<double*> *ref_coords = NULL;
   vector<double*> *fit_coords = NULL;
   gsl_vector *fits = NULL;
   int *fit_indices = NULL;
-  nthreads = atoi(argv[1])-1;
-  int k = atoi(argv[2]);
   int k1 = k + 1;
-  vector_size = atoi(argv[3]);
   int update_interval = 1;
-  const char* ref_file = argv[4];
-  const char* fit_file = argv[5];
   gsl_vector *keepers = NULL;
   gsl_permutation *permutation = NULL;
   ofstream distances;
@@ -105,7 +157,7 @@ int main(int argc, char* argv[]) {
   // Read coordinates
   cerr << "Reading reference coordinates from file: " << ref_file << " ... ";
   ifstream myfile;
-  myfile.open(ref_file);
+  myfile.open(ref_file.c_str());
   double* mycoords = new double[vector_size];
   myfile.read((char*) mycoords, sizeof(double) * vector_size);
   while (!myfile.eof()) {
@@ -117,7 +169,7 @@ int main(int argc, char* argv[]) {
   cerr << "done." << endl;
 
   cerr << "Reading fitting coordinates from file: " << fit_file << " ... ";
-  myfile.open(fit_file);
+  myfile.open(fit_file.c_str());
   myfile.read((char*) mycoords, sizeof(double) * vector_size);
   while (!myfile.eof()) {
     fit_coords->push_back(mycoords);
@@ -130,8 +182,8 @@ int main(int argc, char* argv[]) {
   cerr << "done." << endl;
 
   // Open output files
-  distances.open("distances.dat");
-  indices.open("indices.dat");
+  distances.open(d_file.c_str());
+  indices.open(i_file.c_str());
 
   // Allocate vectors for storing the RMSDs for a structure
   fits = gsl_vector_calloc(ref_coords->size());
@@ -178,7 +230,7 @@ int main(int argc, char* argv[]) {
     indices.write((char*) &(fit_indices[1]), (sizeof(int) / sizeof(char)) * k);
   }
 
-  cerr << "\rWorking: " << 100.0 << "%" << endl;
+  cerr << "\rWorking: " << 100.0 << "%" << endl << endl;
 
   // Clean coordinates
   for (vector<double*>::iterator itr = ref_coords->begin();

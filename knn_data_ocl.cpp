@@ -60,6 +60,11 @@ int main(int argc, char* argv[]) {
   const char* program_name = "knn_data_ocl";
   bool optsOK = true;
   copyright(program_name);
+  cerr << "   Computes the k nearest neighbors of all pairs of" << endl;
+  cerr << "   vectors in the given binary data files." << endl;
+  cerr << endl;
+  cerr << "   Use -h or --help to see the complete list of options." << endl;
+  cerr << endl;
 
   // Option vars...
   int k = 0;
@@ -94,10 +99,7 @@ int main(int argc, char* argv[]) {
   po::notify(vm);    
 
   if (vm.count("help")) {
-    cerr << "Usage: " << program_name << " [options]" << endl;
-    cerr << "   Computes the k nearest neighbors of all pairs of" << endl;
-    cerr << "   vectors in the given binary data files." << endl;
-    cerr << endl;
+    cerr << "usage: " << program_name << " [options]" << endl;
     cerr << cmdline_options << endl;
     return 1;
   }
@@ -123,12 +125,10 @@ int main(int argc, char* argv[]) {
     fit_file = ref_file;
 
   if (!optsOK) {
-    cerr << "Use --help to see available options." << endl;
-    cerr << endl;
     return -1;
   }
 
-  cerr << program_name << " will use with the following options:" << endl;
+  cerr << "Running with the following options:" << endl;
   cerr << "knn =            " << k << endl;
   cerr << "size =           " << vector_size << endl;
   cerr << "reference-file = " << ref_file << endl;
@@ -263,7 +263,7 @@ int main(int argc, char* argv[]) {
     indices.write((char*) &(permutation[1]), (sizeof(int) / sizeof(char)) * k);
   }
 
-  cerr << "\rWorking: " << 100.0 << "%" << endl;
+  cerr << "\rWorking: " << 100.0 << "%" << endl << endl;
 
   cerr << "OpenCL Device Execution Time: " << time << endl;
   cerr << endl;
