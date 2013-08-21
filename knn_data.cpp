@@ -60,15 +60,16 @@ double distance(int size, double* reference, double* fitting) {
 }
 
 int main(int argc, char* argv[]) {
+
+  cerr << endl;
+  cerr << "   MDSCTK " << MDSCTK_VERSION_MAJOR << "." << MDSCTK_VERSION_MINOR << endl;
+  cerr << "   Copyright (C) 2013 Joshua L. Phillips" << endl;
+  cerr << "   MDSCTK comes with ABSOLUTELY NO WARRANTY; see LICENSE for details." << endl;
+  cerr << "   This is free software, and you are welcome to redistribute it" << endl;
+  cerr << "   under certain conditions; see README.md for details." << endl;
+  cerr << endl;
   
   if (argc != 6) {
-    cerr << endl;
-    cerr << "   MDSCTK " << MDSCTK_VERSION_MAJOR << "." << MDSCTK_VERSION_MINOR << endl;
-    cerr << "   Copyright (C) 2013 Joshua L. Phillips" << endl;
-    cerr << "   MDSCTK comes with ABSOLUTELY NO WARRANTY; see LICENSE for details." << endl;
-    cerr << "   This is free software, and you are welcome to redistribute it" << endl;
-    cerr << "   under certain conditions; see README.md for details." << endl;
-    cerr << endl;
     cerr << "Usage: " << argv[0] << " [# threads] [k] [vector size] [reference data file] [fitting data file]" << endl;
     cerr << "   Computes the k nearest neighbors of all pairs of" << endl;
     cerr << "   vectors in the given binary data files." << endl;

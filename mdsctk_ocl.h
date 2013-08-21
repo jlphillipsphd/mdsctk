@@ -48,7 +48,7 @@ struct OCLDevice {
 
 
 // Grab OpenCL device
-bool getOCLDevice(OCLDevice &device, std::string env = "MDSCTK_DEVICE_ID");
+bool getOCLDevice(OCLDevice &device, int ocl_device_id = 0);
 
 // Get all OpenCL devices
 std::vector<OCLDevice> getOCLDevices();
@@ -67,5 +67,9 @@ double getExecutionTime(cl::Event &event);
 
 // Auxiliary function to print the device list
 void printOCLDeviceList(const std::vector<OCLDevice> &ocl_devices);
+
+// MDSCTK-OCL Built-in Kernels
+
+extern const char* euclidean_distance_KernelSource;
 
 #endif

@@ -38,16 +38,16 @@
 #include <stdlib.h>
 #include <math.h>
 
-// OpenCL
-#include "ocl.h"
+// Boost
+#include <boost/program_options.hpp>
 
 // Local
 #include "config.h"
+#include "mdsctk.h"
+#include "mdsctk_ocl.h"
 
+namespace po = boost::program_options;
 using namespace std;
-
-#define STRIFY(str) #str
-#define STRINGIFY(str) STRIFY(str)
 
 vector<float> fits;
 
@@ -55,68 +55,102 @@ bool compare(int left, int right) {
   return fits[left] < fits[right];
 }
 
-const char *KernelSource = "\n"			\
-  "__kernel void dist(const int n,          \n"	\
-  "                   const int d,          \n" \
-  "                __global const float *A, \n"	\
-  "                __global const float *B, \n" \
-  "                __global float *C) {     \n" \
-  "                                         \n" \
-  "  int i = get_global_id(0);              \n" \
-  "  int j;                                 \n" \
-  "  float x = 0.0;                         \n" \
-  "                                         \n" \
-  "  if (i < n) {                           \n" \
-  "  for (j = 0; j < d; j++) {              \n" \
-  "    x += (A[(i*d)+j] - B[j]) * (A[(i*d)+j] - B[j]);\n" \
-  "  }                                      \n" \
-  "  //printf(\"%d %f %f %f %f %f\\n\",i,A[(i*d)],A[(i*d)+1],B[0],B[1],sqrt(x));\n" \
-  "  C[i] = sqrt(x);                        \n" \
-  "  }                                      \n" \
-  "}                                        \n" \
-  "\n";
-
 int main(int argc, char* argv[]) {
 
-    cout << endl;
-    cout << "   MDSCTK " << MDSCTK_VERSION_MAJOR << "." << MDSCTK_VERSION_MINOR << endl;
-    cout << endl;
-  
-  if (argc != 5) {
-    cerr << "Usage: " << argv[0] << " [k] [vector size] [reference data file] [fitting data file]" << endl;
+  const char* program_name = "knn_data_ocl";
+  bool optsOK = true;
+  copyright(program_name);
+
+  // Option vars...
+  int k = 0;
+  int vector_size = 0;
+  string ref_file;
+  string fit_file;
+  string d_file;
+  string i_file;
+  int ocl_device_id;
+
+  // Declare the supported options.
+  po::options_description cmdline_options;
+  po::options_description program_options("Program options");
+  program_options.add_options()
+    ("help,h", "Display help message")
+    ("knn,k", po::value<int>(&k), "Input:  K-nearest neighbors (int)")
+    ("size,s", po::value<int>(&vector_size), "Input:  Data vector length (int)")
+    ("reference-file,r", po::value<string>(&ref_file)->default_value("reference.pts"), "Input:  Reference data file (string:filename)")
+    ("fit-file,f", po::value<string>(&fit_file), "Input:  Fitting data file (string:filename)")
+    ("distance-file,d", po::value<string>(&d_file)->default_value("distances.dat"), "Output: K-nn distances file (string:filename)")
+    ("index-file,i", po::value<string>(&i_file)->default_value("indices.dat"), "Output: K-nn indices file (string:filename)")    
+    ;
+  po::options_description ocl_options("OpenCL options");
+  ocl_options.add_options()
+    ("device-id,c", po::value<int>(&ocl_device_id)->default_value(0), "Selected OpenCL device number")
+    ("list-devices,l", "List available OpenCL devices, then exit")
+    ;
+  cmdline_options.add(program_options).add(ocl_options);
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, cmdline_options), vm);
+  po::notify(vm);    
+
+  if (vm.count("help")) {
+    cerr << "Usage: " << program_name << " [options]" << endl;
     cerr << "   Computes the k nearest neighbors of all pairs of" << endl;
     cerr << "   vectors in the given binary data files." << endl;
+    cerr << endl;
+    cerr << cmdline_options << endl;
+    return 1;
+  }
+  // Setup OpenCL
+  OCLDevice ocl_device;
+  if (!getOCLDevice(ocl_device, ocl_device_id))
+    return -1;
+
+  if (vm.count("list-devices")) {
+    return 0;
+  }
+  if (!vm.count("knn")) {
+    cerr << "ERROR: --knn not supplied." << endl;
+    cerr << endl;
+    optsOK = false;
+  }
+  if (!vm.count("size")) {
+    cerr << "ERROR: --size not supplied." << endl;
+    cerr << endl;
+    optsOK = false;
+  }
+  if (!vm.count("fit-file"))
+    fit_file = ref_file;
+
+  if (!optsOK) {
+    cerr << "Use --help to see available options." << endl;
     cerr << endl;
     return -1;
   }
 
-  // Local vars
-  int vector_size = 0;
+  cerr << program_name << " will use with the following options:" << endl;
+  cerr << "knn =            " << k << endl;
+  cerr << "size =           " << vector_size << endl;
+  cerr << "reference-file = " << ref_file << endl;
+  cerr << "fit-file =       " << fit_file << endl;
+  cerr << "distance-file =  " << d_file << endl;
+  cerr << "index-file =     " << i_file << endl;
+  cerr << endl;
+
+  // Local vars...
   vector<float*> *ref_coords = NULL;
   vector<float*> *fit_coords = NULL;
-  int k = atoi(argv[1]);
   int k1 = k + 1;
-  vector_size = atoi(argv[2]);
   int update_interval = 1;
-  const char* ref_file = argv[3];
-  const char* fit_file = argv[4];
   double *keepers = NULL;
   ofstream distances;
   ofstream indices;
   float time = 0.0;
   vector<int> permutation;
-  const std::string kernel_source(KernelSource);
 
-  // Setup OpenCL
-  OCLDevice ocl_device;
-  if (!getOCLDevice(ocl_device))
-    return -1;
-  cout << "Using kernel file: " << string(STRINGIFY(MDSCTK_KERNELS))
-    +string("/dist.cl") << endl;
+  const std::string kernel_source(euclidean_distance_KernelSource);
   cl::Kernel kernel = buildKernelFromString(kernel_source,
 				  string("dist"),ocl_device);
-  // cl::Kernel kernel = buildKernel(string(STRINGIFY(MDSCTK_KERNELS))+string("/dist.cl"),
-  // 				  string("dist"),ocl_device);
 
   ref_coords = new vector<float*>;
   fit_coords = new vector<float*>;
@@ -124,7 +158,7 @@ int main(int argc, char* argv[]) {
   // Read coordinates
   cerr << "Reading reference coordinates from file: " << ref_file << " ... ";
   ifstream myfile;
-  myfile.open(ref_file);
+  myfile.open(ref_file.c_str());
   double* myread = new double[vector_size];
   float* mycoords = new float[vector_size];
   myfile.read((char*) myread, sizeof(double) * vector_size);
@@ -139,7 +173,7 @@ int main(int argc, char* argv[]) {
   cerr << "done." << endl;
 
   cerr << "Reading fitting coordinates from file: " << fit_file << " ... ";
-  myfile.open(fit_file);
+  myfile.open(fit_file.c_str());
   myfile.read((char*) myread, sizeof(double) * vector_size);
   while (!myfile.eof()) {
     for (int x = 0; x < vector_size; x++)
@@ -154,8 +188,8 @@ int main(int argc, char* argv[]) {
   cerr << "done." << endl;
 
   // Open output files
-  distances.open("distances.dat");
-  indices.open("indices.dat");
+  distances.open(d_file.c_str());
+  indices.open(i_file.c_str());
 
   // Allocate vectors for storing the RMSDs for a structure
   fits.resize(ref_coords->size());

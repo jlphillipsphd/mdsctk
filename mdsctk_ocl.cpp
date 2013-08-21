@@ -35,7 +35,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include "ocl.h"
+#include "mdsctk_ocl.h"
 
 std::vector<OCLDevice> getOCLDevices() {
   std::cerr << "Initializing OpenCL..." << std::endl;
@@ -92,7 +92,7 @@ void printOCLDeviceList(const std::vector<OCLDevice> &ocl_devices) {
   std::cout << std::endl;
 }
 
-bool getOCLDevice(OCLDevice &device, std::string env) {
+bool getOCLDevice(OCLDevice &device, int ocl_device_id) {
   std::vector<OCLDevice> ocl_devices = getOCLDevices();
   
   if (ocl_devices.size() == 0)
@@ -100,17 +100,11 @@ bool getOCLDevice(OCLDevice &device, std::string env) {
 
   printOCLDeviceList(ocl_devices);
   
-  int ocl_device_id = 0;
-  if (getenv(env.c_str())) {
-    ocl_device_id = atoi(getenv(env.c_str()));
-  }
-
-  std::cout << "Selected OpenCL Device: [" << ocl_device_id << "]"
-	    << " (set " << env << " to change devices)." << std::endl;
+  std::cout << "Selected OpenCL Device: [" << ocl_device_id << "]" << std::endl;
   std::cout << std::endl;
 
   if (ocl_device_id >= ocl_devices.size()) {
-    std::cerr << "Illegal device [" << ocl_device_id << "] (from " << env << ")." << std::endl; 
+    std::cerr << "Selected Illegal Device [" << ocl_device_id << "]" << std::endl; 
     std::cerr << std::endl;
     return false;
   }
@@ -246,3 +240,25 @@ double getExecutionTime(cl::Event &event) {
     return -0.0;
   } 
 }
+
+const char *euclidean_distance_KernelSource = "\n" \
+  "#define AX(i,j,d) A[(i*d)+j]             \n" \
+  "                                         \n" \
+  "__kernel void dist(const int n,          \n"	\
+  "                   const int d,          \n" \
+  "                __global const float *A, \n"	\
+  "                __global const float *B, \n" \
+  "                __global float *C) {     \n" \
+  "                                         \n" \
+  "  int i = get_global_id(0);              \n" \
+  "  int j;                                 \n" \
+  "  float x = 0.0;                         \n" \
+  "                                         \n" \
+  "   if (i < n) {                          \n" \
+  "      for (j = 0; j < d; j++) {          \n" \
+  "        x += (AX(i,j,d) - B[j]) * (AX(i,j,d) - B[j]);\n" \
+  "      }                                  \n" \
+  "      C[i] = sqrt(x);                    \n" \
+  "   }                                     \n" \
+  "}                                        \n" \
+  "\n";

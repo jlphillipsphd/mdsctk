@@ -82,17 +82,6 @@ if(NOT HAVE_DB_CXX_H)
   message(FATAL_ERROR "ERROR: unable to find Berekely DB C++ header file.")
 endif(NOT HAVE_DB_CXX_H)
 
-## Boost
-set(BOOST_INCLUDE_PATH "/usr/include"
-  CACHE STRING "Location of boost/graph/dijkstra_shortest_paths.hpp")
-unset(HAVE_BOOST_DSP_H CACHE)
-set(CMAKE_REQUIRED_FLAGS "-I${BOOST_INCLUDE_PATH}")
-check_include_file_cxx(boost/graph/dijkstra_shortest_paths.hpp
-  HAVE_BOOST_DSP_H)
-if(NOT HAVE_BOOST_DSP_H)
-  message(FATAL_ERROR "ERROR: unable to find BOOST(C++) graph library header.")
-endif(NOT HAVE_BOOST_DSP_H)
-
 ## OpenCL
 set(OPENCL_INCLUDE_PATH "/usr/include"
   CACHE STRING "Location of CL/cl.hpp")
@@ -180,6 +169,13 @@ find_package(BLAS REQUIRED)
 include_directories(${BLAS_INCLUDE_DIRS})
 set(LIBS ${LIBS} ${BLAS_LIBRARIES})
 
+# Boost
+find_package(Boost 1.36.0 COMPONENTS program_options)
+if(Boost_FOUND)
+  include_directories(${Boost_INCLUDE_DIRS})
+  set(LIBS ${LIBS} ${Boost_LIBRARIES})
+endif(Boost_FOUND)
+
 # GSL
 pkg_check_modules(PC_GSL REQUIRED gsl)
 set(GSL_DEFINITIONS ${PC_GSL_CFLAGS_OTHER})
@@ -255,7 +251,7 @@ set(MDSCTK_TOOLS
   split_xtc)
 
 foreach(TOOL ${MDSCTK_TOOLS})
-  add_executable(${TOOL} ${TOOL}.cpp)
+  add_executable(${TOOL} ${TOOL}.cpp mdsctk.cpp)
   target_link_libraries(${TOOL} ${LIBS})
 endforeach(TOOL ${MDSCTK_TOOLS})
 
@@ -265,7 +261,7 @@ set(MDSCTK_OCL_TOOLS
   knn_data_ocl)
 
 foreach(TOOL ${MDSCTK_OCL_TOOLS})
-  add_executable(${TOOL} ${TOOL}.cpp ocl.cpp)
+  add_executable(${TOOL} ${TOOL}.cpp mdsctk.cpp mdsctk_ocl.cpp)
   target_link_libraries(${TOOL} ${LIBS})
 endforeach(TOOL ${MDSCTK_OCL_TOOLS})
 endif(HAVE_LIBOPENCL)
