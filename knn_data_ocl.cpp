@@ -34,6 +34,7 @@
 #include <vector>
 #include <numeric>
 #include <algorithm>
+#include <numeric>
 #include <strings.h>
 #include <stdlib.h>
 #include <math.h>
@@ -60,19 +61,19 @@ int main(int argc, char* argv[]) {
   const char* program_name = "knn_data_ocl";
   bool optsOK = true;
   copyright(program_name);
-  cerr << "   Computes the k nearest neighbors of all pairs of" << endl;
-  cerr << "   vectors in the given binary data files." << endl;
-  cerr << endl;
-  cerr << "   Use -h or --help to see the complete list of options." << endl;
-  cerr << endl;
+  cout << "   Computes the k nearest neighbors of all pairs of" << endl;
+  cout << "   vectors in the given binary data files." << endl;
+  cout << endl;
+  cout << "   Use -h or --help to see the complete list of options." << endl;
+  cout << endl;
 
   // Option vars...
   int k = 0;
   int vector_size = 0;
-  string ref_file;
-  string fit_file;
-  string d_file;
-  string i_file;
+  string ref_filename;
+  string fit_filename;
+  string d_filename;
+  string i_filename;
   int ocl_device_id;
 
   // Declare the supported options.
@@ -82,10 +83,10 @@ int main(int argc, char* argv[]) {
     ("help,h", "show this help message and exit")
     ("knn,k", po::value<int>(&k), "Input:  K-nearest neighbors (int)")
     ("size,s", po::value<int>(&vector_size), "Input:  Data vector length (int)")
-    ("reference-file,r", po::value<string>(&ref_file)->default_value("reference.pts"), "Input:  Reference data file (string:filename)")
-    ("fit-file,f", po::value<string>(&fit_file), "Input:  Fitting data file (string:filename)")
-    ("distance-file,d", po::value<string>(&d_file)->default_value("distances.dat"), "Output: K-nn distances file (string:filename)")
-    ("index-file,i", po::value<string>(&i_file)->default_value("indices.dat"), "Output: K-nn indices file (string:filename)")    
+    ("reference-file,r", po::value<string>(&ref_filename)->default_value("reference.pts"), "Input:  Reference data file (string:filename)")
+    ("fit-file,f", po::value<string>(&fit_filename), "Input:  Fitting data file (string:filename)")
+    ("distance-file,d", po::value<string>(&d_filename)->default_value("distances.dat"), "Output: K-nn distances file (string:filename)")
+    ("index-file,i", po::value<string>(&i_filename)->default_value("indices.dat"), "Output: K-nn indices file (string:filename)")    
     ;
   po::options_description ocl_options("OpenCL options");
   ocl_options.add_options()
@@ -99,8 +100,8 @@ int main(int argc, char* argv[]) {
   po::notify(vm);    
 
   if (vm.count("help")) {
-    cerr << "usage: " << program_name << " [options]" << endl;
-    cerr << cmdline_options << endl;
+    cout << "usage: " << program_name << " [options]" << endl;
+    cout << cmdline_options << endl;
     return 1;
   }
   // Setup OpenCL
@@ -112,30 +113,30 @@ int main(int argc, char* argv[]) {
     return 0;
   }
   if (!vm.count("knn")) {
-    cerr << "ERROR: --knn not supplied." << endl;
-    cerr << endl;
+    cout << "ERROR: --knn not supplied." << endl;
+    cout << endl;
     optsOK = false;
   }
   if (!vm.count("size")) {
-    cerr << "ERROR: --size not supplied." << endl;
-    cerr << endl;
+    cout << "ERROR: --size not supplied." << endl;
+    cout << endl;
     optsOK = false;
   }
   if (!vm.count("fit-file"))
-    fit_file = ref_file;
+    fit_filename = ref_filename;
 
   if (!optsOK) {
     return -1;
   }
 
-  cerr << "Running with the following options:" << endl;
-  cerr << "knn =            " << k << endl;
-  cerr << "size =           " << vector_size << endl;
-  cerr << "reference-file = " << ref_file << endl;
-  cerr << "fit-file =       " << fit_file << endl;
-  cerr << "distance-file =  " << d_file << endl;
-  cerr << "index-file =     " << i_file << endl;
-  cerr << endl;
+  cout << "Running with the following options:" << endl;
+  cout << "knn =            " << k << endl;
+  cout << "size =           " << vector_size << endl;
+  cout << "reference-file = " << ref_filename << endl;
+  cout << "fit-file =       " << fit_filename << endl;
+  cout << "distance-file =  " << d_filename << endl;
+  cout << "index-file =     " << i_filename << endl;
+  cout << endl;
 
   // Local vars...
   vector<float*> *ref_coords = NULL;
@@ -156,9 +157,9 @@ int main(int argc, char* argv[]) {
   fit_coords = new vector<float*>;
 
   // Read coordinates
-  cerr << "Reading reference coordinates from file: " << ref_file << " ... ";
+  cout << "Reading reference coordinates from file: " << ref_filename << " ... ";
   ifstream myfile;
-  myfile.open(ref_file.c_str());
+  myfile.open(ref_filename.c_str());
   double* myread = new double[vector_size];
   float* mycoords = new float[vector_size];
   myfile.read((char*) myread, sizeof(double) * vector_size);
@@ -170,10 +171,10 @@ int main(int argc, char* argv[]) {
     myfile.read((char*) myread, sizeof(double) * vector_size);
   }
   myfile.close();
-  cerr << "done." << endl;
+  cout << "done." << endl;
 
-  cerr << "Reading fitting coordinates from file: " << fit_file << " ... ";
-  myfile.open(fit_file.c_str());
+  cout << "Reading fitting coordinates from file: " << fit_filename << " ... ";
+  myfile.open(fit_filename.c_str());
   myfile.read((char*) myread, sizeof(double) * vector_size);
   while (!myfile.eof()) {
     for (int x = 0; x < vector_size; x++)
@@ -185,11 +186,11 @@ int main(int argc, char* argv[]) {
   myfile.close();
   delete [] mycoords;
   mycoords = NULL;
-  cerr << "done." << endl;
+  cout << "done." << endl;
 
   // Open output files
-  distances.open(d_file.c_str());
-  indices.open(i_file.c_str());
+  distances.open(d_filename.c_str());
+  indices.open(i_filename.c_str());
 
   // Allocate vectors for storing the RMSDs for a structure
   fits.resize(ref_coords->size());
@@ -203,8 +204,8 @@ int main(int argc, char* argv[]) {
 
   // Get update frequency
   // int update_interval = (int) floor(sqrt((float) coords.size()));
-  cerr.precision(8);
-  cerr.setf(ios::fixed,ios::floatfield);
+  cout.precision(8);
+  cout.setf(ios::fixed,ios::floatfield);
   update_interval = ceil(sqrt(fit_coords->size()));
 
   // Setup OCL
@@ -232,8 +233,8 @@ int main(int argc, char* argv[]) {
     
     // Update user of progress
     if (fit_frame % update_interval == 0) {
-      cerr << "\rWorking: " << (((float) fit_frame) / ((float) fit_coords->size())) * 100.0 << "%";
-      cerr.flush();
+      cout << "\rWorking: " << (((float) fit_frame) / ((float) fit_coords->size())) * 100.0 << "%";
+      cout.flush();
     }
 
     // Do Work
@@ -252,9 +253,12 @@ int main(int argc, char* argv[]) {
 				       &fits.at(0));
 
     // Sort
-    for (int x = 0; x < permutation.size(); x++)
-      permutation[x] = x;
-    sort(permutation.begin(), permutation.end(), compare);
+    int x = 0;
+    for (vector<int>::iterator p_itr = permutation.begin();
+	 p_itr != permutation.end(); p_itr++)
+      (*p_itr) = x++;    
+    partial_sort(permutation.begin(), permutation.begin()+k1,
+		 permutation.end(), compare);
     for (int x = 0; x < k1; x++)
       keepers[x] = (double) fits[permutation[x]];
     
@@ -263,10 +267,10 @@ int main(int argc, char* argv[]) {
     indices.write((char*) &(permutation[1]), (sizeof(int) / sizeof(char)) * k);
   }
 
-  cerr << "\rWorking: " << 100.0 << "%" << endl << endl;
+  cout << "\rWorking: " << 100.0 << "%" << endl << endl;
 
-  cerr << "OpenCL Device Execution Time: " << time << endl;
-  cerr << endl;
+  cout << "OpenCL Device Execution Time: " << time << endl;
+  cout << endl;
 
   // Clean coordinates
   for (vector<float*>::iterator itr = ref_coords->begin();

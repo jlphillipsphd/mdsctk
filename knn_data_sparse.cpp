@@ -28,25 +28,26 @@
 // 
 //
 
-// GSL Tools
-#include <gsl/gsl_vector.h>
-#include <gsl/gsl_permutation.h>
-#include <gsl/gsl_sort_vector.h>
-
 // Standard
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <algorithm>
 #include <strings.h>
 #include <stdlib.h>
 #include <math.h>
+
+// Boost
+#include <boost/program_options.hpp>
 
 // OpenMP
 #include <omp.h>
 
 // Local
 #include "config.h"
+#include "mdsctk.h"
 
+namespace po = boost::program_options;
 using namespace std;
 
 // You can change this function to utilize different
@@ -61,64 +62,117 @@ double distance(int ref_size, int* ref_index, double* ref_data,
   for (ref = 0; ref < ref_size; ref++) {
     while (fit < fit_size && fit_index[fit] < ref_index[ref]) {
       value += (fit_data[fit] * fit_data[fit]);
-      // cout << "F1: " 
-      // 	   << ref_index[ref] << " " << fit_index[fit] << " "
-      // 	   << ref_data[ref] << " " << fit_data[fit] << endl;
       fit++;
     }
     if (fit < fit_size && ref_index[ref] == fit_index[fit]) {
       value += ((ref_data[ref] - fit_data[fit]) *
 		(ref_data[ref] - fit_data[fit]));
-      // cout << "M:  " 
-      // 	   << ref_index[ref] << " " << fit_index[fit] << " "
-      // 	   << ref_data[ref] << " " << fit_data[fit] << endl;
       fit++;
     }
     else {
-      // cout << "R:  " 
-      // 	   << ref_index[ref] << " " << fit_index[fit] << " "
-      // 	   << ref_data[ref] << " " << fit_data[fit] << endl;
       value += (ref_data[ref] * ref_data[ref]);
     }
   }
   for (;fit < fit_size;fit++) {
-      // cout << "F2: " 
-      // 	   << ref_index[ref] << " " << fit_index[fit] << " "
-      // 	   << ref_data[ref] << " " << fit_data[fit] << endl;
     value += (fit_data[fit] * fit_data[fit]);
   }
   return (sqrt(value));
 }
 
+vector<double> fits;
+
+bool compare(int left, int right) {
+  return fits[left] < fits[right];
+}
+
 int main(int argc, char* argv[]) {
-  
-  if (argc != 3) {
-    cerr << endl;
-    cerr << "   MDSCTK " << MDSCTK_VERSION_MAJOR << "." << MDSCTK_VERSION_MINOR << endl;
-    cerr << endl;
-    cerr << "Usage: " << argv[0] << " [# threads] [k]" << endl;
-    cerr << "   Computes the k nearest neighbors of all pairs of" << endl;
-    cerr << "   vectors in the given sparse binary data files." << endl;
-    cerr << endl;
+
+  const char* program_name = "knn_data_sparse";
+  bool optsOK = true;
+  copyright(program_name);
+  cout << "   Computes the k nearest neighbors of all pairs of" << endl;
+  cout << "   vectors in the given sparse binary data files." << endl;
+  cout << endl;
+  cout << "   Use -h or --help to see the complete list of options." << endl;
+  cout << endl;
+
+  // Option vars...
+  int nthreads = 0;
+  int k = 0;
+  string ref_index_filename;
+  string ref_data_filename;
+  string fit_index_filename;
+  string fit_data_filename;
+  string d_filename;
+  string i_filename;
+
+  // Declare the supported options.
+  po::options_description cmdline_options;
+  po::options_description program_options("Program options");
+  program_options.add_options()
+    ("help,h", "show this help message and exit")
+    ("threads,t", po::value<int>(&nthreads)->default_value(2), "Input: Number of threads to start (int)")
+    ("knn,k", po::value<int>(&k), "Input:  K-nearest neighbors (int)")
+    ("reference-index-file,R", po::value<string>(&ref_index_filename)->default_value("reference-index.pts"), "Input:  Reference index file (string:filename)")
+    ("reference-file,r", po::value<string>(&ref_data_filename)->default_value("reference.pts"), "Input:  Reference data file (string:filename)")
+    ("fit-index-file,F", po::value<string>(&fit_index_filename), "Input:  Fitting index file (string:filename)")
+    ("fit-file,f", po::value<string>(&fit_data_filename), "Input:  Fitting data file (string:filename)")
+    ("distance-file,d", po::value<string>(&d_filename)->default_value("distances.dat"), "Output: K-nn distances file (string:filename)")
+    ("index-file,i", po::value<string>(&i_filename)->default_value("indices.dat"), "Output: K-nn indices file (string:filename)")    
+    ;
+  cmdline_options.add(program_options);
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, cmdline_options), vm);
+  po::notify(vm);    
+
+  if (vm.count("help")) {
+    cout << "usage: " << program_name << " [options]" << endl;
+    cout << endl;
+    cout << cmdline_options << endl;
+    return 1;
+  }
+  if (!vm.count("knn")) {
+    cout << "ERROR: --knn not supplied." << endl;
+    cout << endl;
+    optsOK = false;
+  }
+  if (!vm.count("size")) {
+    cout << "ERROR: --size not supplied." << endl;
+    cout << endl;
+    optsOK = false;
+  }
+  if (!vm.count("fit-index-file"))
+    fit_index_filename = ref_index_filename;
+  if (!vm.count("fit-file"))
+    fit_data_filename = ref_data_filename;
+
+  if (!optsOK) {
     return -1;
   }
 
+  cout << "Running with the following options:" << endl;
+  cout << "threads =              " << nthreads << endl;
+  cout << "knn =                  " << k << endl;
+  cout << "reference-index-file = " << ref_index_filename << endl;
+  cout << "reference-file =       " << ref_data_filename << endl;
+  cout << "fit-index-file =       " << fit_index_filename << endl;
+  cout << "fit-file =             " << fit_data_filename << endl;
+  cout << "distance-file =        " << d_filename << endl;
+  cout << "index-file =           " << i_filename << endl;
+  cout << endl;
+  
   // Local vars
-  int nthreads = 0;
   vector<int> ref_size;
   vector<int> fit_size;
   vector<int*> ref_index;
   vector<int*> fit_index;
   vector<double*> ref_data;
   vector<double*> fit_data;
-  gsl_vector *fits = NULL;
-  int *fit_indices = NULL;
-  nthreads = atoi(argv[1])-1;
-  int k = atoi(argv[2]);
   int k1 = k + 1;
   int update_interval = 1;
-  gsl_vector *keepers = NULL;
-  gsl_permutation *permutation = NULL;
+  vector<double> keepers;
+  vector<int> permutation;
   ifstream index;
   ifstream data;
   ofstream distances;
@@ -131,9 +185,9 @@ int main(int argc, char* argv[]) {
   omp_set_num_threads(nthreads);
 
   // Read coordinates
-  cerr << "Reading reference coordinates from files...";
-  index.open("index.dat");
-  data.open("data.dat");
+  cout << "Reading reference coordinates from files...";
+  index.open(ref_index_filename.c_str());
+  data.open(ref_data_filename.c_str());
   index.read((char*) &n, sizeof(int) / sizeof(char));
   while (!index.eof()) {
     myindex = new int[n];
@@ -147,11 +201,11 @@ int main(int argc, char* argv[]) {
   }
   index.close();
   data.close();  
-  cerr << "done." << endl;
+  cout << "done." << endl;
 
-  cerr << "Reading fitting coordinates from files...";
-  index.open("index.dat");
-  data.open("data.dat");
+  cout << "Reading fitting coordinates from files...";
+  index.open(fit_index_filename.c_str());
+  data.open(fit_data_filename.c_str());
   index.read((char*) &n, sizeof(int) / sizeof(char));
   while (!index.eof()) {
     myindex = new int[n];
@@ -165,84 +219,59 @@ int main(int argc, char* argv[]) {
   }
   index.close();
   data.close();  
-  cerr << "done." << endl;
+  cout << "done." << endl;
 
   // Open output files
-  distances.open("distances.dat");
-  indices.open("indices.dat");
+  distances.open(d_filename.c_str());
+  indices.open(i_filename.c_str());
 
   // Allocate vectors for storing the RMSDs for a structure
-  fits = gsl_vector_calloc(ref_index.size());
-  permutation = gsl_permutation_calloc(ref_index.size());
-  fit_indices = new int[ref_index.size()];
+  fits.resize(ref_index.size());
+  permutation.resize(ref_index.size());
 
   // Fix k if number of frames is too small
   if (ref_index.size()-1 < k)
     k = ref_index.size()-1;
   k1 = k + 1;
-  keepers = gsl_vector_calloc(k1);
+  keepers.resize(k1);
 
   // Get update frequency
-  cerr.precision(8);
-  cerr.setf(ios::fixed,ios::floatfield);
+  cout.precision(8);
+  cout.setf(ios::fixed,ios::floatfield);
   update_interval = ceil(sqrt(fit_index.size()));
-
-  // // Test
-  // cout << endl;
-  // cout << "Testing..." << endl;
-  // cout << "Reference: " << ref_size[0] << endl;
-  // cout << "Ref Ind:" << endl;
-  // for (int i = 0; i < ref_size[0]; i++)
-  //   cout << ref_index[0][i] << " ";
-  // cout << endl;
-  // cout << "Ref Data:" << endl;
-  // for (int i = 0; i < ref_size[0]; i++)
-  //   cout << ref_data[0][i] << " ";
-  // cout << endl;
-  // cout << "Fitting: " << fit_size[1] << endl;
-  // cout << "Fit Ind:" << endl;
-  // for (int i = 0; i < fit_size[1]; i++)
-  //   cout << fit_index[1][i] << " ";
-  // cout << endl;
-  // cout << "Fit Data:" << endl;
-  // for (int i = 0; i < fit_size[1]; i++)
-  //   cout << fit_data[1][i] << " ";
-  // cout << endl;
-  // cout << "Distance:" << distance(ref_size[1],ref_index[1],ref_data[1],
-  // 				  fit_size[0],fit_index[0],fit_data[0]) << endl;
-  // cout << endl;
-
-  // return 0;
 
   // Compute fits
   for (int fit_frame = 0; fit_frame < fit_index.size(); fit_frame++) {
     
     // Update user of progress
     if (fit_frame % update_interval == 0) {
-      cerr << "\rWorking: " << (((double) fit_frame) / ((double) fit_index.size())) * 100.0 << "%";
-      cerr.flush();
+      cout << "\rWorking: " << (((double) fit_frame) / ((double) fit_index.size())) * 100.0 << "%";
+      cout.flush();
     }
 
     // Do Work
 #pragma omp parallel for
     for (int ref_frame = 0; ref_frame < ref_index.size(); ref_frame++)
-      gsl_vector_set(fits,ref_frame,
-		     distance(ref_size[ref_frame],ref_index[ref_frame],ref_data[ref_frame],
-			      fit_size[fit_frame],fit_index[fit_frame],fit_data[fit_frame]));
+      fits[ref_frame] =
+	distance(ref_size[ref_frame],ref_index[ref_frame],ref_data[ref_frame],
+		 fit_size[fit_frame],fit_index[fit_frame],fit_data[fit_frame]);
 
     // Sort
-    gsl_permutation_init(permutation);
-    gsl_sort_vector_index(permutation,fits);
-    for (int x = 0; x < k1; x++) {
-      gsl_vector_set(keepers,x,gsl_vector_get(fits,gsl_permutation_get(permutation,x)));
-      fit_indices[x] = (int) gsl_permutation_get(permutation,x);
-    }
+    int x = 0;
+    for (vector<int>::iterator p_itr = permutation.begin();
+	 p_itr != permutation.end(); p_itr++)
+      (*p_itr) = x++;    
+    partial_sort(permutation.begin(), permutation.begin()+k1,
+		 permutation.end(), compare);
+    for (int x = 0; x < k1; x++)
+      keepers[x] = (double) fits[permutation[x]];
+
     // Write out closest k RMSD alignment scores and indices
-    distances.write((char*) &(keepers->data[1]), (sizeof(double) / sizeof(char)) * k);
-    indices.write((char*) &(fit_indices[1]), (sizeof(int) / sizeof(char)) * k);
+    distances.write((char*) &(keepers[1]), (sizeof(double) / sizeof(char)) * k);
+    indices.write((char*) &(permutation[1]), (sizeof(int) / sizeof(char)) * k);
   }
 
-  cerr << "\rWorking: " << 100.0 << "%" << endl;
+  cout << "\rWorking: " << 100.0 << "%" << endl;
 
   // Clean coordinates
   for (vector<int*>::iterator itr = ref_index.begin();
@@ -253,11 +282,6 @@ int main(int argc, char* argv[]) {
        itr != ref_data.end(); itr++) delete [] (*itr);
   for (vector<double*>::iterator itr = fit_data.begin();
        itr != fit_data.end(); itr++) delete [] (*itr);
-  delete [] fit_indices;
-
-  gsl_vector_free(fits);
-  gsl_vector_free(keepers);
-  gsl_permutation_free(permutation);
 
   return 0;
 }

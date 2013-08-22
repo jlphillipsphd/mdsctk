@@ -28,11 +28,6 @@
 // 
 //
 
-// GSL Tools
-#include <gsl/gsl_vector.h>
-#include <gsl/gsl_permutation.h>
-#include <gsl/gsl_sort_vector.h>
-
 // Standard
 #include <iostream>
 #include <fstream>
@@ -40,6 +35,9 @@
 #include <strings.h>
 #include <stdlib.h>
 #include <math.h>
+
+// Boost
+#include <boost/program_options.hpp>
 
 // OpenMP
 #include <omp.h>
@@ -51,31 +49,90 @@
 
 // Local
 #include "config.h"
+#include "mdsctk.h"
 
-using namespace std;
 typedef real (*coord_array)[3];
 
+namespace po = boost::program_options;
+using namespace std;
+
+vector<real> fits;
+
+bool compare(int left, int right) {
+  return fits[left] < fits[right];
+}
+
 int main(int argc, char* argv[]) {
-  
-  if (argc != 6) {
-    cerr << endl;
-    cerr << "   MDSCTK " << MDSCTK_VERSION_MAJOR << "." << MDSCTK_VERSION_MINOR << endl;
-    cerr << "   Copyright (C) 2013 Joshua L. Phillips" << endl;
-    cerr << "   MDSCTK comes with ABSOLUTELY NO WARRANTY; see LICENSE for details." << endl;
-    cerr << "   This is free software, and you are welcome to redistribute it" << endl;
-    cerr << "   under certain conditions; see README.md for details." << endl;
-    cerr << endl;
-    cerr << "Usage: " << argv[0] << " [# threads] [k] [topology file] [reference xtc file] [fitting xtc file]" << endl;
-    cerr << "   Computes the k nearest neighbors of all reference" << endl;
-    cerr << "   structures in the given xtc file for each structure" << endl;
-    cerr << "   in the given fitting xtc file. (Use the same file for" << endl;
-    cerr << "   fitting and reference to make a symmetric comparison.)" << endl;
-    cerr << "   A topology PDB file should be provided for determining" << endl;
-    cerr << "   the mass of each atom." << endl;
-    cerr << endl;
+
+  const char* program_name = "knn_rms";
+  bool optsOK = true;
+  copyright(program_name);
+  cout << "   Computes the k nearest neighbors of all reference" << endl;
+  cout << "   structures in the given xtc file for each structure" << endl;
+  cout << "   in the given fitting xtc file. (Uses the same file for" << endl;
+  cout << "   as reference by default to make a symmetric comparison.)" << endl;
+  cout << "   A topology PDB file should be provided for determining" << endl;
+  cout << "   the mass of each atom." << endl;
+  cout << endl;
+  cout << "   Use -h or --help to see the complete list of options." << endl;
+  cout << endl;
+
+  // Option vars...
+  int nthreads = 0;
+  int k = 0;
+  string top_filename;
+  string ref_filename;
+  string fit_filename;
+  string d_filename;
+  string i_filename;
+
+  // Declare the supported options.
+  po::options_description cmdline_options;
+  po::options_description program_options("Program options");
+  program_options.add_options()
+    ("help,h", "show this help message and exit")
+    ("threads,t", po::value<int>(&nthreads)->default_value(2), "Input: Number of threads to start (int)")
+    ("knn,k", po::value<int>(&k), "Input:  K-nearest neighbors (int)")
+    ("topology-file,p", po::value<string>(&top_filename)->default_value("topology.pdb"), "Input:  Topology file [.pdb,.gro,.tpr] (string:filename)")
+    ("reference-file,r", po::value<string>(&ref_filename)->default_value("reference.xtc"), "Input:  Reference [.xtc] file (string:filename)")
+    ("fit-file,f", po::value<string>(&fit_filename), "Input:  Fitting [.xtc] file (string:filename)")
+    ("distance-file,d", po::value<string>(&d_filename)->default_value("distances.dat"), "Output: K-nn distances file (string:filename)")
+    ("index-file,i", po::value<string>(&i_filename)->default_value("indices.dat"), "Output: K-nn indices file (string:filename)")    
+    ;
+  cmdline_options.add(program_options);
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, cmdline_options), vm);
+  po::notify(vm);    
+
+  if (vm.count("help")) {
+    cout << "usage: " << program_name << " [options]" << endl;
+    cout << endl;
+    cout << cmdline_options << endl;
+    return 1;
+  }
+  if (!vm.count("knn")) {
+    cout << "ERROR: --knn not supplied." << endl;
+    cout << endl;
+    optsOK = false;
+  }
+  if (!vm.count("fit-file"))
+    fit_filename = ref_filename;
+
+  if (!optsOK) {
     return -1;
   }
 
+  cout << "Running with the following options:" << endl;
+  cout << "threads =        " << nthreads << endl;
+  cout << "knn =            " << k << endl;
+  cout << "topology-file =  " << top_filename << endl;
+  cout << "reference-file = " << ref_filename << endl;
+  cout << "fit-file =       " << fit_filename << endl;
+  cout << "distance-file =  " << d_filename << endl;
+  cout << "index-file =     " << i_filename << endl;
+  cout << endl;
+  
   // Local vars
   int step = 1;
   float time = 0.0;
@@ -84,56 +141,49 @@ int main(int argc, char* argv[]) {
   char buf[256];
   t_topology top;
   int ePBC;
-  int nthreads = atoi(argv[1]);
   int natoms = 0;
-  int k = atoi(argv[2]);
   int k1 = k + 1;
   int update_interval = 1;
-  const char* top_filename = argv[3];
-  const char* ref_filename = argv[4];
-  const char* fit_filename = argv[5];
   t_fileio *ref_file;
   t_fileio *fit_file;
   rvec *mycoords = NULL;
   gmx_bool bOK = 1;
-  gsl_vector *keepers = NULL;
-  gsl_permutation *permutation = NULL;
+  vector<double> keepers;
+  vector<int> permutation;
   ofstream distances;
   ofstream indices;
   vector<coord_array> *ref_coords = NULL;
   vector<coord_array> *fit_coords = NULL;
   real *weights = NULL;
-  gsl_vector *fits = NULL;
-  int *fit_indices = NULL;
 
   // Setup threads
   omp_set_num_threads(nthreads);
 
   // Get number of atoms and initialize weights
-  cerr << "Reading topology information from " << top_filename << " ... ";
-  read_tps_conf(top_filename, buf, &top, &ePBC, &mycoords,
+  cout << "Reading topology information from " << top_filename << " ... ";
+  read_tps_conf(top_filename.c_str(), buf, &top, &ePBC, &mycoords,
 		NULL, box, TRUE);
-  cerr << "done." << endl;
+  cout << "done." << endl;
   delete [] mycoords;
 
-  ref_file = open_xtc(ref_filename,"r");
+  ref_file = open_xtc(ref_filename.c_str(),"r");
   read_first_xtc(ref_file,&natoms, &step, &time, box, &mycoords, &prec, &bOK);
   close_xtc(ref_file);
   if (natoms != top.atoms.nr) {
-    cerr << "*** ERROR ***" << endl;
-    cerr << "Number of atoms in topology file ("
+    cout << "*** ERROR ***" << endl;
+    cout << "Number of atoms in topology file ("
 	 << top.atoms.nr << ") "
 	 << "does not match the number of atoms "
 	 << "in the XTC file (" << ref_filename << " : " << natoms << ")."
 	 << endl;
     exit(4);
   }
-  fit_file = open_xtc(fit_filename,"r");
+  fit_file = open_xtc(fit_filename.c_str(),"r");
   read_first_xtc(fit_file,&natoms, &step, &time, box, &mycoords, &prec, &bOK);
   close_xtc(fit_file);
   if (natoms != top.atoms.nr) {
-    cerr << "*** ERROR ***" << endl;
-    cerr << "Number of atoms in topology file ("
+    cout << "*** ERROR ***" << endl;
+    cout << "Number of atoms in topology file ("
 	 << top.atoms.nr << ") "
 	 << "does not match the number of atoms "
 	 << "in the XTC file (" << fit_filename << " : " << natoms << ")."
@@ -146,8 +196,8 @@ int main(int argc, char* argv[]) {
   for (int x = 0; x < natoms; x++) weights[x] = top.atoms.atom[x].m;
 
   // Read coordinates and weight-center all structures
-  cerr << "Reading reference coordinates from file: " << ref_filename << " ... ";
-  ref_file = open_xtc(ref_filename,"r");
+  cout << "Reading reference coordinates from file: " << ref_filename << " ... ";
+  ref_file = open_xtc(ref_filename.c_str(),"r");
   mycoords = new rvec[natoms];
   while (read_next_xtc(ref_file, natoms, &step, &time, box, mycoords, &prec, &bOK)) {
     reset_x(natoms,NULL,natoms,NULL,mycoords,weights);
@@ -155,10 +205,10 @@ int main(int argc, char* argv[]) {
     mycoords = new rvec[natoms];
   }
   close_xtc(ref_file);
-  cerr << "done." << endl;
+  cout << "done." << endl;
 
-  cerr << "Reading fitting coordinates from file: " << fit_filename << " ... ";
-  fit_file = open_xtc(fit_filename,"r");
+  cout << "Reading fitting coordinates from file: " << fit_filename << " ... ";
+  fit_file = open_xtc(fit_filename.c_str(),"r");
   while (read_next_xtc(fit_file, natoms, &step, &time, box, mycoords, &prec, &bOK)) {
     reset_x(natoms,NULL,natoms,NULL,mycoords,weights);
     fit_coords->push_back(mycoords);
@@ -167,27 +217,26 @@ int main(int argc, char* argv[]) {
   close_xtc(fit_file);
   delete [] mycoords;
   mycoords = NULL;
-  cerr << "done." << endl;
+  cout << "done." << endl;
 
   // Open output files
-  distances.open("distances.dat");
-  indices.open("indices.dat");
+  distances.open(d_filename.c_str());
+  indices.open(i_filename.c_str());
 
   // Allocate vectors for storing the RMSDs for a structure
-  fits = gsl_vector_calloc(ref_coords->size());
-  permutation = gsl_permutation_calloc(ref_coords->size());
-  fit_indices = new int[ref_coords->size()];
+  fits.resize(ref_coords->size());
+  permutation.resize(ref_coords->size());
 
   // Fix k if number of frames is too small
   if (ref_coords->size()-1 < k)
     k = ref_coords->size()-1;
   k1 = k + 1;
-  keepers = gsl_vector_calloc(k1);
+  keepers.resize(k1);
 
   // Get update frequency
   // int update_interval = (int) floor(sqrt((double) coords.size()));
-  cerr.precision(8);
-  cerr.setf(ios::fixed,ios::floatfield);
+  cout.precision(8);
+  cout.setf(ios::fixed,ios::floatfield);
   update_interval = ceil(sqrt(fit_coords->size()));
 
   // Compute fits
@@ -195,8 +244,8 @@ int main(int argc, char* argv[]) {
     
     // Update user of progress
     if (fit_frame % update_interval == 0) {
-      cerr << "\rWorking: " << (((double) fit_frame) / ((double) fit_coords->size())) * 100.0 << "%";
-    cerr.flush();
+      cout << "\rWorking: " << (((double) fit_frame) / ((double) fit_coords->size())) * 100.0 << "%";
+    cout.flush();
     }
     
     // Do Work
@@ -205,25 +254,28 @@ int main(int argc, char* argv[]) {
       do_fit(natoms,weights,
 	     (*fit_coords)[fit_frame],
 	     (*ref_coords)[ref_frame]);
-      gsl_vector_set(fits,ref_frame,rmsdev(natoms,weights,
-					   (*fit_coords)[fit_frame],
-					   (*ref_coords)[ref_frame]) * 10.0);
+      fits[ref_frame] = rmsdev(natoms,weights,
+			       (*fit_coords)[fit_frame],
+			       (*ref_coords)[ref_frame]) * 10.0;
     }
 
     // Sort
-    gsl_permutation_init(permutation);
-    gsl_sort_vector_index(permutation,fits);
-    for (int x = 0; x < k1; x++) {
-      gsl_vector_set(keepers,x,gsl_vector_get(fits,gsl_permutation_get(permutation,x)));
-      fit_indices[x] = (int) gsl_permutation_get(permutation,x);
-    }
+    int x = 0;
+    for (vector<int>::iterator p_itr = permutation.begin();
+	 p_itr != permutation.end(); p_itr++)
+      (*p_itr) = x++;    
+    partial_sort(permutation.begin(), permutation.begin()+k1,
+		 permutation.end(), compare);
+    for (int x = 0; x < k1; x++)
+      keepers[x] = (double) fits[permutation[x]];
+
     // Write out closest k RMSD alignment scores and indices
-    distances.write((char*) &(keepers->data[1]), (sizeof(double)/sizeof(char)) * k);
-    indices.write((char*) &(fit_indices[1]), (sizeof(int)/sizeof(char)) * k);
+    distances.write((char*) &(keepers[1]), (sizeof(double)/sizeof(char)) * k);
+    indices.write((char*) &(permutation[1]), (sizeof(int)/sizeof(char)) * k);
 
   }
 
-  cerr << "\rWorking: " << 100.0 << "%" << endl;
+  cout << "\rWorking: " << 100.0 << "%" << endl;
 
   // Clean coordinates
   for (vector<coord_array>::iterator itr = ref_coords->begin();
@@ -233,11 +285,6 @@ int main(int argc, char* argv[]) {
   delete ref_coords;
   delete fit_coords;
   delete [] weights;
-  delete [] fit_indices;
-
-  gsl_vector_free(fits);
-  gsl_vector_free(keepers);
-  gsl_permutation_free(permutation);
 
   return 0;
 }
