@@ -39,36 +39,51 @@ fi
 
 TOP=trp-cage.pdb
 XTC=trp-cage.xtc
+OSXTC=trp-cage-outofsample.xtc
 
-NTHREADS=8    ## Number of threads to use
-KNN=100       ## Number of nearest neighbors to keep
-NCLUSTERS=10  ## Number of clusters to extract
-SCALING=12    ## (must be <= KNN) for calculating scaling factors...
+NTHREADS=8    # The number of threads to use
+KNN=100       # The number of nearest-neighbors to keep for
+              # the sparse representation
+NCLUSTERS=10  # The number of clusters to extract
+SCALING=12    # The number of nearest-neighbors to use for
+              # computing scaling factors (should be < KNN)
 
-echo "Computing sparse contact distance profiles..."
+echo "Computing sparse contact distance profiles for landmarks..."
 echo -e "0\n0" | \
 ${MDSCTK_HOME}/contact_distance -t ${NTHREADS} -p ${TOP} -x ${XTC}
 
-echo "Computing distances between all structure contact profiles..."
+echo "Computing distances between reference structure contact profiles..."
 ${MDSCTK_HOME}/knn_data_sparse -t ${NTHREADS} -k ${KNN}
 
-echo "Creating CSC format sparse matrix..."
+echo "Creating CSC format symmetric sparse matrix..."
 ${MDSCTK_HOME}/make_sysparse -k ${KNN}
 
+echo "Computing sparse contact distance profiles for remainder..."
+echo -e "0\n0" | \
+${MDSCTK_HOME}/contact_distance -t ${NTHREADS} -p ${TOP} -x ${OSXTC} -i fitting.svi -d fitting.svd
+
+echo "Computing distances between all structure contact profiles..."
+${MDSCTK_HOME}/knn_data_sparse -t ${NTHREADS} -k ${KNN} -F fitting.svi -f fitting.svd
+
+echo "Creating CSC format non-symmetric sparse matrix..."
+${MDSCTK_HOME}/make_gesparse -k ${KNN}
+
 echo "Performing autoscaled spectral decomposition..."
-${MDSCTK_HOME}/auto_decomp_sparse -n ${NCLUSTERS} -k ${SCALING}
+${MDSCTK_HOME}/auto_decomp_sparse_nystrom -n ${NCLUSTERS} -k ${SCALING}
 
 # echo "Performing spectral decomposition..."
-# ${MDSCTK_HOME}/decomp_sparse -n ${NCLUSTERS} -q 15.0
+# ${MDSCTK_HOME}/decomp_sparse_nystrom -n ${NCLUSTERS} -q 15.0
 
 echo "Clustering eigenvectors..."
 ${MDSCTK_HOME}/kmeans.r -k ${NCLUSTERS}
 
 # Generate trajectory assignment file,
-# 10 trajectories of 100 frames each.
+# 10 trajectories of 100 frames each
+# and a single remaining out-of-sample
+# trajectory with 10000 frames.
 Rscript \
     -e 'myout<-pipe("cat","w")' \
-    -e 'write(sort(rep(seq(1,10),100)),myout,ncolumns=1)' \
+    -e 'write(c(sort(rep(seq(1,10),100)),rep(11,10000)),myout,ncolumns=1)' \
     -e 'close(myout)' > assignment.dat
 
 echo "Computing replicate-cluster assignment pdf..."

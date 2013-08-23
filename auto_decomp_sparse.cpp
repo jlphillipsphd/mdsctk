@@ -214,6 +214,11 @@ int main(int argc, char* argv[])
     }
   }
 
+  for (int x = 1; x < n; x++)
+    sigma_a[0] += sigma_a[x];
+  cout << "Average sigma: " << (sigma_a[0] / (double) n) << endl;
+  cout << endl;
+
   delete [] sigma_a;
   delete [] d_a;
 

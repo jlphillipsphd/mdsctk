@@ -62,9 +62,9 @@ int main(int argc, char* argv[]) {
   const char* program_name = "contact_distance";
   bool optsOK = true;
   copyright(program_name);
-  cout << "   Computes the atomic contacts for structures in the given" << endl;
-  cout << "   xtc file. A topology PDB file and atom index file should" << endl;
-  cout << "   be provided for determining the atoms to compare." << endl;
+  cout << "   Computes the standard atomic contacts for structures in" << endl;
+  cout << "   the given xtc file. A topology PDB file and atom index file" << endl;
+  cout << "   should be provided for determining the atoms to compare." << endl;
   cout << "   The resulting sparse contact distance profiles are" << endl;
   cout << "   in sparse vector format (index-file and data-file)." << endl;
   cout << endl;
@@ -73,6 +73,8 @@ int main(int argc, char* argv[]) {
 
   // Option vars...
   int nthreads = 0;
+  double sigma;
+  double eps;
   string top_filename;
   string xtc_filename;
   string ndx_filename;
@@ -86,6 +88,8 @@ int main(int argc, char* argv[]) {
   program_options.add_options()
     ("help,h", "show this help message and exit")
     ("threads,t", po::value<int>(&nthreads)->default_value(2), "Input: Number of threads to start (int)")
+    ("epsilon,e", po::value<double>(&eps)->default_value(9.0), "Input:  Contact cutoff (real)")
+    //    ("sigma,q", po::value<double>(&sigma)->default_value(1), "Input:  Standard deviation of gaussian kernel (real)")
     ("topology-file,p", po::value<string>(&top_filename)->default_value("topology.pdb"), "Input:  Topology file [.pdb,.gro,.tpr] (string:filename)")
     ("xtc-file,x", po::value<string>(&xtc_filename)->default_value("traj.xtc"), "Input:  Trajectory file (string:filename)")
     ("ndx-file,n", po::value<string>(&ndx_filename), "Input: K-nn distances file (string:filename)")
@@ -147,11 +151,6 @@ int main(int argc, char* argv[]) {
   int myout = dup(1);
   dup2(2,1);
 
-  // EPS
-  double eps = 1.0;
-  do { eps /= 2.0; } while (1.0 + (eps / 2.0) != 1.0);
-  eps = sqrt(eps);
-
   // Setup threads
   omp_set_num_threads(nthreads);
 
@@ -207,7 +206,7 @@ int main(int argc, char* argv[]) {
 #pragma omp parallel for
   for (int i = 0; i < gnx1; i++)
     for (int j = 0; j < gnx2; j++) {
-      weights[(i*gnx2)+j] = log(top.atoms.atom[index1[i]].m * top.atoms.atom[index2[j]].m)*3.0;
+      weights[(i*gnx2)+j] = top.atoms.atom[index1[i]].m * top.atoms.atom[index2[j]].m;
     }
 
   // Restore C stdout.
@@ -247,9 +246,11 @@ int main(int argc, char* argv[]) {
 	  d += (((*ref_coords)[frame][ii][k] - (*ref_coords)[frame][jj][k]) *
 		((*ref_coords)[frame][ii][k] - (*ref_coords)[frame][jj][k]));
 	d = sqrt(d) * 10.0;
-	d = 1.0 / (1.0 + exp(d - weights[(i*gnx2)+j]));
+	// d = exp(-(d*d) / (2.0 * weights[(i*gnx2)+j]));
+	// if (d > eps)
+	//   contact[(i*gnx2)+j] = d;
 	if (d > eps)
-	  contact[(i*gnx2)+j] = d;
+	  contact[(i*gnx2)+j] = 1.0;
       } // j
     } // i
 

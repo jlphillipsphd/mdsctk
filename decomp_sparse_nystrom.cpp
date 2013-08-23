@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
   po::options_description program_options("Program options");
   program_options.add_options()
     ("help,h", "show this help message and exit")
-    ("sigma,q", po::value<double>(&sigma_a), "Input:  Standard deviation of gaussian kernel (int)")
+    ("sigma,q", po::value<double>(&sigma_a), "Input:  Standard deviation of gaussian kernel (real)")
     ("nevals,n", po::value<int>(&nev), "Input:  Number of eigenvalues/vectors (int)")
     ("ssm-file,s", po::value<string>(&ssm_filename)->default_value("distances.ssm"), "Input:  Symmetric sparse matrix file (string:filename)")
     ("gsm-file,g", po::value<string>(&gsm_filename)->default_value("distances.gsm"), "Input:  General sparse matrix file (string:filename)")
