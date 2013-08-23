@@ -1,2 +1,2 @@
 clean :
-	rm *.dat *.eps *.ndx *.ssm *.gsm
+	rm *.dat *.eps *.ndx *.ssm *.gsm *.svi *.svd

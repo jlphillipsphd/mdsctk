@@ -29,12 +29,15 @@
 //
 
 // Standard
-#include <iostream>
-#include <fstream>
-#include <vector>
+// C
 #include <strings.h>
 #include <stdlib.h>
 #include <math.h>
+// C++
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <ctime>
 
 // Boost
 #include <boost/program_options.hpp>
@@ -194,18 +197,19 @@ int main(int argc, char* argv[]) {
   k1 = k + 1;
   keepers.resize(k1);
 
-  // Get update frequency
-  // int update_interval = (int) floor(sqrt((double) coords.size()));
-  cout.precision(8);
-  cout.setf(ios::fixed,ios::floatfield);
-  update_interval = ceil(sqrt(fit_coords->size()));
+  // Timers...
+  time_t start = std::time(0);
+  time_t last = start;
 
   // Compute fits
   for (int fit_frame = 0; fit_frame < fit_coords->size(); fit_frame++) {
     
     // Update user of progress
-    if (fit_frame % update_interval == 0) {
-      cout << "\rWorking: " << (((double) fit_frame) / ((double) fit_coords->size())) * 100.0 << "%";
+    if (std::time(0) - last > update_interval) {
+      last = std::time(0);
+      time_t eta = start + ((last-start) * fit_coords->size() / fit_frame);
+      cout << "\rFrame: " << fit_frame << ", will finish " 
+	   << string(std::ctime(&eta)).substr(0,20);
       cout.flush();
     }
 
@@ -230,7 +234,7 @@ int main(int argc, char* argv[]) {
     indices.write((char*) &(permutation[1]), (sizeof(int) / sizeof(char)) * k);
   }
 
-  cout << "\rWorking: " << 100.0 << "%" << endl << endl;
+  cout << endl << endl;
 
   // Clean coordinates
   for (vector<double*>::iterator itr = ref_coords->begin();

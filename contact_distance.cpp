@@ -29,11 +29,17 @@
 //
 
 // Standard
+// C
+#include <stdlib.h>
+#include <math.h>
+// C++
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <stdlib.h>
-#include <math.h>
+#include <ctime>
+
+// Boost
+#include <boost/program_options.hpp>
 
 // OpenMP
 #include <omp.h>
@@ -43,21 +49,78 @@
 #include <gromacs/xtcio.h>
 #include <gromacs/index.h>
 
-using namespace std;
+// Local
+#include "config.h"
+#include "mdsctk.h"
+
 typedef real (*coord_array)[3];
+namespace po = boost::program_options;
+using namespace std;
 
 int main(int argc, char* argv[]) {
-  
-  if (argc != 5 && argc != 4) {
-    cerr << endl;
-    cerr << "Usage: " << argv[0] << " [# threads] [topology file] [xtc file] <ndx file>" << endl;
-    cerr << "   Computes the atomic contacts for structures in the given" << endl;
-    cerr << "   xtc file. A topology PDB file and atom index file should" << endl;
-    cerr << "   be provided for determining the atoms to compare." << endl;
-    cerr << endl;
+
+  const char* program_name = "knn_data";
+  bool optsOK = true;
+  copyright(program_name);
+  cout << "   Computes the atomic contacts for structures in the given" << endl;
+  cout << "   xtc file. A topology PDB file and atom index file should" << endl;
+  cout << "   be provided for determining the atoms to compare." << endl;
+  cout << "   The resulting sparse contact distance profiles are" << endl;
+  cout << "   in sparse vector format (index-file and data-file)." << endl;
+  cout << endl;
+  cout << "   Use -h or --help to see the complete list of options." << endl;
+  cout << endl;
+
+  // Option vars...
+  int nthreads = 0;
+  string top_filename;
+  string xtc_filename;
+  string ndx_filename;
+  const char* ndx_filename_ptr = NULL;
+  string index_filename;
+  string data_filename;
+
+  // Declare the supported options.
+  po::options_description cmdline_options;
+  po::options_description program_options("Program options");
+  program_options.add_options()
+    ("help,h", "show this help message and exit")
+    ("threads,t", po::value<int>(&nthreads)->default_value(2), "Input: Number of threads to start (int)")
+    ("topology-file,p", po::value<string>(&top_filename)->default_value("topology.pdb"), "Input:  Topology file [.pdb,.gro,.tpr] (string:filename)")
+    ("xtc-file,x", po::value<string>(&xtc_filename)->default_value("traj.xtc"), "Input:  Trajectory file (string:filename)")
+    ("ndx-file,n", po::value<string>(&ndx_filename), "Input: K-nn distances file (string:filename)")
+    ("index-file,i", po::value<string>(&index_filename)->default_value("reference.svi"), "Output: Sparse vector indices file (string:filename)")    
+    ("data-file,d", po::value<string>(&data_filename)->default_value("reference.svd"), "Output: Sparse vector data file (string:filename)")    
+    ;
+  cmdline_options.add(program_options);
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, cmdline_options), vm);
+  po::notify(vm);    
+
+  if (vm.count("help")) {
+    cout << "usage: " << program_name << " [options]" << endl;
+    cout << endl;
+    cout << cmdline_options << endl;
+    return 1;
+  }
+  if (vm.count("ndx-file")) {
+    ndx_filename_ptr = ndx_filename.c_str();
+  }
+
+  if (!optsOK) {
     return -1;
   }
 
+  cout << "Running with the following options:" << endl;
+  cout << "threads =       " << nthreads << endl;
+  cout << "topology-file = " << top_filename << endl;
+  cout << "xtc-file =      " << xtc_filename << endl;
+  cout << "ndx-file =      " << ndx_filename << endl;
+  cout << "index-file =    " << index_filename << endl;
+  cout << "data-file =     " << data_filename << endl;
+  cout << endl;
+  
   // Local vars
   int step = 1;
   float time = 0.0;
@@ -66,13 +129,9 @@ int main(int argc, char* argv[]) {
   char buf[256];
   t_topology top;
   int ePBC;
-  int nthreads = atoi(argv[1]);
   int natoms = 0;
   int nframes= 0;
   int update_interval = 1;
-  const char* top_filename = argv[2];
-  const char* ref_filename = argv[3];
-  const char* ndx_filename = NULL;
   t_fileio *ref_file;
   rvec *mycoords = NULL;
   gmx_bool bOK = 1;
@@ -94,46 +153,42 @@ int main(int argc, char* argv[]) {
   do { eps /= 2.0; } while (1.0 + (eps / 2.0) != 1.0);
   eps = sqrt(eps);
 
-  // Check for topology
-  if (argc == 5)
-    ndx_filename = argv[4];
-
   // Setup threads
   omp_set_num_threads(nthreads);
 
   // Get number of atoms and check xtc
-  cerr << "Reading topology information from " << top_filename << " ... ";
-  read_tps_conf(top_filename, buf, &top, &ePBC, &mycoords,
+  cout << "Reading topology information from " << top_filename << " ... ";
+  read_tps_conf(top_filename.c_str(), buf, &top, &ePBC, &mycoords,
 		NULL, box, TRUE);
-  cerr << "done." << endl;
+  cout << "done." << endl;
   delete [] mycoords;
 
-  ref_file = open_xtc(ref_filename,"r");
+  ref_file = open_xtc(xtc_filename.c_str(),"r");
   read_first_xtc(ref_file,&natoms, &step, &time, box, &mycoords, &prec, &bOK);
   close_xtc(ref_file);
   if (natoms != top.atoms.nr) {
-    cerr << "*** ERROR ***" << endl;
-    cerr << "Number of atoms in topology file ("
+    cout << "*** ERROR ***" << endl;
+    cout << "Number of atoms in topology file ("
 	 << top.atoms.nr << ") "
 	 << "does not match the number of atoms "
-	 << "in the XTC file (" << ref_filename << " : " << natoms << ")."
+	 << "in the XTC file (" << xtc_filename << " : " << natoms << ")."
 	 << endl;
     exit(4);
   }
 
   // Get atom selections
-  cerr << "Please select two (non-overlapping) groups for contact profiling..." << endl;
-  get_index(&top.atoms,ndx_filename,1,&gnx1,&index1,&grpname1);
-  cerr << endl;
-  get_index(&top.atoms,ndx_filename,1,&gnx2,&index2,&grpname2);
-  cerr << endl;
+  cout << "Please select two (non-overlapping) groups for contact profiling..." << endl;
+  get_index(&top.atoms,ndx_filename_ptr,1,&gnx1,&index1,&grpname1);
+  cout << endl;
+  get_index(&top.atoms,ndx_filename_ptr,1,&gnx2,&index2,&grpname2);
+  cout << endl;
 
-  cerr << "Total grid size is " << gnx1 << " x " << gnx2 << " = " << (gnx1*gnx2) << endl;
+  cout << "Total grid size is " << gnx1 << " x " << gnx2 << " = " << (gnx1*gnx2) << endl;
 
   // Read coordinates and weight-center all structures
-  cerr << "Reading reference coordinates from file: " << ref_filename << " ... ";
+  cout << "Reading reference coordinates from file: " << xtc_filename << " ... ";
   ref_coords = new vector<coord_array>;
-  ref_file = open_xtc(ref_filename,"r");
+  ref_file = open_xtc(xtc_filename.c_str(),"r");
   mycoords = new rvec[natoms];
   while (read_next_xtc(ref_file, natoms, &step, &time, box, mycoords, &prec, &bOK)) {
     ref_coords->push_back(mycoords);
@@ -143,7 +198,7 @@ int main(int argc, char* argv[]) {
   delete [] mycoords;
   mycoords = NULL;
   nframes = ref_coords->size();
-  cerr << "done." << endl;
+  cout << "done." << endl;
 
   // Allocate vectors for storing the distances for a structure
   contact = new double[gnx1*gnx2];
@@ -156,28 +211,28 @@ int main(int argc, char* argv[]) {
       weights[(i*gnx2)+j] = log(top.atoms.atom[index1[i]].m * top.atoms.atom[index2[j]].m)*3.0;
     }
 
-  // Get update frequency
-  cerr.precision(8);
-  cerr.setf(ios::fixed,ios::floatfield);
-  update_interval = ceil(sqrt(ref_coords->size()));
-
   // Restore C stdout.
   dup2(myout,1);
 
-  index.open("index.dat");
-  data.open("data.dat");
+  index.open(index_filename.c_str());
+  data.open(data_filename.c_str());
+
+  // Timer for ETA
+  time_t start = std::time(0);
+  time_t last = start;
 
   // Compute fits
   for (int frame = 0; frame < nframes; frame++) {
 
     // Update user of progress
-    if (frame % update_interval == 0) {
-      cerr << "\rWorking: " 
-	   << ((double) (frame)) / 
-	((double) (ref_coords->size())) * 100.0 << "%";
-      cerr.flush();
+    if (std::time(0) - last > update_interval) {
+      last = std::time(0);
+      time_t eta = start + ((last-start) * nframes / frame);
+      cout << "\rFrame: " << frame << ", will finish " 
+	   << string(std::ctime(&eta)).substr(0,20);
+      cout.flush();
     }
-    
+
     // Do Work
 #pragma omp parallel for
     for (int i = 0; i < gnx1*gnx2; i++)
@@ -221,11 +276,11 @@ int main(int argc, char* argv[]) {
 	data.write((char*) &contact[i], sizeof(double) / sizeof(char));
       }
 
-    // cerr << frame << " " << total << endl;
+    // cout << frame << " " << total << endl;
 
   } // frame
 
-  cerr << "\rWorking: " << 100.0 << "%" << endl;
+  cout << endl << endl;
 
   index.close();
   data.close();

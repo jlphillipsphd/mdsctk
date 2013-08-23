@@ -29,15 +29,17 @@
 //
 
 // Standard
+// C
+#include <strings.h>
+#include <stdlib.h>
+#include <math.h>
+// C++
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <numeric>
 #include <algorithm>
-#include <numeric>
-#include <strings.h>
-#include <stdlib.h>
-#include <math.h>
+#include <ctime>
 
 // Boost
 #include <boost/program_options.hpp>
@@ -202,12 +204,6 @@ int main(int argc, char* argv[]) {
   k1 = k + 1;
   keepers = new double[k1];
 
-  // Get update frequency
-  // int update_interval = (int) floor(sqrt((float) coords.size()));
-  cout.precision(8);
-  cout.setf(ios::fixed,ios::floatfield);
-  update_interval = ceil(sqrt(fit_coords->size()));
-
   // Setup OCL
   cl::Buffer bufferA = cl::Buffer(ocl_device.context, CL_MEM_READ_ONLY,
 				  ref_coords->size() * vector_size * sizeof(float));
@@ -220,7 +216,7 @@ int main(int argc, char* argv[]) {
   kernel.setArg(2, bufferA);
   kernel.setArg(3, bufferB);
   kernel.setArg(4, bufferC);
-  
+
   // Load reference frames...
   for (int ref_frame = 0; ref_frame < ref_coords->size(); ref_frame++)
     ocl_device.queue.enqueueWriteBuffer(bufferA, CL_TRUE,
@@ -228,12 +224,19 @@ int main(int argc, char* argv[]) {
 					vector_size * sizeof(float),
 					(*ref_coords)[ref_frame]);
 
+  // Timers...
+  time_t start = std::time(0);
+  time_t last = start;
+  
   // Compute fits
   for (int fit_frame = 0; fit_frame < fit_coords->size(); fit_frame++) {
     
     // Update user of progress
-    if (fit_frame % update_interval == 0) {
-      cout << "\rWorking: " << (((float) fit_frame) / ((float) fit_coords->size())) * 100.0 << "%";
+    if (std::time(0) - last > update_interval) {
+      last = std::time(0);
+      time_t eta = start + ((last-start) * fit_coords->size() / fit_frame);
+      cout << "\rFrame: " << fit_frame << ", will finish " 
+	   << string(std::ctime(&eta)).substr(0,20);
       cout.flush();
     }
 
@@ -267,7 +270,7 @@ int main(int argc, char* argv[]) {
     indices.write((char*) &(permutation[1]), (sizeof(int) / sizeof(char)) * k);
   }
 
-  cout << "\rWorking: " << 100.0 << "%" << endl << endl;
+  cout << endl << endl;
 
   cout << "OpenCL Device Execution Time: " << time << endl;
   cout << endl;

@@ -29,13 +29,16 @@
 //
 
 // Standard
+// C
+#include <strings.h>
+#include <stdlib.h>
+#include <math.h>
+// C++
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <algorithm>
-#include <strings.h>
-#include <stdlib.h>
-#include <math.h>
+#include <ctime>
 
 // Boost
 #include <boost/program_options.hpp>
@@ -113,10 +116,10 @@ int main(int argc, char* argv[]) {
     ("help,h", "show this help message and exit")
     ("threads,t", po::value<int>(&nthreads)->default_value(2), "Input: Number of threads to start (int)")
     ("knn,k", po::value<int>(&k), "Input:  K-nearest neighbors (int)")
-    ("reference-index-file,R", po::value<string>(&ref_index_filename)->default_value("reference-index.pts"), "Input:  Reference index file (string:filename)")
-    ("reference-file,r", po::value<string>(&ref_data_filename)->default_value("reference.pts"), "Input:  Reference data file (string:filename)")
+    ("reference-index-file,R", po::value<string>(&ref_index_filename)->default_value("reference.svi"), "Input:  Reference index file (string:filename)")
+    ("reference-data-file,r", po::value<string>(&ref_data_filename)->default_value("reference.svd"), "Input:  Reference data file (string:filename)")
     ("fit-index-file,F", po::value<string>(&fit_index_filename), "Input:  Fitting index file (string:filename)")
-    ("fit-file,f", po::value<string>(&fit_data_filename), "Input:  Fitting data file (string:filename)")
+    ("fit-data-file,f", po::value<string>(&fit_data_filename), "Input:  Fitting data file (string:filename)")
     ("distance-file,d", po::value<string>(&d_filename)->default_value("distances.dat"), "Output: K-nn distances file (string:filename)")
     ("index-file,i", po::value<string>(&i_filename)->default_value("indices.dat"), "Output: K-nn indices file (string:filename)")    
     ;
@@ -137,14 +140,9 @@ int main(int argc, char* argv[]) {
     cout << endl;
     optsOK = false;
   }
-  if (!vm.count("size")) {
-    cout << "ERROR: --size not supplied." << endl;
-    cout << endl;
-    optsOK = false;
-  }
   if (!vm.count("fit-index-file"))
     fit_index_filename = ref_index_filename;
-  if (!vm.count("fit-file"))
+  if (!vm.count("fit-data-file"))
     fit_data_filename = ref_data_filename;
 
   if (!optsOK) {
@@ -235,17 +233,19 @@ int main(int argc, char* argv[]) {
   k1 = k + 1;
   keepers.resize(k1);
 
-  // Get update frequency
-  cout.precision(8);
-  cout.setf(ios::fixed,ios::floatfield);
-  update_interval = ceil(sqrt(fit_index.size()));
+  // Timers...
+  time_t start = std::time(0);
+  time_t last = start;
 
   // Compute fits
   for (int fit_frame = 0; fit_frame < fit_index.size(); fit_frame++) {
     
     // Update user of progress
-    if (fit_frame % update_interval == 0) {
-      cout << "\rWorking: " << (((double) fit_frame) / ((double) fit_index.size())) * 100.0 << "%";
+    if (std::time(0) - last > update_interval) {
+      last = std::time(0);
+      time_t eta = start + ((last-start) * fit_index.size() / fit_frame);
+      cout << "\rFrame: " << fit_frame << ", will finish " 
+	   << string(std::ctime(&eta)).substr(0,20);
       cout.flush();
     }
 
@@ -271,7 +271,7 @@ int main(int argc, char* argv[]) {
     indices.write((char*) &(permutation[1]), (sizeof(int) / sizeof(char)) * k);
   }
 
-  cout << "\rWorking: " << 100.0 << "%" << endl;
+  cout << endl << endl;
 
   // Clean coordinates
   for (vector<int*>::iterator itr = ref_index.begin();
