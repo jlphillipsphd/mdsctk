@@ -6,7 +6,7 @@
 # 
 #       Molecular Dynamics Spectral Clustering ToolKit
 # 
-#                        VERSION 1.1.2
+#                        VERSION 1.2.0
 # Written by Joshua L. Phillips.
 # Copyright (c) 2013, Joshua L. Phillips.
 # check out http://github.com/douradopalmares/mdsctk/ for more information.
@@ -32,7 +32,7 @@ cmake_minimum_required (VERSION 2.6)
 project (MDSCTK)
 # The version number.
 set (MDSCTK_VERSION_MAJOR 1)
-set (MDSCTK_VERSION_MINOR 1)
+set (MDSCTK_VERSION_MINOR 2)
 
 # Cmake modules/macros are in a subdirectory to keep this file cleaner
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
