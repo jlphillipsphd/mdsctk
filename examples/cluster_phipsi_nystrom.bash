@@ -97,13 +97,13 @@ Rscript \
     -e 'write(c(sort(rep(seq(1,10),100)),rep(11,10000)),myout,ncolumns=1)' \
     -e 'close(myout)' > assignment.dat
 
-echo "Computing replicate-cluster assignment histogram..."
-${MDSCTK_HOME}/clustering_histogram.r
+echo "Computing replicate-cluster assignment pdf..."
+${MDSCTK_HOME}/clustering_pdf.r
 
-echo "Plotting the histogram (fails if R package 'fields' is missing)..."
-${MDSCTK_HOME}/plot_histogram.r
+echo "Plotting the pdf (fails if R package 'fields' is missing)..."
+${MDSCTK_HOME}/plot_pdf.r
 
-echo "See histogram.eps for results (eg. evince histogram.eps)..."
+echo "See pdf.eps for results (eg. evince pdf.eps)..."
 
 echo "Computing normalized mutual information..."
-${MDSCTK_HOME}/clustering_nmi.r | tee nmi.dat
+${MDSCTK_HOME}/clustering_nmi.r

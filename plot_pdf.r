@@ -36,53 +36,44 @@ if (Sys.getenv("MDSCTK_HOME")=="") {
     cat("\n")
     q()
 } else {
-    source(paste(Sys.getenv("MDSCTK_HOME"),"/config.r",sep=""))
+    program.name <- "plot_pdf.r"
+    source(paste(Sys.getenv("MDSCTK_HOME"),"/mdsctk.r",sep=""))
 }
 
-myargs <- commandArgs(TRUE)
+cat("   Reads in a joint assignment-cluster probability distribution,\n")
+cat("   plots the distribution as a heatmap, and also prints the\n")
+cat("   normalized mutual information between assignments and clusters\n")
+cat("   in the lower-right corner of the plot.\n")
+cat("\n")
+cat("   Use -h or --help to see the complete list of options.\n")
+cat("\n")
 
-if (length(myargs) != 0) {
-  cat("\n")
-  cat(paste("   MDSCTK ",MDSCTK_VERSION_MAJOR,".",MDSCTK_VERSION_MINOR,"\n",sep=""))
-  cat("   Copyright (C) 2013 Joshua L. Phillips\n")
-  cat("   MDSCTK comes with ABSOLUTELY NO WARRANTY; see LICENSE for details.\n")
-  cat("   This is free software, and you are welcome to redistribute it\n")
-  cat("   under certain conditions; see README.md for details.\n")
-  cat("\n")
-  cat("Usage: plot_histogram.r\n")
-  cat("   Reads in a joint assignment-cluster probability distribution\n")
-  cat("   from histogram.dat and plots the distribution as a heatmap and\n")
-  cat("   prints the normalized mutual information between assignments\n")
-  cat("   and clusters in the lower-right corner. The result is written\n")
-  cat("   to histogram.eps.\n")
-  cat("\n")
-  q()
+parser$add_argument("-p","--pdf",default="pdf.dat",
+                    help="Joint PDF file [default %(default)s]")
+parser$add_argument("-o","--output",default="pdf.eps",
+                    help="Joint PDF file [default %(default)s]")
+
+myargs <- parser$parse_args()
+
+cat("Running with the following options:\n")
+cat(paste("pdf =    ",myargs$pdf,"\n"))
+cat(paste("output = ",myargs$output,"\n"))
+cat("\n")
+
+if (!suppressPackageStartupMessages(require("fields",character.only=TRUE))) {
+    cat("   Please install the R package 'fields' to use this MDSCTK R scripts.\n")
+    cat("\n")
+    q()
 }
 
-require(fields)
-
-normalmutualinf <- function(data) {
-  s <- 0
-  e <- 0
-  pc <- colSums(data)
-  pr <- rowSums(data)
-  for (i in 1:dim(data)[1])
-    for (j in 1:dim(data)[2])
-      if (data[i,j] > 0) {
-        e <- e + (data[i,j] * log2(data[i,j]))
-        s <- s + (data[i,j] * log2(data[i,j] / (pr[i] * pc[j])))
-      }
-  return(s / -e)
-}
-
-data <- as.matrix(read.table("histogram.dat",header=FALSE))
+data <- as.matrix(read.table(myargs$pdf,header=FALSE))
 n <- nrow(data)
 m <- ncol(data)
 mycol <- rev(heat.colors(50))
 nmi <- normalmutualinf(data)
 mark <- "A"
 
-postscript("histogram.eps",width=5.5,height=4.6,onefile=FALSE,horizontal=FALSE)
+postscript(myargs$output,width=5.5,height=4.6,onefile=FALSE,horizontal=FALSE)
 
 par(mar=c(3,3,0.5,4.6)+0.1,mgp=c(2.1,0.8,0))
 image(seq(1,n),seq(1,m),data,zlim=c(0,max(data)),col=mycol,
@@ -94,4 +85,4 @@ image.plot(seq(1,n),seq(1,m),data,zlim=c(0,1.0/max(c(n,m))),col=mycol,
            legend.only=TRUE,
            legend.args=list(cex=0.75,text=expression(p(R,C))),
            legend.mar=4.1,useRaster=TRUE)
-dev.off()
+temp <- dev.off()

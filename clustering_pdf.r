@@ -36,7 +36,7 @@ if (Sys.getenv("MDSCTK_HOME")=="") {
     cat("\n")
     q()
 } else {
-    program.name <- "clustering_histogram.r"
+    program.name <- "clustering_pdf.r"
     source(paste(Sys.getenv("MDSCTK_HOME"),"/mdsctk.r",sep=""))
 }
 
@@ -56,7 +56,7 @@ parser$add_argument("-a","--assignment",default="assignment.dat",
                     help="Data assignment file [default %(default)s]")
 parser$add_argument("-c","--clusters",default="clusters.dat",
                     help="Cluster assignment file [default %(default)s]")
-parser$add_argument("-o","--output",default="histogram.dat",
+parser$add_argument("-o","--output",default="pdf.dat",
                     help="(Output) Joint probability distribution file [default %(default)s]")
 
 myargs <- parser$parse_args()
@@ -66,20 +66,6 @@ cat(paste("assignment = ",myargs$assignment,"\n"))
 cat(paste("clusters =   ",myargs$clusters,"\n"))
 cat(paste("output =     ",myargs$output,"\n"))
 cat("\n")
-
-## Utilities
-cluster.sort <- function(data,f=median) {
-  s <- seq(range(data)[1], range(data)[2])
-  x <- rep(0,length(s))
-  l <- list()
-  for (i in 1:length(s)) {
-    l[[i]] <- which(data == s[i])
-    x[i] <- f(l[[i]])
-  }
-  ix <- sort(x, index.return=TRUE)$ix
-  for (i in 1:length(s)) data[l[[ix[i]]]] <- i
-  return (data)
-}
 
 ## Note that the raw cluster numbers are "changed", or relabeled
 ## in order to make the histogram plots interpretable. These can

@@ -36,46 +36,45 @@ if (Sys.getenv("MDSCTK_HOME")=="") {
     cat("\n")
     q()
 } else {
-    source(paste(Sys.getenv("MDSCTK_HOME"),"/config.r",sep=""))
+    program.name <- "entropy.r"
+    source(paste(Sys.getenv("MDSCTK_HOME"),"/mdsctk.r",sep=""))
 }
 
-myargs <- commandArgs(TRUE)
+cat("   Computes the local entropy of the given sparse\n")
+cat("   matrix with indices from indices.dat and the densities\n")
+cat("   in density.dat. The number of nearest neighbors,\n")
+cat("   k, is required.\n")
+cat("\n")
+cat("   Use -h or --help to see the complete list of options.\n")
+cat("\n")
 
-if (length(myargs) != 1) {
-  cat("\n")
-  cat(paste("   MDSCTK ",MDSCTK_VERSION_MAJOR,".",MDSCTK_VERSION_MINOR,"\n",sep=""))
-  cat("   Copyright (C) 2013 Joshua L. Phillips\n")
-  cat("   MDSCTK comes with ABSOLUTELY NO WARRANTY; see LICENSE for details.\n")
-  cat("   This is free software, and you are welcome to redistribute it\n")
-  cat("   under certain conditions; see README.md for details.\n")
-  cat("\n")
-  cat("Usage: entropy.r [k]\n")
-  cat("   Computes the local entropy of the given sparse\n")
-  cat("   matrix with indices from indices.dat and the densities\n")
-  cat("   in density.dat. The number of nearest neighbors,\n")
-  cat("   k, is required.\n")
-  cat("\n")
-  q()
+parser$add_argument("-k","--knn",type="integer",
+                    help="Number of k-nearest neighbors",metavar="integer")
+parser$add_argument("-i","--indices",default="indices.dat",
+                    help="K-nn indices file [default %(default)s]")
+parser$add_argument("-d","--densities",default="density.dat",
+                    help="Density file [default %(default)s]")
+parser$add_argument("-o","--output",default="entropy.dat",
+                    help="(Output) Entropy file [default %(default)s]")
+
+myargs <- parser$parse_args()
+
+if (is.null(myargs$knn)) {
+    cat("ERROR: --knn not supplied.\n")
+    cat("\n")
+    q()
 }
 
-myindexfile <- "indices.dat"
-mydensfile <- "density.dat"
-myk <- as.integer(myargs[1])
+cat("Running with the following options:\n")
+cat(paste("knn =       ",myargs$knn,"\n"))
+cat(paste("indices   = ",myargs$indices,"\n"))
+cat(paste("densities = ",myargs$densities,"\n"))
+cat(paste("output    = ",myargs$output,"\n"))
+cat("\n")
 
-entropy.pointwise <- function(data,dens) {
-  return (apply(apply(data,
-                      1,
-                      FUN=function(vec,dens){dens[vec]},
-                      dens),
-                2,FUN=function(vec){-sum(log2(vec))/length(vec)}))
-}
-
-read.binary.int <- function(filename,n) {
-  fd <- file(filename,open="rb")
-  data <- readBin(fd,"integer",n=n,size=4)
-  close(fd)
-  return (data)
-}
+myindexfile <- myargs$indices
+mydensfile <- myargs$densities
+myk <- myargs$knn
 
 dens <- scan(mydensfile,quiet=TRUE)
-write(entropy.pointwise(matrix(read.binary.int(myindexfile,length(dens)*myk)+1,ncol=myk,byrow=TRUE),dens),file="entropy.dat",ncolumns=1)
+write(entropy.pointwise(matrix(read.binary.int(myindexfile,length(dens)*myk)+1,ncol=myk,byrow=TRUE),dens),file=myargs$output,ncolumns=1)

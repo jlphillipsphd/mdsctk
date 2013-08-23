@@ -49,7 +49,7 @@ cat("   Use -h or --help to see the complete list of options.\n")
 cat("\n")
 
 parser$add_argument("-k","--k",type="integer",
-                    help="Number of clusters",metavar="number")
+                    help="Number of clusters",metavar="integer")
 parser$add_argument("-v","--evals",default="eigenvalues.dat",
                     help="File containing eigenvalues [default %(default)s]")
 parser$add_argument("-e","--evecs",default="eigenvectors.dat",

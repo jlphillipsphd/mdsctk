@@ -59,3 +59,67 @@ if (!suppressPackageStartupMessages(require("argparse",character.only=TRUE))) {
 }
 
 parser <- ArgumentParser()
+
+## Functions
+read.binary.int <- function(filename,n) {
+  fd <- file(filename,open="rb")
+  data <- readBin(fd,"integer",n=n,size=4)
+  close(fd)
+  return (data)
+}
+
+read.binary <- function(filename,n) {
+  fd <- file(filename,open="rb")
+  data <- readBin(fd,"double",n=n,size=8)
+  close(fd)
+  return (data)
+}
+
+
+dens.pointwise <- function(data,sigma) {
+  p <- colSums(exp(-data^2 / (2 * sigma^2)))
+  return (p / nrow(data))
+
+}
+
+prob.pointwise <- function(data,sigma) {
+  p <- colSums(exp(-data^2 / (2 * sigma^2)))
+  return (p / sum(p))
+
+}
+
+entropy.pointwise <- function(data,dens) {
+  return (apply(apply(data,
+                      1,
+                      FUN=function(vec,dens){dens[vec]},
+                      dens),
+                2,FUN=function(vec){-sum(log2(vec))/length(vec)}))
+}
+
+normalmutualinf <- function(data) {
+  s <- 0
+  e <- 0
+  pc <- colSums(data)
+  pr <- rowSums(data)
+  for (i in 1:dim(data)[1])
+    for (j in 1:dim(data)[2])
+      if (data[i,j] > 0) {
+        e <- e + (data[i,j] * log2(data[i,j]))
+        s <- s + (data[i,j] * log2(data[i,j] / (pr[i] * pc[j])))
+      }
+  return(s / -e)
+}
+
+cluster.sort <- function(data,f=median) {
+  s <- seq(range(data)[1], range(data)[2])
+  x <- rep(0,length(s))
+  l <- list()
+  for (i in 1:length(s)) {
+    l[[i]] <- which(data == s[i])
+    x[i] <- f(l[[i]])
+  }
+  ix <- sort(x, index.return=TRUE)$ix
+  for (i in 1:length(s)) data[l[[ix[i]]]] <- i
+  return (data)
+}
+

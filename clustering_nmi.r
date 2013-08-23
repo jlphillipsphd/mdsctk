@@ -36,43 +36,27 @@ if (Sys.getenv("MDSCTK_HOME")=="") {
     cat("\n")
     q()
 } else {
-    source(paste(Sys.getenv("MDSCTK_HOME"),"/config.r",sep=""))
+    program.name <- "clustering_nmi.r"
+    source(paste(Sys.getenv("MDSCTK_HOME"),"/mdsctk.r",sep=""))
 }
 
-myargs <- commandArgs(TRUE)
+cat("   Reads in a joint assignment-cluster probability distribution\n")
+cat("   from and computes the normalized mutual information between\n")
+cat("   assignments and clusters.\n")
+cat("\n")
+cat("   Use -h or --help to see the complete list of options.\n")
+cat("\n")
 
-if (length(myargs) != 0) {
-  cat("\n")
-  cat(paste("   MDSCTK ",MDSCTK_VERSION_MAJOR,".",MDSCTK_VERSION_MINOR,"\n",sep=""))
-  cat("   Copyright (C) 2013 Joshua L. Phillips\n")
-  cat("   MDSCTK comes with ABSOLUTELY NO WARRANTY; see LICENSE for details.\n")
-  cat("   This is free software, and you are welcome to redistribute it\n")
-  cat("   under certain conditions; see README.md for details.\n")
-  cat("\n")
-  cat("Usage: clustering_nmi.r\n")
-  cat("   Reads in a joint assignment-cluster probability distribution\n")
-  cat("   from histogram.dat and computes the normalized mutual\n")
-  cat("   information between assignments and clusters.\n")
-  cat("\n")
-  q()
-}
+parser$add_argument("-p","--pdf",default="pdf.dat",
+                    help="Joint PDF file [default %(default)s]")
 
-normalmutualinf <- function(data) {
-  s <- 0
-  e <- 0
-  pc <- colSums(data)
-  pr <- rowSums(data)
-  for (i in 1:dim(data)[1])
-    for (j in 1:dim(data)[2])
-      if (data[i,j] > 0) {
-        e <- e + (data[i,j] * log2(data[i,j]))
-        s <- s + (data[i,j] * log2(data[i,j] / (pr[i] * pc[j])))
-      }
-  return(s / -e)
-}
+myargs <- parser$parse_args()
 
-hist <- as.matrix(read.table("histogram.dat",header=FALSE))
+cat("Running with the following options:\n")
+cat(paste("pdf = ",myargs$pdf,"\n"))
+cat("\n")
 
-myfd <- pipe("cat","wb")
-write(normalmutualinf(hist),myfd,ncolumns=1)
-close(myfd)
+hist <- as.matrix(read.table(myargs$pdf,header=FALSE))
+
+cat(sprintf("NMI = %g\n",normalmutualinf(hist)))
+cat("\n")

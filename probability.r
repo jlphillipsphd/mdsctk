@@ -36,47 +36,56 @@ if (Sys.getenv("MDSCTK_HOME")=="") {
     cat("\n")
     q()
 } else {
-    source(paste(Sys.getenv("MDSCTK_HOME"),"/config.r",sep=""))
+    program.name <- "probability.r"
+    source(paste(Sys.getenv("MDSCTK_HOME"),"/mdsctk.r",sep=""))
 }
 
-myargs <- commandArgs(TRUE)
+cat("   Computes the kernel density estimate for the sparse distances\n")
+cat("   in distances.dat, and convert the results to estimated probailities.\n")
+cat("   The number of k nearest neighbors is required but the bandwidth of\n")
+cat("   the kernel, sigma, can be supplied or guesstimated based the data.\n")
+cat("\n")
+cat("   Use -h or --help to see the complete list of options.\n")
+cat("\n")
 
-if (length(myargs) != 1 & length(myargs) != 2) {
-  cat("\n")
-  cat(paste("   MDSCTK ",MDSCTK_VERSION_MAJOR,".",MDSCTK_VERSION_MINOR,"\n",sep=""))
-  cat("   Copyright (C) 2013 Joshua L. Phillips\n")
-  cat("   MDSCTK comes with ABSOLUTELY NO WARRANTY; see LICENSE for details.\n")
-  cat("   This is free software, and you are welcome to redistribute it\n")
-  cat("   under certain conditions; see README.md for details.\n")
-  cat("\n")
-  cat("Usage: density.r [k] <sigma>\n")
-  cat("   Computes the kernel density estimate for the sparse distances\n")
-  cat("   in distances.dat, and convert the results to estimated probailities.\n")
-  cat("   The number of k nearest neighbors is required but the bandwidth of\n")
-  cat("   the kernel, sigma, can be supplied or guesstimated based the data.\n")
-  cat("\n")
-  q()
+parser$add_argument("-k","--knn",type="integer",
+                    help="Number of k-nearest neighbors",metavar="integer")
+parser$add_argument("-q","--sigma",type="double",
+                    help="Kernel bandwidth",metavar="number")
+parser$add_argument("-i","--indices",default="indices.dat",
+                    help="K-nn indices file [default %(default)s]")
+parser$add_argument("-d","--distances",default="distances.dat",
+                    help="K-nn distances file [default %(default)s]")
+parser$add_argument("-o","--output",default="probability.dat",
+                    help="(Output) Probability file [default %(default)s]")
+
+myargs <- parser$parse_args()
+
+if (is.null(myargs$knn)) {
+    cat("ERROR: --knn not supplied.\n")
+    cat("\n")
+    q()
 }
 
-myk <- as.integer(myargs[1])
-
-prob.pointwise <- function(data,sigma) {
-  p <- colSums(exp(-data^2 / (2 * sigma^2)))
-  return (p / sum(p))
-
-}
-
-read.binary <- function(filename,n) {
-  fd <- file(filename,open="rb")
-  data <- readBin(fd,"double",n=n,size=8)
-  close(fd)
-  return (data)
-}
-
-data <- matrix(read.binary("distances.dat",file.info("distances.dat")$size/8),nrow=myk)
-if (length(myargs)==2) {
-    sigma <- as.double(myargs[2])
+cat("Running with the following options:\n")
+cat(paste("knn =       ",myargs$knn,"\n"))
+if (is.null(myargs$sigma)) {
+    cat(paste("sigma =     ","estimated","\n"))
 } else {
-    sigma <- sd(as.double(data))
+    cat(paste("sigma =     ",myargs$sigma,"\n"))
 }
-write(prob.pointwise(data,sigma),file="probability.dat",ncolumns=1)
+cat(paste("indices   = ",myargs$indices,"\n"))
+cat(paste("distances = ",myargs$distances,"\n"))
+cat(paste("output    = ",myargs$output,"\n"))
+cat("\n")
+
+myk <- myargs$knn
+
+data <- matrix(read.binary(myargs$distances,file.info(myargs$distances)$size/8),nrow=myk)
+if (is.null(myargs$sigma)) {
+    sigma <- sd(as.double(data))
+    cat(sprintf("Estimated sigma: %g\n\n",sigma))
+} else {
+    sigma <- myargs$sigma
+}
+write(prob.pointwise(data,sigma),file=myargs$output,ncolumns=1)
