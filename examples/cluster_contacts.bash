@@ -47,7 +47,7 @@ SCALING=12    ## (must be <= KNN) for calculating scaling factors...
 
 echo "Computing sparse contact distance profiles..."
 echo -e "0\n0" | \
-${MDSCTK_HOME}/contact_distance -t ${NTHREADS} -p ${TOP} -x ${XTC}
+${MDSCTK_HOME}/contact_profile -t ${NTHREADS} -p ${TOP} -x ${XTC}
 
 echo "Computing distances between all structure contact profiles..."
 ${MDSCTK_HOME}/knn_data_sparse -t ${NTHREADS} -k ${KNN}

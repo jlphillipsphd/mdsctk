@@ -50,7 +50,7 @@ SCALING=12    # The number of nearest-neighbors to use for
 
 echo "Computing sparse contact distance profiles for landmarks..."
 echo -e "0\n0" | \
-${MDSCTK_HOME}/contact_distance -t ${NTHREADS} -p ${TOP} -x ${XTC}
+${MDSCTK_HOME}/contact_profile -t ${NTHREADS} -p ${TOP} -x ${XTC}
 
 echo "Computing distances between reference structure contact profiles..."
 ${MDSCTK_HOME}/knn_data_sparse -t ${NTHREADS} -k ${KNN}
@@ -60,7 +60,7 @@ ${MDSCTK_HOME}/make_sysparse -k ${KNN}
 
 echo "Computing sparse contact distance profiles for remainder..."
 echo -e "0\n0" | \
-${MDSCTK_HOME}/contact_distance -t ${NTHREADS} -p ${TOP} -x ${OSXTC} -i fitting.svi -d fitting.svd
+${MDSCTK_HOME}/contact_profile -t ${NTHREADS} -p ${TOP} -x ${OSXTC} -i fitting.svi -d fitting.svd
 
 echo "Computing distances between all structure contact profiles..."
 ${MDSCTK_HOME}/knn_data_sparse -t ${NTHREADS} -k ${KNN} -F fitting.svi -f fitting.svd

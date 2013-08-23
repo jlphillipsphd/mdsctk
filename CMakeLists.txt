@@ -219,7 +219,7 @@ set(MDSCTK_TOOLS
   auto_decomp_sparse_nystrom
   bb_xtc_to_phipsi
   check_xtc
-  contact_distance
+  contact_profile
   decomp_sparse
   decomp_sparse_nystrom
   knn_data

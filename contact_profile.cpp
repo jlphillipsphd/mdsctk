@@ -59,7 +59,7 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
 
-  const char* program_name = "contact_distance";
+  const char* program_name = "contact_profile";
   bool optsOK = true;
   copyright(program_name);
   cout << "   Computes the standard atomic contacts for structures in" << endl;
