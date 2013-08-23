@@ -281,6 +281,9 @@ int main(int argc, char *argv[]) {
   time_t start = std::time(0);
   time_t last = start;
   int nframes = 0;
+  indices.seekg(0,ios::end);
+  nframes = (indices.tellg() * sizeof(char) / sizeof(int)) / maxk;
+  indices.seekg(0,ios::beg);
 
   // Read a set of distances and indices
   distances.read((char*) current_distances, sizeof(double) * maxk);
