@@ -41,12 +41,17 @@
 #include <set>
 #include <algorithm>
 
+// Boost
+#include <boost/program_options.hpp>
+
 // Berkeley DB
 #include <db_cxx.h>
 
 // Local
 #include "config.h"
+#include "mdsctk.h"
 
+namespace po = boost::program_options;
 using namespace std;
 
 // Edges struct, comparison, and sorting routines
@@ -95,60 +100,93 @@ void split_edges(int current_index, Dbc *cursor, vector<int> &indices, vector<do
 }
 
 int main(int argc, char *argv[]) {
-  
-  if (argc != 2 && argc != 3) {
-    cerr << endl;
-    cerr << "   MDSCTK " << MDSCTK_VERSION_MAJOR << "." << MDSCTK_VERSION_MINOR << endl;
-    cerr << "   Copyright (C) 2013 Joshua L. Phillips" << endl;
-    cerr << "   MDSCTK comes with ABSOLUTELY NO WARRANTY; see LICENSE for details." << endl;
-    cerr << "   This is free software, and you are welcome to redistribute it" << endl;
-    cerr << "   under certain conditions; see README.md for details." << endl;
-    cerr << endl;
-    cerr << "Usage: " << argv[0] << " [k] <output k>" << endl;
-    cerr << "   Converts the results from knn_rms into CSC format." << endl;
-    cerr << endl;
-    cerr << "   Normally, the number of nearest neighbors in the input" << endl;
-    cerr << "   distances is used for constructing the CSC matrix." << endl;
-    cerr << "   However, you can set <output k> <= [k] in order to" << endl;
-    cerr << "   subselect the number of neighbors to consider in the" << endl;
-    cerr << "   CSC representation. This makes it easy to store a" << endl;
-    cerr << "   large number of neighbors using knn_* but then use" << endl;
-    cerr << "   a subset for, say, computing approximate geodesic" << endl;
-    cerr << "   distances." << endl;
-    cerr << endl;
+
+  const char* program_name = "make_gesparse";
+  bool optsOK = true;
+  copyright(program_name);
+  cout << "   Converts the results from knn_* into general CSC format." << endl;
+  cout << endl;
+  cout << "   Normally, the number of nearest neighbors in the input" << endl;
+  cout << "   distances is used for constructing the CSC matrix." << endl;
+  cout << "   However, you can set output-knn <= knn in order to" << endl;
+  cout << "   subselect the number of neighbors to consider in the" << endl;
+  cout << "   CSC representation. This makes it easy to store a" << endl;
+  cout << "   large number of neighbors using knn_* but then use" << endl;
+  cout << "   a subset for, say, computing approximate geodesic" << endl;
+  cout << "   distances." << endl;
+  cout << endl;
+  cout << "   Use -h or --help to see the complete list of options." << endl;
+  cout << endl;
+
+  // Option vars...
+  int k;
+  int maxk;
+  string i_filename;
+  string d_filename;
+  string o_filename;
+
+  // Declare the supported options.
+  po::options_description cmdline_options;
+  po::options_description program_options("Program options");
+  program_options.add_options()
+    ("help,h", "show this help message and exit")
+    ("knn,k", po::value<int>(&maxk), "Input:  K-nearest neighbors (int)")
+    ("output-knn,n", po::value<int>(&k), "Input:  K-nn to keep in output (int)")
+    ("index-file,i", po::value<string>(&i_filename)->default_value("indices.dat"), "Input:  Index file (string:filename)")
+    ("distance-file,d", po::value<string>(&d_filename)->default_value("distances.dat"), "Input:  Distances file (string:filename)")
+    ("output-file,o", po::value<string>(&o_filename)->default_value("distances.gsm"), "Output: General sparse matrix file (string:filename)")    
+    ;
+  cmdline_options.add(program_options);
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, cmdline_options), vm);
+  po::notify(vm);    
+
+  if (vm.count("help")) {
+    cout << "usage: " << program_name << " [options]" << endl;
+    cout << endl;
+    cout << cmdline_options << endl;
+    return 1;
+  }
+  if (!vm.count("knn")) {
+    cout << "ERROR: --knn not supplied." << endl;
+    cout << endl;
+    optsOK = false;
+  }
+  if (!vm.count("output-knn"))
+    k = maxk;
+
+  // Check
+  if (maxk < k) {
+    cout << "ERROR: Output k (" << k << ") is not less than the input k (" << maxk << ")." << endl;
+    cout << endl;
+    optsOK = false;
+  }
+
+  if (!optsOK) {
     return -1;
   }
 
-  int k = 0;
-  int maxk = 0;
+  cout << "Running with the following options:" << endl;
+  cout << "knn =            " << maxk << endl;
+  cout << "output-knn =     " << k << endl;
+  cout << "index-file =     " << i_filename << endl;
+  cout << "distances-file = " << d_filename << endl;
+  cout << "output-file =  " << o_filename << endl;
+  cout << endl;
+
   int current_index = 0;
   int *current_indices;
   double *current_distances;
   vector<int> *sorted_indices;
   vector<double> *sorted_distances;
 
-  // Initialize data from command-line arguments
-  maxk = atoi(argv[1]);
-  if (argc == 4) {
-    k = atoi(argv[2]);
-  }
-  else {
-    k = maxk;
-  }
-
-  if (maxk < k) {
-    cerr << "ERROR: Output k (" << k << ") is not less than the input k (" << maxk << ")." << endl;
-    cerr << endl;
-    return -1;
-  }
-
-  // char *distances_file_name = argv[3];
-  // char *indices_file_name = argv[4];
-  const char *distances_file_name = "distances.dat";
-  const char *indices_file_name = "indices.dat";
-  const char *nonsym_distances_file_name = "nonsym_distances.dat";
-  const char *nonsym_row_indices_file_name = "nonsym_row_indices.dat";
-  const char *nonsym_col_indices_file_name = "nonsym_col_indices.dat";
+  stringstream nsd_filename;
+  nsd_filename << "." << getpid() << ".nsd";
+  stringstream nsr_filename;
+  nsr_filename << "." << getpid() << ".nsr";
+  stringstream nsc_filename;
+  nsc_filename << "." << getpid() << ".nsc";
 
   int nonsym_col = 0;
   current_indices = new int[maxk];
@@ -161,51 +199,49 @@ int main(int argc, char *argv[]) {
   ofstream nonsym_distances;
   ofstream nonsym_row_indices;
   ofstream nonsym_col_indices;
+  ofstream o_file;
 
   // Open files for reading/writing
-  distances.open(distances_file_name,ios::in | ios::binary);
+  distances.open(d_filename.c_str(),ios::in | ios::binary);
   if (!distances.good()) {
-    cerr << "***ERROR***" << endl;
-    cerr << "Could not open file: " << distances_file_name << endl;
-    cerr << endl;
+    cout << "***ERROR***" << endl;
+    cout << "Could not open file: " << d_filename << endl;
+    cout << endl;
     return -1;
   }
-  indices.open(indices_file_name,ios::in | ios::binary);
+  indices.open(i_filename.c_str(),ios::in | ios::binary);
   if (!indices.good()) {
-    cerr << "***ERROR***" << endl;
-    cerr << "Could not open file: " << indices_file_name << endl;
-    cerr << endl;
-    distances.close();
+    cout << "***ERROR***" << endl;
+    cout << "Could not open file: " << i_filename << endl;
+    cout << endl;
     return -1;
   }
-  nonsym_distances.open(nonsym_distances_file_name,ios::out | ios::binary);
+  nonsym_distances.open(nsd_filename.str().c_str(),ios::out | ios::binary);
   if (!nonsym_distances.good()) {
-    cerr << "***ERROR***" << endl;
-    cerr << "Could not open file: " << nonsym_distances_file_name << endl;
-    cerr << endl;
-    distances.close();
-    indices.close();
+    cout << "***ERROR***" << endl;
+    cout << "Could not open file: " << nsd_filename << endl;
+    cout << endl;
     return -1;
   }
-  nonsym_row_indices.open(nonsym_row_indices_file_name,ios::out | ios::binary);
+  nonsym_row_indices.open(nsr_filename.str().c_str(),ios::out | ios::binary);
   if (!nonsym_row_indices.good()) {
-    cerr << "***ERROR***" << endl;
-    cerr << "Could not open file: " << nonsym_row_indices_file_name << endl;
-    cerr << endl;
-    distances.close();
-    indices.close();
-    nonsym_distances.close();
+    cout << "***ERROR***" << endl;
+    cout << "Could not open file: " << nsr_filename << endl;
+    cout << endl;
     return -1;
   }
-  nonsym_col_indices.open(nonsym_col_indices_file_name,ios::out | ios::binary);
+  nonsym_col_indices.open(nsc_filename.str().c_str(),ios::out | ios::binary);
   if (!nonsym_col_indices.good()) {
-    cerr << "***ERROR***" << endl;
-    cerr << "Could not open file: " << nonsym_col_indices_file_name << endl;
-    cerr << endl;
-    distances.close();
-    indices.close();
-    nonsym_distances.close();
-    nonsym_row_indices.close();
+    cout << "***ERROR***" << endl;
+    cout << "Could not open file: " << nsc_filename << endl;
+    cout << endl;
+    return -1;
+  }
+  o_file.open(o_filename.c_str(),ios::out | ios::binary);
+  if (!o_file.good()) {
+    cout << "***ERROR***" << endl;
+    cout << "Could not open file: " << o_filename << endl;
+    cout << endl;
     return -1;
   }
 
@@ -244,16 +280,16 @@ int main(int argc, char *argv[]) {
   indices.read((char*) current_indices, sizeof(int) * maxk);
 
   while (!distances.eof() || !indices.eof()) {
-    
+ 
     if (current_index % 1000 == 0)
       cout << "Frame number: " << current_index << "\r";
     // cout << current_index << " : ";
     
     // Print basic information
-    // cerr << "Starting work on " << current_index << ":";
+    // cout << "Starting work on " << current_index << ":";
     // for (int x = 0; x < k; x++)
-    //   cerr << " " << current_indices[x];
-    // cerr << endl;
+    //   cout << " " << current_indices[x];
+    // cout << endl;
 
     for (int x = 0; x < k; x++) {
             
@@ -262,7 +298,7 @@ int main(int argc, char *argv[]) {
       myedge.to = current_indices[x];
       mydistance = current_distances[x];
       if (db.put(NULL, &key, &data, 0) != 0) {
-	cerr << "Could not insert edge: "
+	cout << "Could not insert edge: "
 	     << myedge.from << " "
 	     << myedge.to << " -> "
 	     << mydistance << endl;
@@ -273,7 +309,7 @@ int main(int argc, char *argv[]) {
       // myedge.from = current_indices[x];
       // mydistance = current_distances[x];
       // if (db.put(NULL, &key, &data, 0) != 0) {
-      // 	cerr << "Ccould not insert edge: "
+      // 	cout << "Ccould not insert edge: "
       // 	     << myedge.from << " "
       // 	     << myedge.to << " -> "
       // 	     << mydistance << endl;
@@ -303,6 +339,7 @@ int main(int argc, char *argv[]) {
     
   }
 
+
   // Final index -- just the total number of non-zero entries...
   nonsym_col_indices.write((char*) &nonsym_col, sizeof(int));
 
@@ -312,6 +349,14 @@ int main(int argc, char *argv[]) {
   nonsym_distances.close();
   nonsym_row_indices.close();
   nonsym_col_indices.close();
+
+  o_file.write((char*) &current_index, (sizeof(int) / sizeof(char)));
+  o_file.close();
+  string mycall = "cat "
+    + nsc_filename.str() + " "
+    + nsr_filename.str() + " "
+    + nsd_filename.str() + " >> " + o_filename;
+  system(mycall.c_str());
 
   // Delete dynamically allocated data
   delete [] current_indices;
@@ -326,8 +371,20 @@ int main(int argc, char *argv[]) {
 
   // Delete the database file
   if (remove(db_file_name) != 0) {
-    cerr << "*** WARNING ***" << endl;
-    cerr << "Could not remove database file: " << db_file_name << endl;
+    cout << "*** WARNING ***" << endl;
+    cout << "Could not remove database file: " << db_file_name << endl;
+  }
+  if (remove(nsd_filename.str().c_str()) != 0) {
+    cout << "*** WARNING ***" << endl;
+    cout << "Could not remove database file: " << nsd_filename.str() << endl;
+  }
+  if (remove(nsr_filename.str().c_str()) != 0) {
+    cout << "*** WARNING ***" << endl;
+    cout << "Could not remove database file: " << nsr_filename.str() << endl;
+  }
+  if (remove(nsc_filename.str().c_str()) != 0) {
+    cout << "*** WARNING ***" << endl;
+    cout << "Could not remove database file: " << nsc_filename.str() << endl;
   }
   
   return 0;
