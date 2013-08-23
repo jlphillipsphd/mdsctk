@@ -47,10 +47,10 @@ echo "Computing distances between all point pairs..."
 ${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -s ${DIM} -r rings.pts
 
 echo "Creating CSC format sparse matrix..."
-${MDSCTK_HOME}/make_sysparse ${KNN}
+${MDSCTK_HOME}/make_sysparse -k ${KNN}
 
 echo "Performing autoscaled spectral decomposition..."
-${MDSCTK_HOME}/auto_decomp_sparse ${NCLUSTERS} ${SCALING}
+${MDSCTK_HOME}/auto_decomp_sparse -n ${NCLUSTERS} -k ${SCALING}
 
 echo "Clustering eigenvectors..."
 ${MDSCTK_HOME}/kmeans.r -k ${NCLUSTERS}

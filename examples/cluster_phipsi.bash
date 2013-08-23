@@ -60,16 +60,16 @@ echo "Converting angles to polar coordinates..."
 ${MDSCTK_HOME}/phipsi_to_sincos
 
 echo "Computing Euclidean distances between all vector pairs..."
-${MDSCTK_HOME}/knn_data ${NTHREADS} ${KNN} ${NSINCOS} sincos.dat sincos.dat
+${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -s ${NSINCOS} -r sincos.dat
 
 echo "Creating CSC format sparse matrix..."
-${MDSCTK_HOME}/make_sysparse ${KNN}
+${MDSCTK_HOME}/make_sysparse -k ${KNN}
 
 echo "Performing autoscaled spectral decomposition..."
-${MDSCTK_HOME}/auto_decomp_sparse ${NCLUSTERS} ${SCALING}
+${MDSCTK_HOME}/auto_decomp_sparse -n ${NCLUSTERS} -k ${SCALING}
 
 echo "Clustering eigenvectors..."
-${MDSCTK_HOME}/kmeans.r ${NCLUSTERS}
+${MDSCTK_HOME}/kmeans.r -k ${NCLUSTERS}
 
 # Generate trajectory assignment file,
 # 10 trajectories of 100 frames each.
@@ -79,7 +79,7 @@ Rscript \
     -e 'close(myout)' > assignment.dat
 
 echo "Computing replicate-cluster assignment histogram..."
-${MDSCTK_HOME}/clustering_histogram.r assignment.dat clusters.dat
+${MDSCTK_HOME}/clustering_histogram.r
 
 echo "Plotting the histogram (fails if R package 'fields' is missing)..."
 ${MDSCTK_HOME}/plot_histogram.r

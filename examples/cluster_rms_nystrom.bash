@@ -41,7 +41,7 @@ TOP=trp-cage.pdb
 XTC=trp-cage.xtc
 OSXTC=trp-cage-outofsample.xtc
 
-NPROCS=2      # The number of threads to use
+NTHREADS=2    # The number of threads to use
 KNN=100       # The number of nearest-neighbors to keep for
               # the sparse representation
 NCLUSTERS=10  # The number of clusters to extract
@@ -49,22 +49,22 @@ SCALING=12    # The number of nearest-neighbors to use for
               # computing scaling factors (should be < KNN)
 
 echo "Computing RMS distances between all landmark pairs..."
-${MDSCTK_HOME}/knn_rms ${NPROCS} ${KNN} ${TOP} ${XTC} ${XTC}
+${MDSCTK_HOME}/knn_rms -t ${NTHREADS} -k ${KNN} -p ${TOP} -r ${XTC}
 
 echo "Creating CSC format symmetric sparse matrix..."
-${MDSCTK_HOME}/make_sysparse ${KNN}
+${MDSCTK_HOME}/make_sysparse -k ${KNN}
 
 echo "Computing RMS distances between landmarks and out-of-sample structures..."
-${MDSCTK_HOME}/knn_rms ${NPROCS} ${KNN} ${TOP} ${XTC} ${OSXTC}
+${MDSCTK_HOME}/knn_rms -t ${NTHREADS} -k ${KNN} -p ${TOP} -r ${XTC} -f ${OSXTC}
 
 echo "Creating CSC format non-symmetric sparse matrix..."
-${MDSCTK_HOME}/make_gesparse ${KNN}
+${MDSCTK_HOME}/make_gesparse -k ${KNN}
 
 echo "Performing autoscaled spectral decomposition..."
-${MDSCTK_HOME}/auto_decomp_sparse_nystrom ${NCLUSTERS} ${SCALING}
+${MDSCTK_HOME}/auto_decomp_sparse_nystrom -n ${NCLUSTERS} -k ${SCALING}
 
 echo "Clustering eigenvectors..."
-${MDSCTK_HOME}/kmeans.r ${NCLUSTERS}
+${MDSCTK_HOME}/kmeans.r -k ${NCLUSTERS}
 
 # Generate trajectory assignment file,
 # 10 trajectories of 100 frames each
@@ -76,7 +76,7 @@ Rscript \
     -e 'close(myout)' > assignment.dat
 
 echo "Computing replicate-cluster assignment histogram..."
-${MDSCTK_HOME}/clustering_histogram.r assignment.dat clusters.dat
+${MDSCTK_HOME}/clustering_histogram.r
 
 echo "Plotting the histogram (fails if R package 'fields' is missing)..."
 ${MDSCTK_HOME}/plot_histogram.r

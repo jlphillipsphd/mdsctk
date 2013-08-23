@@ -28,17 +28,23 @@
 // 
 //
 
+// Standard
+// C
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-
+// C++
 #include <fstream>
 #include <iostream>
 #include <vector>
 #include <algorithm>
 
+// Boost
+#include <boost/program_options.hpp>
+
 // Local
 #include "config.h"
+#include "mdsctk.h"
 
 extern "C" {
   
@@ -64,6 +70,7 @@ extern "C" {
   
 } // end FORTRAN definitions
 
+namespace po = boost::program_options;
 using namespace std;
 
 // Sparse Routines
@@ -107,31 +114,81 @@ void sp_dgemv(int n, int *irow, int *pcol, double *A,
 int main(int argc, char* argv[])
 {
 
-  if (argc != 3) {
-    cerr << endl;
-    cerr << "   MDSCTK " << MDSCTK_VERSION_MAJOR << "." << MDSCTK_VERSION_MINOR << endl;
-    cerr << "   Copyright (C) 2013 Joshua L. Phillips" << endl;
-    cerr << "   MDSCTK comes with ABSOLUTELY NO WARRANTY; see LICENSE for details." << endl;
-    cerr << "   This is free software, and you are welcome to redistribute it" << endl;
-    cerr << "   under certain conditions; see README.md for details." << endl;
-    cerr << endl;
-    cerr << "Usage: " << argv[0] << " [# eigenvalues/vectors] [k_sigma]" << endl;
-    cerr << "   Reads the symmetric CSC format sparse matrix from the" << endl;
-    cerr << "   files sym_distances.dat, sym_row_indices.dat, &" << endl;
-    cerr << "   sym_col_indices.dat and computes the number of" << endl;
-    cerr << "   requested eigenvalues/vectors of the normalized" << endl;
-    cerr << "   laplacian using a gaussian kernal of width sigma," << endl;
-    cerr << "   where sigma is calculated using the average k-smallest" << endl;
-    cerr << "   values in each column. The nonsymmetric CSC format sparse" << endl;
-    cerr << "   matrix in nonsym_distances.dat, nonsym_row_indices.dat, &" << endl;
-    cerr << "   nonsym_col_indices.dat is projected onto the earlier" << endl;
-    cerr << "   eigen vectors (i.e. out-of-sample prediction)." << endl;
-    cerr << endl;
+  const char* program_name = "auto_decomp_parse_nystrom";
+  bool optsOK = true;
+  copyright(program_name);
+  cout << "   Reads the symmetric CSC format sparse matrix from" << endl;
+  cout << "   input-file, and computes the number of requested" << endl;
+  cout << "   eigenvalues/vectors of the normalized laplacian" << endl;
+  cout << "   using ARPACK and a gaussian kernel of width sigma," << endl;
+  cout << "   where sigma is calculated using the average of the" << endl;
+  cout << "   k-closest neighbor distances in each column." << endl;
+  cout << "   Note that k is normally smaller than the number of" << endl;
+  cout << "   neighbors used to construct the sparse CSC matrix." << endl;
+  cout << "   The nonsymmetric CSC format sparse matrix is projected" << endl;
+  cout << "   onto the eigenvectors of the symmetric matrix for" << endl;
+  cerr << "   out-of-sample prediction." << endl;
+  cout << endl;
+  cout << "   Use -h or --help to see the complete list of options." << endl;
+  cout << endl;
+
+  // Option vars...
+  int k_a;
+  int nev;
+  string ssm_filename;
+  string gsm_filename;
+  string evals_filename;
+  string evecs_filename;
+  string residuals_filename;
+
+  // Declare the supported options.
+  po::options_description cmdline_options;
+  po::options_description program_options("Program options");
+  program_options.add_options()
+    ("help,h", "show this help message and exit")
+    ("k-sigma,k", po::value<int>(&k_a), "Input:  K-nn to average for sigmas (int)")
+    ("nevals,n", po::value<int>(&nev), "Input:  Number of eigenvalues/vectors (int)")
+    ("ssm-file,s", po::value<string>(&ssm_filename)->default_value("distances.ssm"), "Input:  Symmetric sparse matrix file (string:filename)")
+    ("gsm-file,g", po::value<string>(&gsm_filename)->default_value("distances.gsm"), "Input:  General sparse matrix file (string:filename)")
+    ("evals-file,v", po::value<string>(&evals_filename)->default_value("eigenvalues.dat"), "Output:  Eigenvalues file (string:filename)")
+    ("evecs-file,e", po::value<string>(&evecs_filename)->default_value("eigenvectors.dat"), "Output: Eigenvectors file (string:filename)")    
+    ("residuals-file,r", po::value<string>(&residuals_filename)->default_value("residuals.dat"), "Output: Residuals file (string:filename)")    
+    ;
+  cmdline_options.add(program_options);
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, cmdline_options), vm);
+  po::notify(vm);    
+
+  if (vm.count("help")) {
+    cout << "usage: " << program_name << " [options]" << endl;
+    cout << endl;
+    cout << cmdline_options << endl;
+    return 1;
+  }
+  if (!vm.count("k-sigma")) {
+    cout << "ERROR: --k-sigma not supplied." << endl;
+    cout << endl;
+    optsOK = false;
+  }
+  if (!vm.count("nevals")) {
+    cout << "ERROR: --nevals not supplied." << endl;
+    cout << endl;
+    optsOK = false;
+  }
+
+  if (!optsOK) {
     return -1;
   }
 
-  int     nev = atoi(argv[1]); // Number of eigenvectors...
-  int     k_a = atoi(argv[2]); // Neighbors for sigmas...
+  cout << "Running with the following options:" << endl;
+  cout << "k-sigma =    " << k_a << endl;
+  cout << "nevals =     " << nev << endl;
+  cout << "ssm-file =   " << ssm_filename << endl;
+  cout << "gsm-file =   " << gsm_filename << endl;
+  cout << "evals-file = " << evals_filename << endl;
+  cout << "evecs-file = " << evecs_filename << endl;
+  cout << endl;
   
   // General
   int     n;   // Dimension of the problem.
@@ -152,9 +209,8 @@ int main(int argc, char* argv[])
 		// sparse elements of B.
 
   // File input streams
-  ifstream distances;
-  ifstream row_pointers;
-  ifstream col_pointers;
+  ifstream ssm;
+  ifstream gsm;
 
   // File output streams
   ofstream eigenvalues;
@@ -167,50 +223,33 @@ int main(int argc, char* argv[])
   eps = sqrt(eps);
  
   // Open files
-  distances.open("sym_distances.dat");
-  row_pointers.open("sym_row_indices.dat");
-  col_pointers.open("sym_col_indices.dat");
-  eigenvalues.open("eigenvalues.dat");
-  eigenvectors.open("eigenvectors.dat");
-  residuals.open("residuals.dat");
+  ssm.open(ssm_filename.c_str());
+  gsm.open(gsm_filename.c_str());
+  eigenvalues.open(evals_filename.c_str());
+  eigenvectors.open(evecs_filename.c_str());
+  residuals.open(residuals_filename.c_str());
 
-  // Determine size of col pointer file
-  col_pointers.seekg(0,ios::end);
-  n = (col_pointers.tellg() * sizeof(char) / sizeof(int));
-  col_pointers.seekg(0,ios::beg);
-  pcolA = new int[n];
-  col_pointers.read((char*) pcolA, (sizeof(int) / sizeof(char)) * n);
-  n--;
+  // Read symmetric CSC matrix
+  ssm.read((char*) &n, (sizeof(int) / sizeof(char)));
+  pcolA = new int[n+1];
+  ssm.read((char*) pcolA, (sizeof(int) / sizeof(char)) * (n+1));
   nnzA = pcolA[n];
   A = new double[nnzA];
   irowA = new int[nnzA];
-  row_pointers.read((char*) irowA, (sizeof(int) / sizeof(char)) * nnzA);
-  distances.read((char*) A, (sizeof(double) / sizeof(char)) * nnzA);
+  ssm.read((char*) irowA, (sizeof(int) / sizeof(char)) * nnzA);
+  ssm.read((char*) A, (sizeof(double) / sizeof(char)) * nnzA);
+  ssm.close();
 
-  distances.close();
-  row_pointers.close();
-  col_pointers.close();
-
-  // Open files
-  distances.open("nonsym_distances.dat");
-  row_pointers.open("nonsym_row_indices.dat");
-  col_pointers.open("nonsym_col_indices.dat");
-
-  col_pointers.seekg(0,ios::end);
-  m = (col_pointers.tellg() * sizeof(char) / sizeof(int));
-  col_pointers.seekg(0,ios::beg);
-  pcolB = new int[m];
-  col_pointers.read((char*) pcolB, (sizeof(int) / sizeof(char)) * m);
-  m--;
+  // Read general CSC matrix
+  gsm.read((char*) &m, (sizeof(int) / sizeof(char)));
+  pcolB = new int[m+1];
+  gsm.read((char*) pcolB, (sizeof(int) / sizeof(char)) * (m+1));
   nnzB = pcolB[m];
   B = new double[nnzB];
   irowB = new int[nnzB];
-  row_pointers.read((char*) irowB, (sizeof(int) / sizeof(char)) * nnzB);
-  distances.read((char*) B, (sizeof(double) / sizeof(char)) * nnzB);
-
-  distances.close();
-  row_pointers.close();
-  col_pointers.close();
+  gsm.read((char*) irowB, (sizeof(int) / sizeof(char)) * nnzB);
+  gsm.read((char*) B, (sizeof(double) / sizeof(char)) * nnzB);
+  gsm.close();
 
   // Turn distances into normalized affinities...
   double *sigma_a = new double[n];

@@ -172,7 +172,7 @@ int main(int argc, char *argv[]) {
   cout << "output-knn =     " << k << endl;
   cout << "index-file =     " << i_filename << endl;
   cout << "distances-file = " << d_filename << endl;
-  cout << "output-file =  " << o_filename << endl;
+  cout << "output-file =    " << o_filename << endl;
   cout << endl;
 
   int current_index = 0;
