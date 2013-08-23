@@ -46,75 +46,13 @@
 #include "config.h"
 #include "mdsctk.h"
 
-extern "C" {
-  
-  void dsaupd_(int *ido, char *bmat, int *n, char *which,
-	       int *nev, double *tol, double *resid,
-	       int *ncv, double *V, int *ldv,
-	       int *iparam, int *ipntr, double *workd,
-	       double *workl, int *lworkl, int *info);
-  
-  void dseupd_(int *rvec, char *HowMny, int *select,
-	       double *d, double *Z, int *ldz,
-	       double *sigma, char *bmat, int *n,
-	       char *which, int *nev, double *tol,
-	       double *resid, int *ncv, double *V,
-	       int *ldv, int *iparam, int *ipntr,
-	       double *workd, double *workl,
-	       int *lworkl, int *info);
-
-  // For checking residuals
-  void daxpy_(const int *n, const double *da, const double *dx,
-	      const int *incx, double *dy, const int *incy);
-  double dnrm2_(const int *n, const double *dx, const int *incx);
-  
-} // end FORTRAN definitions
-
 namespace po = boost::program_options;
 using namespace std;
-
-// Sparse Routines
-void sp_dsymv(int n, int *irow, int *pcol, double *A,
-	      double *v, double *w) {
-
-  int i,j,k;
-  double t = 0.0;
-  
-  for (i=0; i<n; i++) w[i] = 0.0;
-
-  for (i=0; i<n; i++) {
-    t = v[i];
-    k = pcol[i];
-    if ((k!=pcol[i+1])&&(irow[k]==i)) {
-      w[i] += t*A[k];
-      k++;
-    }
-    for (j=k; j<pcol[i+1]; j++) {
-      w[irow[j]] += t*A[j];
-      w[i] += v[irow[j]]*A[j];
-    }
-  }
-}
-
-void sp_dgemv(int n, int *irow, int *pcol, double *A,
-	      double *v, double *w) {
-  
-  int i,j,k;
-  
-  for (i=0; i<n; i++) w[i] = 0.0;
-  
-  for (i=0; i<n; i++) {
-    k = pcol[i];
-    for (j=k; j<pcol[i+1]; j++) {
-      w[i] += v[irow[j]]*A[j];
-    }
-  }
-}
 
 int main(int argc, char* argv[])
 {
 
-  const char* program_name = "auto_decomp_parse_nystrom";
+  const char* program_name = "auto_decomp_sparse_nystrom";
   bool optsOK = true;
   copyright(program_name);
   cout << "   Reads the symmetric CSC format sparse matrix from" << endl;
@@ -125,7 +63,7 @@ int main(int argc, char* argv[])
   cout << "   k-closest neighbor distances in each column." << endl;
   cout << "   Note that k is normally smaller than the number of" << endl;
   cout << "   neighbors used to construct the sparse CSC matrix." << endl;
-  cout << "   The nonsymmetric CSC format sparse matrix is projected" << endl;
+  cout << "   The general CSC format sparse matrix is projected" << endl;
   cout << "   onto the eigenvectors of the symmetric matrix for" << endl;
   cerr << "   out-of-sample prediction." << endl;
   cout << endl;

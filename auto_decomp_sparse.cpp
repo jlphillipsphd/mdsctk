@@ -46,61 +46,13 @@
 #include "config.h"
 #include "mdsctk.h"
 
-// ARPACK routines
-extern "C" {
-  
-  void dsaupd_(int *ido, char *bmat, int *n, char *which,
-	       int *nev, double *tol, double *resid,
-	       int *ncv, double *V, int *ldv,
-	       int *iparam, int *ipntr, double *workd,
-	       double *workl, int *lworkl, int *info);
-  
-  void dseupd_(int *rvec, char *HowMny, int *select,
-	       double *d, double *Z, int *ldz,
-	       double *sigma, char *bmat, int *n,
-	       char *which, int *nev, double *tol,
-	       double *resid, int *ncv, double *V,
-	       int *ldv, int *iparam, int *ipntr,
-	       double *workd, double *workl,
-	       int *lworkl, int *info);
-
-  // For checking residuals
-  void daxpy_(const int *n, const double *da, const double *dx,
-	      const int *incx, double *dy, const int *incy);
-  double dnrm2_(const int *n, const double *dx, const int *incx);
-  
-} // end FORTRAN definitions
-
 namespace po = boost::program_options;
 using namespace std;
-
-// Sparse Routines
-void sp_dsymv(int n, int *irow, int *pcol, double *A,
-	      double *v, double *w) {
-
-  int i,j,k;
-  double t = 0.0;
-  
-  for (i=0; i<n; i++) w[i] = 0.0;
-
-  for (i=0; i<n; i++) {
-    t = v[i];
-    k = pcol[i];
-    if ((k!=pcol[i+1])&&(irow[k]==i)) {
-      w[i] += t*A[k];
-      k++;
-    }
-    for (j=k; j<pcol[i+1]; j++) {
-      w[irow[j]] += t*A[j];
-      w[i] += v[irow[j]]*A[j];
-    }
-  }
-}
 
 int main(int argc, char* argv[])
 {
 
-  const char* program_name = "auto_decomp_parse";
+  const char* program_name = "auto_decomp_sparse";
   bool optsOK = true;
   copyright(program_name);
   cout << "   Reads the symmetric CSC format sparse matrix from" << endl;

@@ -58,6 +58,9 @@ ${MDSCTK_HOME}/make_gesparse -k ${KNN}
 echo "Performing autoscaled spectral decomposition..."
 ${MDSCTK_HOME}/auto_decomp_sparse_nystrom -n ${NCLUSTERS} -k ${SCALING}
 
+# echo "Performing spectral decomposition..."
+# ${MDSCTK_HOME}/decomp_sparse_nystrom -n ${NCLUSTERS} -q 0.3
+
 echo "Clustering eigenvectors..."
 ${MDSCTK_HOME}/kmeans.r -k ${NCLUSTERS}
 
