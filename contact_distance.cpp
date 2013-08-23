@@ -59,7 +59,7 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
 
-  const char* program_name = "knn_data";
+  const char* program_name = "contact_distance";
   bool optsOK = true;
   copyright(program_name);
   cout << "   Computes the atomic contacts for structures in the given" << endl;
@@ -100,7 +100,6 @@ int main(int argc, char* argv[]) {
 
   if (vm.count("help")) {
     cout << "usage: " << program_name << " [options]" << endl;
-    cout << endl;
     cout << cmdline_options << endl;
     return 1;
   }

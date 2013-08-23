@@ -28,20 +28,25 @@
 // 
 //
 
+// Standard
 // C
 #include <math.h>
-
 // C++
 #include <iostream>
 #include <fstream>
+
+// Boost
+#include <boost/program_options.hpp>
 
 // GROMACS
 #include <gromacs/xtcio.h>
 
 // Local
 #include "config.h"
+#include "mdsctk.h"
 
 const double RAD2DEG = 180.0 / M_PI;
+namespace po = boost::program_options;
 using namespace std;
 
 void crossprod(float C[],
@@ -89,24 +94,53 @@ float torsion(float pos1[], float pos2[], float pos3[], float pos4[], bool degre
 
 int main(int argc, char* argv[]) {
 
-  if (argc < 2) {
-    cerr << endl;
-    cerr << "   MDSCTK " << MDSCTK_VERSION_MAJOR << "." << MDSCTK_VERSION_MINOR << endl;
-    cerr << "   Copyright (C) 2013 Joshua L. Phillips" << endl;
-    cerr << "   MDSCTK comes with ABSOLUTELY NO WARRANTY; see LICENSE for details." << endl;
-    cerr << "   This is free software, and you are welcome to redistribute it" << endl;
-    cerr << "   under certain conditions; see README.md for details." << endl;
-    cerr << endl;
-    cerr << "Usage: " << argv[0] << " [xtc file]..." << endl;
-    cerr << "   Convert the provided xtc file to phipsi angles and" << endl;
-    cerr << "   write the results to standard output." << endl;
-    cerr << endl;
+  const char* program_name = "bb_xtc_to_phipsi";
+  bool optsOK = true;
+  copyright(program_name);
+  cout << "   Convert the provided XTC file to phipsi angles and" << endl;
+  cout << "   write the results to the selected output file." << endl;
+  cout << "   Note that this code anticipates a single protein" << endl;
+  cout << "   chain, and only the N-CA-C atoms to be present in" << endl;
+  cout << "   the XTC file." << endl;
+  cout << endl;
+  cout << "   Use -h or --help to see the complete list of options." << endl;
+  cout << endl;
+
+  // Option vars...
+  string xtc_filename;
+  string output_filename;
+
+  // Declare the supported options.
+  po::options_description cmdline_options;
+  po::options_description program_options("Program options");
+  program_options.add_options()
+    ("help,h", "show this help message and exit")
+    ("xtc-file,x", po::value<string>(&xtc_filename)->default_value("traj.xtc"), "Input:  Trajectory file (string:filename)")
+    ("output-file,o", po::value<string>(&output_filename)->default_value("phipsi.dat"), "Output: Phi-phi angle data file (string:filename)")    
+    ;
+  cmdline_options.add(program_options);
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, cmdline_options), vm);
+  po::notify(vm);    
+
+  if (vm.count("help")) {
+    cout << "usage: " << program_name << " [options]" << endl;
+    cout << cmdline_options << endl;
+    return 1;
+  }
+
+  if (!optsOK) {
     return -1;
   }
 
+  cout << "Running with the following options:" << endl;
+  cout << "xtc-file =    " << xtc_filename << endl;
+  cout << "output-file = " << output_filename << endl;
+  cout << endl;
+
   // Main variables
   int natoms;
-  const char* xtc_file = argv[1];
   rvec* mycoords = NULL;
   double* mymat = NULL;
   t_fileio *myfile;
@@ -121,16 +155,16 @@ int main(int argc, char* argv[]) {
   gmx_bool bOK = 1;
 
   // Get number of atoms and allocate data structures
-  myfile = open_xtc(xtc_file,"r");
+  myfile = open_xtc(xtc_filename.c_str(),"r");
   read_first_xtc(myfile,&natoms, &step, &time, box, &mycoords, &prec, &bOK);
   close_xtc(myfile);
   mycoords = new rvec[natoms];
   mymat = new double[(2*(natoms/3)-2)];
-  output.open("phipsi.dat");
+  output.open(output_filename.c_str());
 
   // Convert coordinates
   for (int x = 1; x < argc; x++) {
-    myfile = open_xtc(xtc_file,"r");
+    myfile = open_xtc(xtc_filename.c_str(),"r");
     while (read_next_xtc(myfile, natoms, &step, &time, box, mycoords, &prec, &bOK)) {
       int i_mat = 0;    
       for (int x = 0; x < natoms-3;) {
@@ -147,9 +181,10 @@ int main(int argc, char* argv[]) {
   }
   output.close();
 
-  cerr << "Wrote " << frames
+  cout << "Wrote " << frames
        << " vectors of length " << (2*(natoms/3)-2)
        << " (" << (frames*(2*(natoms/3)-2)) << " total values)." << endl;
+  cout << endl;
 
   // Clean up
   delete [] mycoords;

@@ -31,34 +31,62 @@
 // C++
 #include <iostream>
 
+// Boost
+#include <boost/program_options.hpp>
+
 // GROMACS
 #include <gromacs/xtcio.h>
 
 // Local
 #include "config.h"
+#include "mdsctk.h"
 
+namespace po = boost::program_options;
 using namespace std;
 
 int main(int argc, char* argv[]) {
 
-  if (argc != 2) {
-    cerr << endl;
-    cerr << "   MDSCTK " << MDSCTK_VERSION_MAJOR << "." << MDSCTK_VERSION_MINOR << endl;
-    cerr << "   Copyright (C) 2013 Joshua L. Phillips" << endl;
-    cerr << "   MDSCTK comes with ABSOLUTELY NO WARRANTY; see LICENSE for details." << endl;
-    cerr << "   This is free software, and you are welcome to redistribute it" << endl;
-    cerr << "   under certain conditions; see README.md for details." << endl;
-    cerr << endl;
-    cerr << "Usage: " << argv[0] << " [xtc file]" << endl;
-    cerr << "   Report stats on the provided xtc file." << endl;
-    cerr << endl;
+  const char* program_name = "check_xtc";
+  bool optsOK = true;
+  copyright(program_name);
+  cout << "   Report stats on the provided xtc file." << endl;
+  cout << endl;
+  cout << "   Use -h or --help to see the complete list of options." << endl;
+  cout << endl;
+
+  // Option vars...
+  string xtc_filename;
+
+  // Declare the supported options.
+  po::options_description cmdline_options;
+  po::options_description program_options("Program options");
+  program_options.add_options()
+    ("help,h", "show this help message and exit")
+    ("xtc-file,x", po::value<string>(&xtc_filename)->default_value("traj.xtc"), "Input:  Trajectory file (string:filename)")
+    ;
+  cmdline_options.add(program_options);
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, cmdline_options), vm);
+  po::notify(vm);    
+
+  if (vm.count("help")) {
+    cout << "usage: " << program_name << " [options]" << endl;
+    cout << cmdline_options << endl;
+    return 1;
+  }
+
+  if (!optsOK) {
     return -1;
   }
+
+  cout << "Running with the following options:" << endl;
+  cout << "xtc-file =    " << xtc_filename << endl;
+  cout << endl;
 
   // Main variables
   int natoms;
   int nframes = 0;
-  const char* my_filename = argv[1];
   t_fileio *my_file;
   rvec* mycoords = NULL;
 
@@ -71,10 +99,10 @@ int main(int argc, char* argv[]) {
   gmx_bool bOK = 1;
 
   // Get number of atoms and allocate data structures
-  my_file = open_xtc(my_filename,"r");
+  my_file = open_xtc(xtc_filename.c_str(),"r");
   read_first_xtc(my_file,&natoms, &step, &time, box, &mycoords, &prec, &bOK);
   close_xtc(my_file);
-  my_file = open_xtc(my_filename,"r");
+  my_file = open_xtc(xtc_filename.c_str(),"r");
   mycoords = new rvec[natoms];
   
   // Convert coordinates
@@ -88,12 +116,13 @@ int main(int argc, char* argv[]) {
   // Clean up
   close_xtc(my_file);
 
-  cout << "XTC Statistics" << endl;
-  cout << "N_Frames: " << nframes << endl;
-  cout << "N_Atoms: " << natoms << endl;
-  cout << "Start_Time: " << start_time << endl;
-  cout << "End_Time: " << time << endl;
-  cout << "Precision: " << prec << endl;
+  cout << "XTC Statistics - " << xtc_filename << endl;
+  cout << "Number of frames: " << nframes << endl;
+  cout << "Nunber of atoms:  " << natoms << endl;
+  cout << "Start time:       " << start_time << endl;
+  cout << "End time:         " << time << endl;
+  cout << "Precision:        " << prec << endl;
+  cout << endl;
 
   delete [] mycoords;
 

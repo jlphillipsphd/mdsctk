@@ -28,11 +28,6 @@
 // 
 //
 
-// GSL Tools
-#include <gsl/gsl_vector.h>
-#include <gsl/gsl_permutation.h>
-#include <gsl/gsl_sort_vector.h>
-
 // Standard
 // C
 #include <string.h>
@@ -43,6 +38,9 @@
 #include <fstream>
 #include <vector>
 
+// Boost
+#include <boost/program_options.hpp>
+
 // GROMACS
 #include <gromacs/tpxio.h>
 #include <gromacs/xtcio.h>
@@ -50,27 +48,58 @@
 
 // Local
 #include "config.h"
+#include "mdsctk.h"
 
+namespace po = boost::program_options;
 using namespace std;
 
 int main(int argc, char* argv[]) {
-  
-  if (argc != 3) {
-    cerr << endl;
-    cerr << "   MDSCTK " << MDSCTK_VERSION_MAJOR << "." << MDSCTK_VERSION_MINOR << endl;
-    cerr << "   Copyright (C) 2013 Joshua L. Phillips" << endl;
-    cerr << "   MDSCTK comes with ABSOLUTELY NO WARRANTY; see LICENSE for details." << endl;
-    cerr << "   This is free software, and you are welcome to redistribute it" << endl;
-    cerr << "   under certain conditions; see README.md for details." << endl;
-    cerr << endl;
-    cerr << "Usage: " << argv[0] << " [reference structure] [fitting xtc file]" << endl;
-    cerr << "   Computes the RMSD of all structures for the given" << endl;
-    cerr << "   in the xtc file. A template structure should be" << endl;
-    cerr << "   provided as the reference structure." << endl;
-    cerr << endl;
+
+  const char* program_name = "rms_test";
+  bool optsOK = true;
+  copyright(program_name);
+  cout << "   Computes the RMSD of all structures for the given" << endl;
+  cout << "   in the xtc file. The topology file provided will be" << endl;
+  cout << "   used as the reference structure." << endl;
+  cout << endl;
+  cout << "   Use -h or --help to see the complete list of options." << endl;
+  cout << endl;
+
+  // Option vars...
+  string top_filename;
+  string xtc_filename;
+  string output_filename;
+
+  // Declare the supported options.
+  po::options_description cmdline_options;
+  po::options_description program_options("Program options");
+  program_options.add_options()
+    ("help,h", "show this help message and exit")
+    ("topology-file,p", po::value<string>(&top_filename)->default_value("topology.pdb"), "Input:  Topology file [.pdb,.gro,.tpr] (string:filename)")
+    ("xtc-file,x", po::value<string>(&xtc_filename)->default_value("traj.xtc"), "Input:  Trajectory file (string:filename)")
+    ("output-file,o", po::value<string>(&output_filename)->default_value("rms.dat"), "Output: RMS data file (string:filename)")    
+    ;
+  cmdline_options.add(program_options);
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, cmdline_options), vm);
+  po::notify(vm);    
+
+  if (vm.count("help")) {
+    cout << "usage: " << program_name << " [options]" << endl;
+    cout << cmdline_options << endl;
+    return 1;
+  }
+
+  if (!optsOK) {
     return -1;
   }
 
+  cout << "Running with the following options:" << endl;
+  cout << "xtc-file =    " << xtc_filename << endl;
+  cout << "output-file = " << output_filename << endl;
+  cout << endl;
+  
   int ref_natoms = -1;
   int natoms = 0;
   rvec* ref_coords = NULL;
@@ -78,9 +107,8 @@ int main(int argc, char* argv[]) {
   real *weights = NULL;
   gmx_bool bOK = 1;
 
-  const char *ref_filename = argv[1];
-  const char *fit_filename = argv[2];
   t_fileio *fit_file;
+  ofstream output;
 
   // Used when reading XTC files...
   int step = 1;
@@ -92,18 +120,18 @@ int main(int argc, char* argv[]) {
   int ePBC;
 
   // Get number of atoms and initialize weights
-  cerr << "Reading reference coordinates from " << ref_filename << " ... ";
-  read_tps_conf(ref_filename, buf, &top, &ePBC, &ref_coords,
+  cout << "Reading reference coordinates from " << top_filename << " ... ";
+  read_tps_conf(top_filename.c_str(), buf, &top, &ePBC, &ref_coords,
 		NULL, box, TRUE);
   ref_natoms = top.atoms.nr;
-  cerr << "done." << endl;
+  cout << "done." << endl;
 
-  fit_file = open_xtc(fit_filename,"r");
+  fit_file = open_xtc(xtc_filename.c_str(),"r");
   read_first_xtc(fit_file,&natoms, &step, &time, box, &fit_coords, &prec, &bOK);
   close_xtc(fit_file);
   if (natoms != ref_natoms) {
-    cerr << "*** ERROR ***" << endl;
-    cerr << "Number of atoms in topology file ("
+    cout << "*** ERROR ***" << endl;
+    cout << "Number of atoms in topology file ("
 	 << ref_natoms << ") "
 	 << "does not match the number of atoms "
 	 << "in the XTC file (" << natoms << ")."
@@ -118,16 +146,18 @@ int main(int argc, char* argv[]) {
   }
   reset_x(natoms,NULL,natoms,NULL,ref_coords,weights);
 
+  output.open(output_filename.c_str());
   // Read coordinates and weight-center all structures
-  cerr << "Reading fitting coordinates from file: " << fit_filename << " ... ";
-  fit_file = open_xtc(fit_filename,"r");
+  cout << "Reading fitting coordinates from file: " << xtc_filename << " ... ";
+  fit_file = open_xtc(xtc_filename.c_str(),"r");
   while (read_next_xtc(fit_file, natoms, &step, &time, box, fit_coords, &prec, &bOK)) {
     reset_x(natoms,NULL,natoms,NULL,fit_coords,weights);
     do_fit(natoms,weights,ref_coords,fit_coords);
-    cout << time << "\t" << (rmsdev(natoms,weights,ref_coords,fit_coords) * 10.0) << endl;
+    output << time << "\t" << (rmsdev(natoms,weights,ref_coords,fit_coords) * 10.0) << endl;
   }
   close_xtc(fit_file);
-  cerr << "done." << endl;
+  output.close();
+  cout << "done." << endl;
 
   // Clean coordinates
   delete [] ref_coords;

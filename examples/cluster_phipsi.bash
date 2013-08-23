@@ -54,7 +54,7 @@ NPHIPSI=$(( (${NRES}*2) - 2 )) # Number of Phi-Psi angles
 NSINCOS=$(( ${NPHIPSI}*2 ))    # Number of polar coordinates
 
 echo "Computing Phi-Psi angles..."
-${MDSCTK_HOME}/bb_xtc_to_phipsi ${XTC}
+${MDSCTK_HOME}/bb_xtc_to_phipsi -x ${XTC}
 
 echo "Converting angles to polar coordinates..."
 ${MDSCTK_HOME}/phipsi_to_sincos

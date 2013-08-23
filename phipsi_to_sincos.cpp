@@ -28,37 +28,69 @@
 // 
 //
 
+// Standard
 // C
 #include <math.h>
-
 // C++
 #include <iostream>
 #include <fstream>
 
+// Boost
+#include <boost/program_options.hpp>
+
 // Local
 #include "config.h"
+#include "mdsctk.h"
 
+namespace po = boost::program_options;
 using namespace std;
 
 #define BLKSIZE 65536
 
 int main(int argc, char* argv[]) {
 
-  if (argc != 1) {
-    cerr << endl;
-    cerr << "   MDSCTK " << MDSCTK_VERSION_MAJOR << "." << MDSCTK_VERSION_MINOR << endl;
-    cerr << "   Copyright (C) 2013 Joshua L. Phillips" << endl;
-    cerr << "   MDSCTK comes with ABSOLUTELY NO WARRANTY; see LICENSE for details." << endl;
-    cerr << "   This is free software, and you are welcome to redistribute it" << endl;
-    cerr << "   under certain conditions; see README.md for details." << endl;
-    cerr << endl;
-    cerr << "Usage: " << argv[0] << endl;
-    cerr << "   Convert the (binary-double) angles from phipsi.dat" << endl;
-    cerr << "   to sin-cos euclidean coordinates and write the results" << endl;
-    cerr << "   to sincos.dat." << endl;
-    cerr << endl;
+  const char* program_name = "phipsi_to_sincos";
+  bool optsOK = true;
+  copyright(program_name);
+  cout << "   Convert the (binary-double) angles from the input file" << endl;
+  cout << "   to sin-cos euclidean coordinates and write the results" << endl;
+  cout << "   to the provided output file." << endl;
+  cout << endl;
+  cout << "   Use -h or --help to see the complete list of options." << endl;
+  cout << endl;
+
+  // Option vars...
+  string input_filename;
+  string output_filename;
+
+  // Declare the supported options.
+  po::options_description cmdline_options;
+  po::options_description program_options("Program options");
+  program_options.add_options()
+    ("help,h", "show this help message and exit")
+    ("input-file,i", po::value<string>(&input_filename)->default_value("phipsi.dat"), "Input:  Phi-psi angle data file (string:filename)")
+    ("output-file,o", po::value<string>(&output_filename)->default_value("sincos.dat"), "Output: Projected angle data file (string:filename)")    
+    ;
+  cmdline_options.add(program_options);
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, cmdline_options), vm);
+  po::notify(vm);    
+
+  if (vm.count("help")) {
+    cout << "usage: " << program_name << " [options]" << endl;
+    cout << cmdline_options << endl;
+    return 1;
+  }
+
+  if (!optsOK) {
     return -1;
   }
+
+  cout << "Running with the following options:" << endl;
+  cout << "input-file =    " << input_filename << endl;
+  cout << "output-file = " << output_filename << endl;
+  cout << endl;
 
   int input_length = 0;
   int char_block_size = BLKSIZE / sizeof(char);
@@ -71,8 +103,8 @@ int main(int argc, char* argv[]) {
 
   ifstream myin;
   ofstream myout;
-  myin.open("phipsi.dat");
-  myout.open("sincos.dat");
+  myin.open(input_filename.c_str());
+  myout.open(output_filename.c_str());
 
   myin.seekg(0, ios::end);
   input_length = myin.tellg();
@@ -98,8 +130,9 @@ int main(int argc, char* argv[]) {
   } 
   myout.write((char*) result, char_extra * 2);
   
-  cerr << "Wrote " << (input_length/8) 
+  cout << "Wrote " << (input_length/8) 
        << " sin-cos pairs (" << (input_length/4) << " total values)." << endl;
+  cout << endl;
 
   delete [] data;
   delete [] result;

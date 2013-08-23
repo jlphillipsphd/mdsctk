@@ -31,41 +31,82 @@
 // C++
 #include <iostream>
 
+// Boost
+#include <boost/program_options.hpp>
+
 // GROMACS
 #include <gromacs/xtcio.h>
 
 // Local
 #include "config.h"
+#include "mdsctk.h"
 
+namespace po = boost::program_options;
 using namespace std;
 
 int main(int argc, char* argv[]) {
 
-  if (argc != 3) {
-    cerr << endl;
-    cerr << "   MDSCTK " << MDSCTK_VERSION_MAJOR << "." << MDSCTK_VERSION_MINOR << endl;
-    cerr << "   Copyright (C) 2013 Joshua L. Phillips" << endl;
-    cerr << "   MDSCTK comes with ABSOLUTELY NO WARRANTY; see LICENSE for details." << endl;
-    cerr << "   This is free software, and you are welcome to redistribute it" << endl;
-    cerr << "   under certain conditions; see README.md for details." << endl;
-    cerr << endl;
-    cerr << "Usage: " << argv[0] << " [xtc file] [n]" << endl;
-    cerr << "   Splits the provided xtc file into two separate." << endl;
-    cerr << "   xtc files (landmarks.xtc and remainder.xtc) where" << endl;
-    cerr << "   landmarks.xtc will contain every n-th frame from" << endl;
-    cerr << "   the input xtc file, while remainder.xtc will contain" << endl;
-    cerr << "   all other frames from the input trajectory." << endl;
-    cerr << endl;
+  const char* program_name = "split_xtc";
+  bool optsOK = true;
+  copyright(program_name);
+  cout << "   Splits the provided xtc file into two separate." << endl;
+  cout << "   xtc files (landmarks.xtc and remainder.xtc) where" << endl;
+  cout << "   landmarks.xtc will contain every n-th frame from" << endl;
+  cout << "   the input xtc file, while remainder.xtc will contain" << endl;
+  cout << "   all other frames from the input trajectory." << endl;
+  cout << endl;
+  cout << "   Use -h or --help to see the complete list of options." << endl;
+  cout << endl;
+
+  // Option vars...
+  int n;
+  string xtc_filename;
+  string landmarks_filename;
+  string remainder_filename;
+
+  // Declare the supported options.
+  po::options_description cmdline_options;
+  po::options_description program_options("Program options");
+  program_options.add_options()
+    ("help,h", "show this help message and exit")
+    ("n,n", po::value<int>(&n), "Input: Every n-th frames goes to landmarks, the rest in remainder (int)")
+    ("xtc-file,x", po::value<string>(&xtc_filename)->default_value("traj.xtc"), "Input:  Trajectory file (string:filename)")
+    ("landmarks-file,l", po::value<string>(&landmarks_filename)->default_value("landmarks.xtc"), "Output:  Trajectory file (string:filename)")
+    ("remainder-file,r", po::value<string>(&remainder_filename)->default_value("remainder.xtc"), "Output:  Trajectory file (string:filename)")
+    ;
+  cmdline_options.add(program_options);
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, cmdline_options), vm);
+  po::notify(vm);    
+
+  if (vm.count("help")) {
+    cout << "usage: " << program_name << " [options]" << endl;
+    cout << cmdline_options << endl;
+    return 1;
+  }
+  if (!vm.count("n")) {
+    cout << "ERROR: --n not supplied." << endl;
+    cout << endl;
+    optsOK = false;
+  }
+
+  if (!optsOK) {
     return -1;
   }
+
+  cout << "Running with the following options:" << endl;
+  cout << "n =              " << n << endl;
+  cout << "xtc-file =       " << xtc_filename << endl;
+  cout << "landmarks-file = " << landmarks_filename << endl;
+  cout << "remainder-file = " << remainder_filename << endl;
+  cout << endl;
 
   // Main variables
   int natoms;
   int nframes = 0;
   int lframes = 0;
   int rframes = 0;
-  const char* my_filename = argv[1];
-  int n = atoi(argv[2]);
   t_fileio *my_file;
   t_fileio *landmark_file;
   t_fileio *remainder_file;
@@ -80,14 +121,14 @@ int main(int argc, char* argv[]) {
   gmx_bool bOK = 1;
 
   // Get number of atoms and allocate data structures
-  my_file = open_xtc(my_filename,"r");
+  my_file = open_xtc(xtc_filename.c_str(),"r");
   read_first_xtc(my_file,&natoms, &step, &time, box, &mycoords, &prec, &bOK);
   close_xtc(my_file);
-  my_file = open_xtc(my_filename,"r");
+  my_file = open_xtc(xtc_filename.c_str(),"r");
   mycoords = new rvec[natoms];
 
-  landmark_file = open_xtc("landmarks.xtc","w");
-  remainder_file = open_xtc("remainder.xtc","w");
+  landmark_file = open_xtc(landmarks_filename.c_str(),"w");
+  remainder_file = open_xtc(remainder_filename.c_str(),"w");
   
   // Convert coordinates
   while (read_next_xtc(my_file, natoms, &step, &time, box, mycoords, &prec, &bOK)) {
@@ -110,17 +151,17 @@ int main(int argc, char* argv[]) {
   close_xtc(landmark_file);
   close_xtc(remainder_file);
 
-  cout << "XTC Statistics" << endl;
-  cout << "N_Frames: " << nframes << endl;
-  cout << "N_Atoms: " << natoms << endl;
-  cout << "Start_Time: " << start_time << endl;
-  cout << "End_Time: " << time << endl;
-  cout << "Precision: " << prec << endl;
-
+  cout << "XTC Statistics - " << xtc_filename << endl;
+  cout << "Number of frames: " << nframes << endl;
+  cout << "Nunber of atoms:  " << natoms << endl;
+  cout << "Start time:       " << start_time << endl;
+  cout << "End time:         " << time << endl;
+  cout << "Precision:        " << prec << endl;
   cout << endl;
   cout << "Frame distribution..." << endl;
-  cout << "Landmark N_Frames: " << lframes << endl;
-  cout << "Remainder N_Frames: " << rframes << endl;
+  cout << "Number of landmark frames (" << landmarks_filename << "): " << lframes << endl;
+  cout << "Number of remaining frames (" << remainder_filename << "): " << rframes << endl;
+  cout << endl;
 
   delete [] mycoords;
 

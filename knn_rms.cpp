@@ -110,7 +110,6 @@ int main(int argc, char* argv[]) {
 
   if (vm.count("help")) {
     cout << "usage: " << program_name << " [options]" << endl;
-    cout << endl;
     cout << cmdline_options << endl;
     return 1;
   }
