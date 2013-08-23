@@ -60,12 +60,12 @@ set(CMAKE_BUILD_TYPE Debug)
 # Compiler flags
 if(CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS_RELEASE
-      "-O3 -DHAVE_INLINE -DGSL_RANGE_CHECK_OFF -Wl,-as-needed")  # Optimize
+      "-O3 -Wl,-as-needed")  # Optimize
     set(CMAKE_EXE_LINKER_FLAGS_RELEASE "-s")  # Strip binary
 endif(CMAKE_COMPILER_IS_GNUCXX)
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX "/usr/local/mdsctk" CACHE
+  set(CMAKE_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}/mdsctk" CACHE
     STRING "Installation prefix (installation will need write permissions here)" FORCE)
 endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
@@ -73,81 +73,82 @@ endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 include(CheckIncludeFileCXX)
 
 ## Oracle Berkeley DB
-set(DB_CXX_INCLUDE_PATH "/usr/include"
+set(DB_CXX_INCLUDE_PATH ""
   CACHE STRING "Location of db_cxx.h")
 unset(HAVE_DB_CXX_H CACHE)
+if(NOT DB_CXX_INCLUDE_PATH STREQUAL "")
 set(CMAKE_REQUIRED_FLAGS "-I${DB_CXX_INCLUDE_PATH}")
+endif(NOT DB_CXX_INCLUDE_PATH STREQUAL "")
 check_include_file_cxx(db_cxx.h      HAVE_DB_CXX_H)
 if(NOT HAVE_DB_CXX_H)
   message(FATAL_ERROR "ERROR: unable to find Berekely DB C++ header file.")
 endif(NOT HAVE_DB_CXX_H)
 
 ## OpenCL
-set(OPENCL_INCLUDE_PATH "/usr/include"
+set(OPENCL_INCLUDE_PATH ""
   CACHE STRING "Location of CL/cl.hpp")
 unset(HAVE_OPENCL_H CACHE)
+if(NOT OPENCL_INCLUDE_PATH STREQUAL "")
 set(CMAKE_REQUIRED_FLAGS "-I${OPENCL_INCLUDE_PATH}")
+endif(NOT OPENCL_INCLUDE_PATH STREQUAL "")
 check_include_file_cxx(CL/cl.hpp      HAVE_OPENCL_H)
 if(NOT HAVE_OPENCL_H)
   message(STATUS "WARNING: unable to find OpenCL header file.")
-  message(STATUS "WARNING: OpenCL accelerated tools will NOT be built.")
 endif(NOT HAVE_OPENCL_H)
 
 ## Basic library checks
 include(CheckLibraryExists)
 
-## C Math Library
-set(MATH_LIBRARY_PATH "/usr/lib"
-  CACHE STRING "Location of libm.so")
-unset(HAVE_LIBM CACHE)
-set(CMAKE_REQUIRED_FLAGS "-L${MATH_LIBRARY_PATH}")
-check_library_exists(m sqrt "" HAVE_LIBM)
-if(HAVE_LIBM)
-  set(LIBS ${LIBS} m)
-else(HAVE_LIBM)
-  message(FATAL_ERROR "ERROR: unable to find C math library.")
-endif(HAVE_LIBM)
-
 ## ARPACK
-set(ARPACK_LIBRARY_PATH "/usr/lib"
+set(ARPACK_LIBRARY_PATH ""
   CACHE STRING "Location of libarpack.so")
 unset(HAVE_LIBARPACK CACHE)
+if(NOT ARPACK_LIBRARY_PATH STREQUAL "")
 set(CMAKE_REQUIRED_FLAGS "-L${ARPACK_LIBRARY_PATH}")
+endif(NOT ARPACK_LIBRARY_PATH STREQUAL "")
 check_library_exists(arpack dsaupd_ "" HAVE_LIBARPACK)
 if(HAVE_LIBARPACK)
   set(LIBS ${LIBS} arpack)
+  if(NOT ARPACK_LIBRARY_PATH STREQUAL "")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${ARPACK_LIBRARY_PATH}")
+  endif(NOT ARPACK_LIBRARY_PATH STREQUAL "")
 else(HAVE_LIBARPACK)
   message(FATAL_ERROR "ERROR: unable to find ARPACK library.")
 endif(HAVE_LIBARPACK)
 
 ## Oracle Berkeley DB
-set(DB_CXX_LIBRARY_PATH "/usr/lib"
+set(DB_CXX_LIBRARY_PATH ""
   CACHE STRING "Location of libdb_cxx.so")
+if(NOT DB_CXX_LIBRARY_PATH STREQUAL "")
 set(CMAKE_REQUIRED_FLAGS "-L${DB_CXX_LIBRARY_PATH}")
+endif(NOT DB_CXX_LIBRARY_PATH STREQUAL "")
 unset(HAVE_LIBDB_CXX CACHE)
 check_library_exists(db_cxx open "" HAVE_LIBDB_CXX)
 if(HAVE_LIBDB_CXX)
   set(LIBS ${LIBS} db_cxx)
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${DB_CXX_LIBRARY_PATH}")
+  if(NOT DB_CXX_LIBRARY_PATH STREQUAL "")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${DB_CXX_LIBRARY_PATH}")
+  endif(NOT DB_CXX_LIBRARY_PATH STREQUAL "")    
 else(HAVE_LIBDB_CXX)
   message(FATAL_ERROR "ERROR: unable to find Berkeley DB C++ library.")
 endif(HAVE_LIBDB_CXX)
 
 ## OpenCL
-set(OPENCL_LIBRARY_PATH "/usr/lib"
+set(OPENCL_LIBRARY_PATH ""
   CACHE STRING "Location of libOpenCL.so")
 unset(HAVE_LIBOPENCL CACHE)
-if(HAVE_OPENCL_H)
+if(NOT OPENCL_LIBRARY_PATH STREQUAL "")
 set(CMAKE_REQUIRED_FLAGS "-L${OPENCL_LIBRARY_PATH}")
+endif(NOT OPENCL_LIBRARY_PATH STREQUAL "")
 check_library_exists(OpenCL clGetPlatformIDs "" HAVE_LIBOPENCL)
 if(HAVE_LIBOPENCL)
   set(LIBS ${LIBS} OpenCL)
-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${OPENCL_LIBRARY_PATH}")
+  if(NOT OPENCL_LIBRARY_PATH STREQUAL "")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${OPENCL_LIBRARY_PATH}")
+  endif(NOT OPENCL_LIBRARY_PATH STREQUAL "")
 else(HAVE_LIBOPENCL)
   message(STATUS "WARNING: unable to find OpenCL library (libOpenCL.so).")
-  message(STATUS "WARNING: OpenCL accelerated tools will NOT be built.")
 endif(HAVE_LIBOPENCL)
-endif(HAVE_OPENCL_H)
 
 # PKGCONFIG checks
 find_package(PkgConfig REQUIRED)
@@ -175,26 +176,6 @@ if(Boost_FOUND)
   include_directories(${Boost_INCLUDE_DIRS})
   set(LIBS ${LIBS} ${Boost_LIBRARIES})
 endif(Boost_FOUND)
-
-# GSL
-pkg_check_modules(PC_GSL REQUIRED gsl)
-set(GSL_DEFINITIONS ${PC_GSL_CFLAGS_OTHER})
-find_path(GSL_INCLUDE_DIR gsl/gsl_vector.h
-  HINTS ${PC_GSL_INCLUDEDIR} ${PC_GSL_INCLUDE_DIRS}
-  PATH_SUFFIXES gromacs)
-find_library(GSL_LIBRARY NAMES gsl libgsl
-  HINTS ${PC_GSL_LIBDIR} ${PC_GSL_LIBRARY_DIRS})
-find_library(GSL_CBLAS_LIBRARY NAMES gslcblas libgslcblas
-  HINTS ${PC_GSL_LIBDIR} ${PC_GSL_LIBRARY_DIRS})
-set(GSL_INCLUDE_DIRS ${GSL_INCLUDE_DIR})
-set(GSL_LIBRARIES ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY})
-
-find_package_handle_standard_args(gsl DEFAULT_MSG
-  GSL_LIBRARY GSL_INCLUDE_DIR)
-mark_as_advanced(GSL_INCLUDE_DIR GSL_LIBRARY)
-
-include_directories(${GSL_INCLUDE_DIRS})
-set(LIBS ${LIBS} ${GSL_LIBRARIES})
 
 # GROMACS-libgmx
 pkg_check_modules(PC_LIBGMX REQUIRED libgmx)
@@ -256,7 +237,7 @@ foreach(TOOL ${MDSCTK_TOOLS})
 endforeach(TOOL ${MDSCTK_TOOLS})
 
 ## OpenCL tools...
-if(HAVE_LIBOPENCL)
+if(HAVE_OPENCL_H AND HAVE_LIBOPENCL)
 set(MDSCTK_OCL_TOOLS
   knn_data_ocl)
 
@@ -264,4 +245,8 @@ foreach(TOOL ${MDSCTK_OCL_TOOLS})
   add_executable(${TOOL} ${TOOL}.cpp mdsctk.cpp mdsctk_ocl.cpp)
   target_link_libraries(${TOOL} ${LIBS})
 endforeach(TOOL ${MDSCTK_OCL_TOOLS})
-endif(HAVE_LIBOPENCL)
+else(HAVE_OPENCL_H AND HAVE_LIBOPENCL)
+  message(STATUS "WARNING:")
+  message(STATUS "WARNING: OpenCL accelerated tools will NOT be built.")
+  message(STATUS "WARNING:")
+endif(HAVE_OPENCL_H AND HAVE_LIBOPENCL)
