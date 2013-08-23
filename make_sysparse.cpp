@@ -40,6 +40,7 @@
 #include <vector>
 #include <set>
 #include <algorithm>
+#include <ctime>
 
 // Boost
 #include <boost/program_options.hpp>
@@ -274,15 +275,28 @@ int main(int argc, char *argv[]) {
 	  oFlags,              // Open flags
 	  0);                  // File mode (using defaults)
 
+
+  cout << "Creating sparse matrix database..." << endl;
+
+  // Timer for ETA
+  time_t start = std::time(0);
+  time_t last = start;
+  int nframes = 0;
+
   // Read a set of distances and indices
   distances.read((char*) current_distances, sizeof(double) * maxk);
   indices.read((char*) current_indices, sizeof(int) * maxk);
 
   while (!distances.eof() || !indices.eof()) {
     
-    if (current_index % 1000 == 0)
-      cout << "Frame number: " << current_index << "\r";
-    // cout << current_index << " : ";
+    // Update user of progress
+    if (std::time(0) - last > update_interval) {
+      last = std::time(0);
+      time_t eta = start + ((last-start) * nframes / current_index);
+      cout << "\rFrame: " << current_index << ", will finish " 
+	   << string(std::ctime(&eta)).substr(0,20);
+      cout.flush();
+    }
     
     // Print basic information
     // cout << "Starting work on " << current_index << ":";
@@ -324,11 +338,27 @@ int main(int argc, char *argv[]) {
     current_index++;
   }
 
+  cout << endl;
+  cout << "Converting database to sparse matrix..." << endl;
+
+  start = std::time(0);
+  last = start;
+  nframes = current_index;
+
   // Initialize cursor
   db.cursor(NULL, &cursor, 0); 
   cursor->get(&key, &data, DB_FIRST);
     
   for (int col = 0; col < current_index; col++) {
+
+    // Update user of progress
+    if (std::time(0) - last > update_interval) {
+      last = std::time(0);
+      time_t eta = start + ((last-start) * nframes / col);
+      cout << "\rFrame: " << col << ", will finish " 
+	   << string(std::ctime(&eta)).substr(0,20);
+      cout.flush();
+    }
     
     split_edges(col, cursor, *sorted_indices, *sorted_distances);
     
@@ -358,6 +388,8 @@ int main(int argc, char *argv[]) {
     + sr_filename.str() + " "
     + sd_filename.str() + " >> " + o_filename;
   system(mycall.c_str());
+
+  cout << endl << endl;
 
   // Delete dynamically allocated data
   delete [] current_indices;
