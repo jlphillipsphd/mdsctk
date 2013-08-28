@@ -83,6 +83,19 @@ struct edge {
   int to;  
 };
 
+// CSC Matrix
+struct CSC_matrix {
+  CSC_matrix(const string filename);
+  ~CSC_matrix();
+  int     n;   // Dimension of the matrix (#cols)
+  int     nnz;
+  int     *irow;
+  int     *pcol;
+  double  *M;   // Pointer to an array that stores the
+		// elements of the matrix.
+  void cleanup();
+};
+
 // TOP_file
 class TOP_file {
 public:
@@ -142,8 +155,8 @@ template <class T> struct permutation {
       std::sort(indices.begin(),indices.end(),*this);
     }
     else {
-      indices.resize(k);
-      for (int x = 0; x < k; x++)
+      indices.resize(data.size());
+      for (int x = 0; x < data.size(); x++)
 	indices[x] = x;
       std::partial_sort(indices.begin(),indices.begin()+k,
 			indices.end(),*this);

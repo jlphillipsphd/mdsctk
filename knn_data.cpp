@@ -131,22 +131,22 @@ int main(int argc, char* argv[]) {
   ifstream myfile;
   myfile.open(ref_filename.c_str());
   double* mycoords = new double[vector_size];
-  myfile.read((char*) mycoords, sizeof(double) * vector_size);
+  myfile.read((char*) mycoords, (sizeof(double)/sizeof(char)) * vector_size);
   while (!myfile.eof()) {
     ref_coords->push_back(mycoords);
     mycoords = new double[vector_size];
-    myfile.read((char*) mycoords, sizeof(double) * vector_size);
+    myfile.read((char*) mycoords, (sizeof(double)/sizeof(char)) * vector_size);
   }
   myfile.close();
   cout << "done." << endl;
-
+  
   cout << "Reading fitting coordinates from file: " << fit_filename << " ... ";
   myfile.open(fit_filename.c_str());
-  myfile.read((char*) mycoords, sizeof(double) * vector_size);
+  myfile.read((char*) mycoords, (sizeof(double)/sizeof(char)) * vector_size);
   while (!myfile.eof()) {
     fit_coords->push_back(mycoords);
     mycoords = new double[vector_size];
-    myfile.read((char*) mycoords, sizeof(double) * vector_size);
+    myfile.read((char*) mycoords, (sizeof(double)/sizeof(char)) * vector_size);
   }
   myfile.close();
   delete [] mycoords;
@@ -185,8 +185,8 @@ int main(int argc, char* argv[]) {
     // Do Work
 #pragma omp parallel for
     for (int ref_frame = 0; ref_frame < ref_coords->size(); ref_frame++)
-      fits.data[ref_frame] = ::distance(vector_size,(*fit_coords)[fit_frame],
-					(*ref_coords)[ref_frame]);
+      fits.data[ref_frame] = ::euclidean_distance(vector_size,(*fit_coords)[fit_frame],
+						  (*ref_coords)[ref_frame]);
 
     // Sort
     fits.sort(k1);

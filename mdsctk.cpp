@@ -35,6 +35,43 @@
 const double RAD2DEG = 180.0 / M_PI;
 const size_t update_interval = 3;
 
+CSC_matrix::CSC_matrix(const string filename) : n(0),
+						nnz(0),
+						irow(NULL),
+						pcol(NULL),
+						M(NULL)
+{
+  ifstream csc;
+  csc.open(filename.c_str());
+  csc.read((char*) &n, (sizeof(int) / sizeof(char)));
+  pcol = new int[n+1];
+  csc.read((char*) pcol, (sizeof(int) / sizeof(char)) * (n+1));
+  nnz = pcol[n];
+  M = new double[nnz];
+  irow = new int[nnz];
+  csc.read((char*) irow, (sizeof(int) / sizeof(char)) * nnz);
+  csc.read((char*) M, (sizeof(double) / sizeof(char)) * nnz);
+  csc.close();
+}
+
+CSC_matrix::~CSC_matrix() {
+  cleanup();
+}
+
+void CSC_matrix::cleanup() {
+  n=0;
+  nnz=0;
+  if (irow)
+    delete [] irow;
+  if (pcol)
+    delete [] pcol;
+  if (M)
+    delete [] M;
+  irow=NULL;
+  pcol=NULL;
+  M=NULL;
+}
+
 TOP_file::TOP_file(const string init_filename) : filename(init_filename),
 						 natoms(0),
 						 mass(NULL),
