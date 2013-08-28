@@ -49,90 +49,41 @@ int main(int argc, char* argv[]) {
     return -1;
   }
 
-  int     n;   // Dimension of the problem.
-  int     nnz; // Number of non-zero elements
-  int     *irow; // CSC Row indices (nnz)
-  int     *pcol; // CSC Col indices (n+1)
-  double  *a;   // CSC LT Matrix
   int     nb;  // Block size for reading data
   int     nthreads;  // # threads
 
   // Boost data types
-  typedef boost::adjacency_list < listS, vecS, directedS,
-			   no_property, property < edge_weight_t, double > > graph_t;
+  typedef boost::adjacency_list < boost::listS, boost::vecS, boost::directedS,
+				  boost::no_property, boost::property < boost::edge_weight_t, double > > graph_t;
   typedef boost::graph_traits < graph_t >::vertex_descriptor vertex_descriptor;
   typedef boost::graph_traits < graph_t >::edge_descriptor edge_descriptor;
   typedef pair<int, int> Edge;
-
-  // File input streams
-  ifstream distances;
-  ifstream row_pointers;
-  ifstream col_pointers;
 
   // File output stream
   ofstream apsp;
 
   // Read sparse matrix data
-  distances.open("sym_distances.dat");
-  col_pointers.open("sym_col_indices.dat");
-  row_pointers.open("sym_row_indices.dat");
   apsp.open("apsp.dat");
   nthreads=atoi(argv[1]);
   omp_set_num_threads(nthreads);
 
-  if (col_pointers.bad()) {
-    cout << "*** ERROR ***" << endl;
-    cout << "   Could not open column pointer file: " << argv[1] << endl;
-    return -1;
-  }
-
-  if (row_pointers.bad()) {
-    cout << "*** ERROR ***" << endl;
-    cout << "   Could not open row pointer file: " << argv[2] << endl;
-    return -1;
-  }
-
-  if (distances.bad()) {
-    cout << "*** ERROR ***" << endl;
-    cout << "   Could not open symmetric CSC file: " << argv[3] << endl;
-    return -1;
-  }
-
   cout << "Reading sparse matrix data...";
-
-  // Determine size of column pointers vector
-  col_pointers.seekg(0,ios::end);
-  n = (col_pointers.tellg() * sizeof(char) / sizeof(int));
-
-  // Read column pointers
-  col_pointers.seekg(0,ios::beg);
-  pcol = new int[n];
-  col_pointers.read((char*) pcol, (sizeof(int) / sizeof(char)) * n);
-  n--;
-  nnz = pcol[n];
-  nb = 0;
-  for (int x = 1; x <= n; x++)
-    if ((pcol[x] - pcol[x-1]) > nb)
-      nb = pcol[x] - pcol[x-1];
-  a = new double[nb];
-  irow = new int[nb];
+  CSC_matrix *A = new CSC_matrix("distances.ssm");
+  int n = A->n;
 
   // Read row index and matrix entries (a)
   graph_t g(n);
-  boost::property_map<graph_t, edge_weight_t>::type weightmap = get(edge_weight, g);
+  boost::property_map<graph_t, boost::edge_weight_t>::type weightmap = get(boost::edge_weight, g);
   for (int i = 0; i < n; i++) {
-    nb = pcol[i+1] - pcol[i];
-    row_pointers.read((char*) irow, (sizeof(int) / sizeof(char)) * nb);
-    distances.read((char*) a, (sizeof(double) / sizeof(char)) * nb);
-    for (int j = 0; j < nb; j++) {
+    for (int j = A->pcol[i]; j < A->pcol[i+1]; j++) {
       edge_descriptor e; bool inserted;
-      tie(e, inserted) = add_edge(i, irow[j], g);
-      weightmap[e] = a[j];
-      tie(e, inserted) = add_edge(irow[j], i, g);
-      weightmap[e] = a[j];
+      tie(e, inserted) = add_edge(i, A->irow[j], g);
+      weightmap[e] = A->M[j];
+      tie(e, inserted) = add_edge(A->irow[j], i, g);
+      weightmap[e] = A->M[j];
     }
   }
-
+  delete A;
   cout << "done." <<endl;
 
   vector<vertex_descriptor> *p[n];
@@ -145,35 +96,40 @@ int main(int argc, char* argv[]) {
   cout << "Total number of vertices: " << num_vertices(g) << endl;
   cout << "Total number of edges (symmetric): " << num_edges(g) / 2 << endl;
   cout << "Computing shortest paths using Dijkstra's algorithm..." << endl;
-  cout << "Complete: 0%";
+
+  // Timer for ETA
+  time_t start = std::time(0);
+  time_t last = start;
 
 #pragma omp parallel for
   for (int j = 0; j < n; j++) {
     
-    if (omp_get_thread_num() == 0)
-      cout << "\rComplete: " << (100 * j * nthreads) / n << "%";
+    // Update user of progress
+    if (std::time(0) - last > update_interval) {
+      last = std::time(0);
+      time_t eta = start + ((last-start) * n / j);
+      cout << "\rFrame: " << j << ", will finish " 
+	   << string(std::ctime(&eta)).substr(0,20);
+      cout.flush();
+    }
     
     vertex_descriptor s = vertex(j, g);
     boost::dijkstra_shortest_paths(g, s, &(p[j]->at(0)),
 				   &(d[j]->at(0)), weightmap,
-				   get(vertex_index, g),
-				   less<double>(), closed_plus<double>(),
+				   get(boost::vertex_index, g),
+				   less<double>(), boost::closed_plus<double>(),
 				   (numeric_limits<double>::max)(), 0.0,
 				   boost::default_dijkstra_visitor());
     
   }
   
-  cout << "\rComplete: 100%" << endl;
+  cout << endl << endl;
   
   for (int j = 0; j < n; j++) {
     apsp.write((char*) &(d[j]->at(j)), (sizeof(double) / sizeof(char)) * (n-j));
     delete p[j];
     delete d[j];
   }
-
-  delete [] pcol;
-  delete [] irow;
-  delete [] a;
 
   return 0;
 }

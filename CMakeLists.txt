@@ -223,8 +223,10 @@ set(MDSCTK_TOOLS
   bb_xtc_to_phipsi
   check_xtc
   contact_profile
+  decomp_dense
   decomp_sparse
   decomp_sparse_nystrom
+  dijkstra
   knn_data
   knn_data_sparse
   knn_rms
