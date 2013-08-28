@@ -50,7 +50,9 @@ CSC_matrix::CSC_matrix(const string filename) : n(0),
   M = new double[nnz];
   irow = new int[nnz];
   csc.read((char*) irow, (sizeof(int) / sizeof(char)) * nnz);
-  csc.read((char*) M, (sizeof(double) / sizeof(char)) * nnz);
+  csc.read((char*) M, (sizeof(double) / sizeof(char)) * nnz);  
+  if (csc.bad())
+    cleanup();
   csc.close();
 }
 
