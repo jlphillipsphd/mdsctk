@@ -153,6 +153,12 @@ additional comments that are not found in the program descriptions.
    clustering. Advances in Neural Information Processing Systems 17
    (Vol. 2, pp. 1601–1608). MIT Press. Retrieved from
    http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.84.7940
+   or alternatively for entropic affinities:
+   M. Vladymyrov and M. A. Carreira-Perpiñán, “Entropic Affinities:
+   Properties and Efficient Numerical Computation,” in Proceedings of
+   the 30th International Conference on Machine Learning (ICML-13),
+   2013, vol. 28, no. 3, pp. 477–485. Retrieved from
+   http://jmlr.org/proceedings/papers/v28/vladymyrov13.pdf
 
 2. auto_decomp_sparse_nystrom
    
@@ -166,7 +172,11 @@ additional comments that are not found in the program descriptions.
 
 7. contact_profile
 
-8. decomp_sparse
+8. decomp_dense
+
+   Performs standard metric scaling of a dense matrix.
+
+9. decomp_sparse
 
    Performs standard specral decomposition of the graph laplacian as
    developed in:
@@ -174,33 +184,46 @@ additional comments that are not found in the program descriptions.
    view. Proceedings of the Seventh IEEE International Conference on
    Computer Vision (pp. 975–982). IEEE. doi:10.1109/ICCV.1999.790354
 
-9. decomp_sparse_nystrom
+10. decomp_sparse_nystrom
 
-10. density.r
+11. density.r
 
-11. entropy.r
+12. dijkstra
 
-12. kmeans.r
+    Computes all pairs of shortest paths for a sparse CSC matrix,
+    yeilding a dense matrix for performing metric scaling using
+    decomp_dense. This is the ISOMAP algorithm as developed in:
+    J. B. Tenenbaum, V. de Silva, and J. C. Langford, “A global
+    geometric framework for nonlinear dimensionality reduction,”
+    Science, vol. 290, no. 5500, pp. 2319–2323, Dec. 2000.
 
-13. knn_data
+13. entropy.r
 
-14. knn_data_sparse
+14. kmeans.r
 
-15. knn_rms
+15. knn_data
 
-16. make_sysparse
+16. knn_data_ocl
 
-17. make_gesparse
+    Proof-of-concept CPU/GPU acceleration using OpenCL.
 
-18. phipsi_to_sincos
+17. knn_data_sparse
 
-19. plot_pdf.r
+18. knn_rms
 
-20. probability.r
+19. make_sysparse
 
-21. rms_test
+20. make_gesparse
 
-22. split_xtc
+21. phipsi_to_sincos
+
+22. plot_pdf.r
+
+23. probability.r
+
+24. rms_test
+
+25. split_xtc
 
 ********
 EXAMPLES
