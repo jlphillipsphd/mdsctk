@@ -94,6 +94,7 @@ struct CSC_matrix {
   double  *M;   // Pointer to an array that stores the
 		// elements of the matrix.
   void cleanup();
+  double& operator[](int);
 };
 
 // TOP_file
@@ -193,6 +194,9 @@ void crossprod(::real C[],
 	       ::real x2, ::real y2, ::real z2);
 
 ::real torsion(::real pos1[], ::real pos2[], ::real pos3[], ::real pos4[], bool degrees);
+
+// Runtime
+int runARPACK(int nev, CSC_matrix &A, double* &d, double* &Z);
 
 // ARPACK, BLAS, LAPACK, etc.
 extern "C" {

@@ -74,6 +74,10 @@ void CSC_matrix::cleanup() {
   M=NULL;
 }
 
+double& CSC_matrix::operator[](int x) {
+  return M[x];
+}
+
 TOP_file::TOP_file(const string init_filename) : filename(init_filename),
 						 natoms(0),
 						 mass(NULL),
@@ -523,4 +527,71 @@ void crossprod(::real C[],
     angle = -angle;
 
   return angle;
+}
+
+int runARPACK(int nev, CSC_matrix &A, double* &d, double* &Z) {
+  // ARPACK variables...
+  int ido = 0;
+  char bmat = 'I';
+  char which[2];
+  which[0] = 'L';
+  which[1] = 'A';
+  double tol = 0.0;
+  double *resid = new double[A.n];
+  // NOTE: Need about one order of magnitude more arnoldi vectors to
+  // converge for the normalized Laplacian (according to residuals...)
+  int ncv = ((10*nev+1)>A.n)?A.n:(10*nev+1);
+  double *V = new double[(ncv*A.n)+1];
+  int ldv = A.n;
+  int *iparam = new int[12];
+  iparam[1] = 1;
+  iparam[3] = 100 * nev;
+  iparam[4] = 1;
+  iparam[7] = 1;
+  int *ipntr = new int[15];
+  double *workd = new double[(3*A.n)+1];
+  int lworkl = ncv*(ncv+9);
+  double *workl = new double[lworkl+1];
+  int info = 0;
+  int rvec = 1;
+  char HowMny = 'A';
+  int *lselect = new int[ncv];
+  d = new double[nev];
+  Z = &V[1];
+  int ldz = A.n;
+  double sigma = 0.0;
+ 
+  while (ido != 99) {
+    dsaupd_(&ido, &bmat, &A.n, which,
+	    &nev, &tol, resid,
+	    &ncv, &V[1], &ldv,
+	    &iparam[1], &ipntr[1], &workd[1],
+	    &workl[1], &lworkl, &info);
+    
+    if (ido == -1 || ido == 1) {
+      // Matrix-vector multiplication
+      sp_dsymv(A.n,A.irow,A.pcol,A.M,
+	       &workd[ipntr[1]],
+	       &workd[ipntr[2]]);
+    }
+  }
+    
+  dseupd_(&rvec, &HowMny, lselect,
+	  d, Z, &ldz,
+	  &sigma, &bmat, &A.n,
+	  which, &nev, &tol,
+	  resid, &ncv, &V[1],
+	  &ldv, &iparam[1], &ipntr[1],
+	  &workd[1], &workl[1],
+	  &lworkl, &info);
+
+  return iparam[5];
+
+  delete [] resid;
+  delete [] lselect;
+  delete [] iparam;
+  delete [] ipntr;
+  delete [] workd;
+  delete [] workl;
+
 }

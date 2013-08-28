@@ -51,6 +51,7 @@ ${MDSCTK_HOME}/make_sysparse -k ${KNN}
 
 echo "Performing autoscaled spectral decomposition..."
 ${MDSCTK_HOME}/auto_decomp_sparse -n ${NCLUSTERS} -k ${SCALING}
+## Entropic affinities...
 # ${MDSCTK_HOME}/auto_decomp_sparse -n ${NCLUSTERS} -k ${KNN} -K ${SCALING}
 
 # echo "Performing spectral decomposition..."

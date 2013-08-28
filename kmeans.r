@@ -97,6 +97,12 @@ clusters <- kmeans(e.vectors[,seq(1,nclusters)],
                    iter.max=30,
                    nstart=10)$cluster
 
+cat("Cluster assignment probabilities:\n")
+for (x in seq(1,nclusters)) {
+    cat(sprintf("%5d: %g\n",x,100*length(which(clusters==x))/length(clusters)))
+}
+cat("\n")
+
 myout <- file(myargs$output,"w")
 write(clusters,myout,ncolumns=1)
 close(myout)

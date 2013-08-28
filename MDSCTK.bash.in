@@ -1,3 +1,12 @@
+# remove old PATH
+tmppath=""
+for i in `echo $PATH | sed "s/:/ /g"`; do
+    if test "$i" != "$MDSCTK_HOME"; then
+	tmppath="${tmppath}${tmppath:+:}${i}"
+    fi
+done
+PATH=$tmppath
+
 # remove old LD_LIBRARY_PATH
 tmppath=""
 for i in `echo $LD_LIBRARY_PATH | sed "s/:/ /g"`; do
@@ -16,15 +25,6 @@ for i in `echo $PKG_CONFIG_PATH | sed "s/:/ /g"`; do
 done
 PKG_CONFIG_PATH=$tmppath
 
-# remove old PATH
-tmppath=""
-for i in `echo $PATH | sed "s/:/ /g"`; do
-    if test "$i" != "$MDSCTK_HOME"; then
-	tmppath="${tmppath}${tmppath:+:}${i}"
-    fi
-done
-PATH=$tmppath
-
 # remove old MANPATH
 tmppath=""
 for i in `echo $MANPATH | sed "s/:/ /g"`; do
@@ -36,9 +36,9 @@ MANPATH=$tmppath
 
 ## Configure
 MDSCTK_HOME="@CMAKE_CURRENT_SOURCE_DIR@"	
+PATH=${MDSCTK_HOME}${PATH:+:}${PATH}
 LD_LIBRARY_PATH=${MDSCTK_HOME}/lib${LD_LIBRARY_PATH:+:}${LD_LIBRARY_PATH}
 PKG_CONFIG_PATH=${MDSCTK_HOME}/lib/pkgconfig${PKG_CONFIG_PATH:+:}${PKG_CONFIG_PATH}
-PATH=${MDSCTK}${PATH:+:}${PATH}
 MANPATH=${MDSCTK_HOME}/man:${MANPATH}
 export MDSCTK_HOME LD_LIBRARY_PATH PATH MANPATH PKG_CONFIG_PATH
 

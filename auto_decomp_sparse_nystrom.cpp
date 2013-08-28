@@ -112,28 +112,10 @@ int main(int argc, char* argv[])
   cout << "evals-file = " << evals_filename << endl;
   cout << "evecs-file = " << evecs_filename << endl;
   cout << endl;
-  
-  // General
-  int     n;   // Dimension of the problem.
-  int     m;   // Outer dimension
 
-  // Main affinity matrix
-  int     nnzA;
-  int     *irowA;
-  int     *pcolA;
-  double  *A;   // Pointer to an array that stores the lower
-		// triangular elements of A.
-
-  // Expanded affinity matrix
-  int     nnzB;
-  int     *irowB;
-  int     *pcolB;
-  double  *B;   // Pointer to an array that stores the
-		// sparse elements of B.
-
-  // File input streams
-  ifstream ssm;
-  ifstream gsm;
+  // Matrices
+  CSC_matrix A(ssm_filename.c_str());
+  CSC_matrix B(gsm_filename.c_str());
 
   // File output streams
   ofstream eigenvalues;
@@ -146,49 +128,25 @@ int main(int argc, char* argv[])
   eps = sqrt(eps);
  
   // Open files
-  ssm.open(ssm_filename.c_str());
-  gsm.open(gsm_filename.c_str());
   eigenvalues.open(evals_filename.c_str());
   eigenvectors.open(evecs_filename.c_str());
   residuals.open(residuals_filename.c_str());
 
-  // Read symmetric CSC matrix
-  ssm.read((char*) &n, (sizeof(int) / sizeof(char)));
-  pcolA = new int[n+1];
-  ssm.read((char*) pcolA, (sizeof(int) / sizeof(char)) * (n+1));
-  nnzA = pcolA[n];
-  A = new double[nnzA];
-  irowA = new int[nnzA];
-  ssm.read((char*) irowA, (sizeof(int) / sizeof(char)) * nnzA);
-  ssm.read((char*) A, (sizeof(double) / sizeof(char)) * nnzA);
-  ssm.close();
-
-  // Read general CSC matrix
-  gsm.read((char*) &m, (sizeof(int) / sizeof(char)));
-  pcolB = new int[m+1];
-  gsm.read((char*) pcolB, (sizeof(int) / sizeof(char)) * (m+1));
-  nnzB = pcolB[m];
-  B = new double[nnzB];
-  irowB = new int[nnzB];
-  gsm.read((char*) irowB, (sizeof(int) / sizeof(char)) * nnzB);
-  gsm.read((char*) B, (sizeof(double) / sizeof(char)) * nnzB);
-  gsm.close();
-
   // Turn distances into normalized affinities...
-  double *sigma_a = new double[n];
-  double *d_a = new double[n];
-  double *d_b = new double[m];
+  double *sigma_a = new double[A.n];
+  double *d_a = new double[A.n];
+  double *d_b = new double[B.n];
 
   // Calculate sigmas...
-  vector<double> *sorted_A = new vector<double>[n];
-  for (int x = 0; x < n; x++)
+  vector<double> *sorted_A = new vector<double>[A.n];
+  for (int x = 0; x < A.n; x++)
     sorted_A[x].clear();
-  for (int x = 0; x < n; x++)
-    for (int y = pcolA[x]; y < pcolA[x+1]; y++) {
+  for (int x = 0; x < A.n; x++)
+    for (int y = A.pcol[x]; y < A.pcol[x+1]; y++) {
       sorted_A[x].push_back(A[y]);
-      sorted_A[irowA[y]].push_back(A[y]);
+      sorted_A[A.irow[y]].push_back(A[y]);
     }
-  for (int x = 0; x < n; x++) {
+  for (int x = 0; x < A.n; x++) {
     partial_sort(sorted_A[x].begin(),
 		 sorted_A[x].begin() +
 		 ((sorted_A[x].size() < k_a)?sorted_A[x].size():k_a),
@@ -199,58 +157,58 @@ int main(int argc, char* argv[])
     sigma_a[x] /= (double) k_a;
   }
   if (pSet)
-    entropic_affinity_sigmas(n, k_a, K, sorted_A, sigma_a);
+    entropic_affinity_sigmas(A.n, k_a, K, sorted_A, sigma_a);
   delete [] sorted_A;
 
   // Make affinity matrices...
-  for (int x = 0; x < n; x++)
-    for (int y = pcolA[x]; y < pcolA[x+1]; y++)
-      A[y] = exp(-(A[y] * A[y]) / (2.0 * sigma_a[x] * sigma_a[irowA[y]]));
+  for (int x = 0; x < A.n; x++)
+    for (int y = A.pcol[x]; y < A.pcol[x+1]; y++)
+      A[y] = exp(-(A[y] * A[y]) / (2.0 * sigma_a[x] * sigma_a[A.irow[y]]));
   
-  for (int x = 0; x < m; x++)
-    for (int y = pcolB[x]; y < pcolB[x+1]; y++)
-      B[y] = exp(-(B[y] * B[y]) / (2.0 * sigma_a[irowB[y]] * sigma_a[irowB[y]]));
+  for (int x = 0; x < B.n; x++)
+    for (int y = B.pcol[x]; y < B.pcol[x+1]; y++)
+      B[y] = exp(-(B[y] * B[y]) / (2.0 * sigma_a[B.irow[y]] * sigma_a[B.irow[y]]));
   
   // Calculate D_A
-  for (int x = 0; x < n; x++)
+  for (int x = 0; x < A.n; x++)
     d_a[x] = 0.0;
-  for (int x = 0; x < n; x++) {
-    for (int y = pcolA[x]; y < pcolA[x+1]; y++) {
+  for (int x = 0; x < A.n; x++) {
+    for (int y = A.pcol[x]; y < A.pcol[x+1]; y++) {
       d_a[x] += A[y];
-      d_a[irowA[y]] += A[y];
+      d_a[A.irow[y]] += A[y];
     }
   }
-  for (int x = 0; x < n; x++)
+  for (int x = 0; x < A.n; x++)
     d_a[x] = 1.0 / sqrt(d_a[x]);
 
   // Calculate D_B
-  for (int x = 0; x < m; x++)
+  for (int x = 0; x < B.n; x++)
     d_b[x] = 0.0;
-  for (int x = 0; x < m; x++) {
-    for (int y = pcolB[x]; y < pcolB[x+1]; y++) {
+  for (int x = 0; x < B.n; x++) {
+    for (int y = B.pcol[x]; y < B.pcol[x+1]; y++) {
       d_b[x] += B[y];
     }
   }
-  for (int x = 0; x < m; x++)
+  for (int x = 0; x < B.n; x++)
     d_b[x] = 1.0 / sqrt(d_b[x]);
 
   // Normalize the affinity matrix...
-  for (int x = 0; x < n; x++) {
-    for (int y = pcolA[x]; y < pcolA[x+1]; y++) {
-      A[y] *= d_a[irowA[y]] * d_a[x];
+  for (int x = 0; x < A.n; x++) {
+    for (int y = A.pcol[x]; y < A.pcol[x+1]; y++) {
+      A[y] *= d_a[A.irow[y]] * d_a[x];
     }
   }
 
   // Normalized B matrix...
-  for (int x = 0; x < m; x++) {
-    for (int y = pcolB[x]; y < pcolB[x+1]; y++) {
-      B[y] *= d_a[irowB[y]] * d_b[x];
+  for (int x = 0; x < B.n; x++) {
+    for (int y = B.pcol[x]; y < B.pcol[x+1]; y++) {
+      B[y] *= d_a[B.irow[y]] * d_b[x];
     }
   }
 
-  for (int x = 1; x < n; x++)
+  for (int x = 1; x < A.n; x++)
     sigma_a[0] += sigma_a[x];
-  cout << "Average sigma: " << (sigma_a[0] / (double) n) << endl;
+  cout << "Average sigma: " << (sigma_a[0] / (double) A.n) << endl;
   cout << endl;
 
   delete [] d_a;
@@ -260,101 +218,49 @@ int main(int argc, char* argv[])
   // Eigen decomposition of nomalized affinity matrix...
 
   // ARPACK setup...
-  double  *Ax = new double[n];  // Array for residual calculation
+  double  *Ax = new double[A.n];  // Array for residual calculation
   double  residual = 0.0;
   double  max_residual = 0.0;
-  int ido = 0;
-  char bmat = 'I';
-  char which[2];
-  which[0] = 'L';
-  which[1] = 'A';
-  double tol = 0.0;
-  double *resid = new double[n];
-  // NOTE: Need about one order of magnitude more arnoldi vectors to
-  // converge for the normalized Laplacian (according to residuals...)
-  int ncv = ((10*nev+1)>n)?n:(10*nev+1);
-  double *V = new double[(ncv*n)+1];
-  int ldv = n;
-  int *iparam = new int[12];
-  iparam[1] = 1;
-  iparam[3] = 100 * nev;
-  iparam[4] = 1;
-  iparam[7] = 1;
-  int *ipntr = new int[15];
-  double *workd = new double[(3*n)+1];
-  int lworkl = ncv*(ncv+9);
-  double *workl = new double[lworkl+1];
-  int info = 0;
-  int rvec = 1;
-  char HowMny = 'A';
-  int *lselect = new int[ncv];
-  double *d = new double[nev];
-  double *Z = &V[1];
-  int ldz = n;
-  double sigma = 0.0;
-  double *extrap_evec = new double[m];
-  double *norm_evec = new double[n];
-
-  while (ido != 99) {
-    dsaupd_(&ido, &bmat, &n, which,
-	    &nev, &tol, resid,
-	    &ncv, &V[1], &ldv,
-	    &iparam[1], &ipntr[1], &workd[1],
-	    &workl[1], &lworkl, &info);
-    
-    if (ido == -1 || ido == 1) {
-      // Matrix-vector multiplication
-      sp_dsymv(n, irowA, pcolA, A,
-	       &workd[ipntr[1]],
-	       &workd[ipntr[2]]);
-    }
-  }
-  
-  dseupd_(&rvec, &HowMny, lselect,
-	  d, Z, &ldz,
-	  &sigma, &bmat, &n,
-	  which, &nev, &tol,
-	  resid, &ncv, &V[1],
-	  &ldv, &iparam[1], &ipntr[1],
-	  &workd[1], &workl[1],
-	  &lworkl, &info);
-
+  double *extrap_evec = new double[B.n];
+  double *norm_evec = new double[A.n];
+  double *d; // values
+  double *Z; // vectors
   cout << "Number of converged eigenvalues/vectors found: "
-       << iparam[5] << endl;
+       << runARPACK(nev,A,d,Z) << endl;
 
   for (int x = nev-1; x >= 0; x--) {
 
 #ifdef DECOMP_WRITE_DOUBLE
     eigenvalues.write((char*) &d[x],(sizeof(double) / sizeof(char)));
-    eigenvectors.write((char*) &Z[n*x],(sizeof(double) * n) / sizeof(char));
+    eigenvectors.write((char*) &Z[A.n*x],(sizeof(double) * A.n) / sizeof(char));
 #else
     eigenvalues << d[x] << endl;
-    for (int y = 0; y < n; y++)
-      eigenvectors << Z[(n*x)+y] << " ";
+    for (int y = 0; y < A.n; y++)
+      eigenvectors << Z[(A.n*x)+y] << " ";
 #endif
 
     // Extrapolate remaining points onto the vector space
-    for (int y = 0; y < n; y++)
-      norm_evec[y] = Z[(n*x)+y] / d[x];
-    sp_dgemv(m, irowB, pcolB, B, norm_evec, extrap_evec);
+    for (int y = 0; y < A.n; y++)
+      norm_evec[y] = Z[(A.n*x)+y] / d[x];
+    sp_dgemv(B.n, B.irow, B.pcol, B.M, norm_evec, extrap_evec);
 
 #ifdef DECOMP_WRITE_DOUBLE
-    eigenvectors.write((char*) extrap_evec,(sizeof(double) * m) / sizeof(char));
+    eigenvectors.write((char*) extrap_evec,(sizeof(double) * B.n) / sizeof(char));
 #else
-    for (int y = 0; y < m; y++)
+    for (int y = 0; y < B.n; y++)
       eigenvectors << extrap_evec[y] << " ";
     eigenvectors << endl;
 #endif
 
     // Calculate residual...
     // Matrix-vector multiplication
-    sp_dsymv(n, irowA, pcolA, A,
-	     &Z[n*x], Ax);
+    sp_dsymv(A.n, A.irow, A.pcol, A.M,
+	     &Z[A.n*x], Ax);
 
     double t = -d[x];
     int i = 1;
-    daxpy_(&n, &t, &Z[n*x], &i, Ax, &i);
-    residual = dnrm2_(&n, Ax, &i)/fabs(d[x]);
+    daxpy_(&A.n, &t, &Z[A.n*x], &i, Ax, &i);
+    residual = dnrm2_(&A.n, Ax, &i)/fabs(d[x]);
     if (residual > max_residual)
       max_residual = residual;
 #ifdef DECOMP_WRITE_DOUBLE
@@ -375,24 +281,10 @@ int main(int argc, char* argv[])
   eigenvectors.close();
   residuals.close();
 
-  delete [] irowA;
-  delete [] pcolA;
-  delete [] A;
-
-  delete [] irowB;
-  delete [] pcolB;
-  delete [] B;
-
   // ARPACK
-  delete [] lselect;
   delete [] d;
-  delete [] resid;
   delete [] Ax;
-  delete [] V;
-  delete [] iparam;
-  delete [] ipntr;
-  delete [] workd;
-  delete [] workl;
+  delete [] &(Z[-1]); // Special
   delete [] norm_evec;
   delete [] extrap_evec;
 
