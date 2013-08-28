@@ -28,34 +28,9 @@
 // 
 //
 
-// Standard
-// C
-#include <stdlib.h>
-#include <math.h>
-// C++
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <ctime>
-
-// Boost
-#include <boost/program_options.hpp>
-
-// OpenMP
-#include <omp.h>
-
-// GROMACS
-#include <gromacs/tpxio.h>
-#include <gromacs/xtcio.h>
-#include <gromacs/index.h>
-
 // Local
 #include "config.h"
 #include "mdsctk.h"
-
-typedef real (*coord_array)[3];
-namespace po = boost::program_options;
-using namespace std;
 
 int main(int argc, char* argv[]) {
 
@@ -140,7 +115,7 @@ int main(int argc, char* argv[]) {
   gmx_bool bOK = 1;
   double *contact = NULL;
   vector<coord_array> *ref_coords = NULL;
-  real *weights = NULL;
+  ::real *weights = NULL;
   int        gnx1,gnx2;
   atom_id    *index1,*index2;
   char       *grpname1,*grpname2;
@@ -200,7 +175,7 @@ int main(int argc, char* argv[]) {
 
   // Allocate vectors for storing the distances for a structure
   contact = new double[gnx1*gnx2];
-  weights = new real[gnx1*gnx2];
+  weights = new ::real[gnx1*gnx2];
   for (int x = 0; x < natoms; x++) weights[x] = top.atoms.atom[x].m;
 
 #pragma omp parallel for

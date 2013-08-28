@@ -51,6 +51,7 @@ ${MDSCTK_HOME}/make_sysparse -k ${KNN}
 
 echo "Performing autoscaled spectral decomposition..."
 ${MDSCTK_HOME}/auto_decomp_sparse -n ${NCLUSTERS} -k ${SCALING}
+# ${MDSCTK_HOME}/auto_decomp_sparse -n ${NCLUSTERS} -k ${KNN} -K ${SCALING}
 
 # echo "Performing spectral decomposition..."
 # ${MDSCTK_HOME}/decomp_sparse -n ${NCLUSTERS} -q 0.3

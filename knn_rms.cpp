@@ -54,17 +54,6 @@
 #include "config.h"
 #include "mdsctk.h"
 
-typedef real (*coord_array)[3];
-
-namespace po = boost::program_options;
-using namespace std;
-
-vector<real> fits;
-
-bool compare(int left, int right) {
-  return fits[left] < fits[right];
-}
-
 int main(int argc, char* argv[]) {
 
   const char* program_name = "knn_rms";
@@ -151,12 +140,12 @@ int main(int argc, char* argv[]) {
   rvec *mycoords = NULL;
   gmx_bool bOK = 1;
   vector<double> keepers;
-  vector<int> permutation;
+  permutation< ::real> fits;
   ofstream distances;
   ofstream indices;
   vector<coord_array> *ref_coords = NULL;
   vector<coord_array> *fit_coords = NULL;
-  real *weights = NULL;
+  ::real *weights = NULL;
 
   // Setup threads
   omp_set_num_threads(nthreads);
@@ -194,7 +183,7 @@ int main(int argc, char* argv[]) {
   }
   ref_coords = new vector<coord_array>;
   fit_coords = new vector<coord_array>;
-  weights = new real[natoms];
+  weights = new ::real[natoms];
   for (int x = 0; x < natoms; x++) weights[x] = top.atoms.atom[x].m;
 
   // Read coordinates and weight-center all structures
@@ -226,8 +215,7 @@ int main(int argc, char* argv[]) {
   indices.open(i_filename.c_str());
 
   // Allocate vectors for storing the RMSDs for a structure
-  fits.resize(ref_coords->size());
-  permutation.resize(ref_coords->size());
+  fits.data.resize(ref_coords->size());
 
   // Fix k if number of frames is too small
   if (ref_coords->size()-1 < k)
@@ -257,24 +245,19 @@ int main(int argc, char* argv[]) {
       do_fit(natoms,weights,
 	     (*fit_coords)[fit_frame],
 	     (*ref_coords)[ref_frame]);
-      fits[ref_frame] = rmsdev(natoms,weights,
-			       (*fit_coords)[fit_frame],
-			       (*ref_coords)[ref_frame]) * 10.0;
+      fits.data[ref_frame] = rmsdev(natoms,weights,
+				    (*fit_coords)[fit_frame],
+				    (*ref_coords)[ref_frame]) * 10.0;
     }
 
     // Sort
-    int x = 0;
-    for (vector<int>::iterator p_itr = permutation.begin();
-	 p_itr != permutation.end(); p_itr++)
-      (*p_itr) = x++;    
-    partial_sort(permutation.begin(), permutation.begin()+k1,
-		 permutation.end(), compare);
+    fits.sort(k1);
     for (int x = 0; x < k1; x++)
-      keepers[x] = (double) fits[permutation[x]];
+      keepers[x] = (double) fits.data[fits.indices[x]];
 
     // Write out closest k RMSD alignment scores and indices
     distances.write((char*) &(keepers[1]), (sizeof(double)/sizeof(char)) * k);
-    indices.write((char*) &(permutation[1]), (sizeof(int)/sizeof(char)) * k);
+    indices.write((char*) &(fits.indices[1]), (sizeof(int)/sizeof(char)) * k);
 
   }
 

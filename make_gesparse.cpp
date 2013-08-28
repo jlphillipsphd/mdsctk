@@ -28,77 +28,9 @@
 // 
 //
 
-// Standard
-// C
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <string.h>
-// C++
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <set>
-#include <algorithm>
-#include <ctime>
-
-// Boost
-#include <boost/program_options.hpp>
-
-// Berkeley DB
-#include <db_cxx.h>
-
 // Local
 #include "config.h"
 #include "mdsctk.h"
-
-namespace po = boost::program_options;
-using namespace std;
-
-// Edges struct, comparison, and sorting routines
-struct edge {
-  int from;
-  int to;  
-};
-
-int compare_edge(Db *db, const Dbt *key1, const Dbt *key2) {
-  edge e1,e2;
-
-  memcpy(&e1,key1->get_data(),sizeof(edge));
-  memcpy(&e2,key2->get_data(),sizeof(edge));
-
-  if (e1.from == e2.from)  {
-    return (e1.to - e2.to);
-  }
-  return (e1.from - e2.from);
-}
-
-// Split edges
-void split_edges(int current_index, Dbc *cursor, vector<int> &indices, vector<double> &distances) {
-
-  edge myedge;
-  double mydistance;
-  Dbt key(&myedge,sizeof(edge));
-  Dbt data(&mydistance,sizeof(double));
-  key.set_ulen(sizeof(myedge));
-  key.set_flags(DB_DBT_USERMEM);
-  data.set_ulen(sizeof(double));
-  data.set_flags(DB_DBT_USERMEM);
-
-  indices.clear();
-  distances.clear();
-  
-  if (cursor->get(&key, &data, DB_CURRENT) == 0) {
-    do {
-      if (myedge.from == current_index) {
-	indices.push_back(myedge.to);
-	distances.push_back(mydistance);
-      }
-      else
-	break;
-    } while (cursor->get(&key, &data, DB_NEXT) == 0);
-  }
-}
 
 int main(int argc, char *argv[]) {
 

@@ -28,69 +28,9 @@
 // 
 //
 
-// Standard
-// C
-#include <math.h>
-// C++
-#include <iostream>
-#include <fstream>
-
-// Boost
-#include <boost/program_options.hpp>
-
-// GROMACS
-#include <gromacs/xtcio.h>
-
 // Local
 #include "config.h"
 #include "mdsctk.h"
-
-const double RAD2DEG = 180.0 / M_PI;
-namespace po = boost::program_options;
-using namespace std;
-
-void crossprod(float C[],
-	       float x1, float y1, float z1,
-	       float x2, float y2, float z2) {
-  C[0] = ((y1 * z2) - (z1 * y2));
-  C[1] = ((z1 * x2) - (x1 * z2));
-  C[2] = ((x1 * y2) - (y1 * x2));
-  return;
-}
-
-float torsion(float pos1[], float pos2[], float pos3[], float pos4[], bool degrees) {
-  float L[3], Lnorm;
-  float R[3], Rnorm;
-  float S[3];
-  float angle;
-
-  crossprod(L,
-	    (pos2[0] - pos1[0]), (pos2[1] - pos1[1]), (pos2[2] - pos1[2]),
-	    (pos3[0] - pos2[0]), (pos3[1] - pos2[1]), (pos3[2] - pos2[2]));
-  crossprod(R,
-	    (pos4[0] - pos3[0]), (pos4[1] - pos3[1]), (pos4[2] - pos3[2]),
-	    (pos2[0] - pos3[0]), (pos2[1] - pos3[1]), (pos2[2] - pos3[2]));
-
-  Lnorm = sqrt(L[0]*L[0] + L[1]*L[1] + L[2]*L[2]);
-  Rnorm = sqrt(R[0]*R[0] + R[1]*R[1] + R[2]*R[2]);
-
-  crossprod(S, L[0], L[1], L[2], R[0], R[1], R[2]);
-  angle = (L[0]*R[0] + L[1]*R[1] + L[2]*R[2]) / (Lnorm * Rnorm);
-
-  if (angle > 1.0) angle = 1.0;
-  if (angle < -1.0) angle = -1.0;
-
-  angle = acos( angle );
-  if (degrees)
-    angle = angle * RAD2DEG;
-
-  if ((S[0] * (pos3[0]-pos2[0]) + 
-       S[1] * (pos3[1]-pos2[1]) +
-       S[2] * (pos3[2]-pos2[2])) < 0 )
-    angle = -angle;
-
-  return angle;
-}
 
 int main(int argc, char* argv[]) {
 
@@ -168,10 +108,12 @@ int main(int argc, char* argv[]) {
     while (read_next_xtc(myfile, natoms, &step, &time, box, mycoords, &prec, &bOK)) {
       int i_mat = 0;    
       for (int x = 0; x < natoms-3;) {
-	mymat[i_mat++] = (double) torsion(mycoords[x],mycoords[x+1],mycoords[x+2],mycoords[x+3],false);
+	mymat[i_mat++] = (double) torsion(mycoords[x],mycoords[x+1],
+					  mycoords[x+2],mycoords[x+3],false);
 	x += 2;
 	
-	mymat[i_mat++] = (double) torsion(mycoords[x],mycoords[x+1],mycoords[x+2],mycoords[x+3],false);
+	mymat[i_mat++] = (double) torsion(mycoords[x],mycoords[x+1],
+					  mycoords[x+2],mycoords[x+3],false);
 	x += 1;
       }
       output.write((char*) mymat, (sizeof(double) / sizeof(char)) * (2*(natoms/3)-2));   

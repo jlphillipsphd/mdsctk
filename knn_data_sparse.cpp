@@ -28,65 +28,16 @@
 // 
 //
 
-// Standard
-// C
-#include <strings.h>
-#include <stdlib.h>
-#include <math.h>
-// C++
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <algorithm>
-#include <ctime>
-
-// Boost
-#include <boost/program_options.hpp>
-
-// OpenMP
-#include <omp.h>
-
 // Local
 #include "config.h"
 #include "mdsctk.h"
 
-namespace po = boost::program_options;
-using namespace std;
-
 // You can change this function to utilize different
 // distance metrics. The current implementation
 // uses Euclidean distance...
-double distance(int ref_size, int* ref_index, double* ref_data,
-		int fit_size, int* fit_index, double* fit_data) {
-  double value = 0.0;
-  int ref = 0;
-  int fit = 0;
-
-  for (ref = 0; ref < ref_size; ref++) {
-    while (fit < fit_size && fit_index[fit] < ref_index[ref]) {
-      value += (fit_data[fit] * fit_data[fit]);
-      fit++;
-    }
-    if (fit < fit_size && ref_index[ref] == fit_index[fit]) {
-      value += ((ref_data[ref] - fit_data[fit]) *
-		(ref_data[ref] - fit_data[fit]));
-      fit++;
-    }
-    else {
-      value += (ref_data[ref] * ref_data[ref]);
-    }
-  }
-  for (;fit < fit_size;fit++) {
-    value += (fit_data[fit] * fit_data[fit]);
-  }
-  return (sqrt(value));
-}
-
-vector<double> fits;
-
-bool compare(int left, int right) {
-  return fits[left] < fits[right];
-}
+double (*distance)(int ref_size, int* ref_index, double* ref_data,
+		   int fit_size, int* fit_index, double* fit_data) =
+  euclidean_distance_sparse;
 
 int main(int argc, char* argv[]) {
 
@@ -169,7 +120,7 @@ int main(int argc, char* argv[]) {
   int k1 = k + 1;
   int update_interval = 1;
   vector<double> keepers;
-  vector<int> permutation;
+  permutation<double> fits;
   ifstream index;
   ifstream data;
   ofstream distances;
@@ -223,8 +174,7 @@ int main(int argc, char* argv[]) {
   indices.open(i_filename.c_str());
 
   // Allocate vectors for storing the RMSDs for a structure
-  fits.resize(ref_index.size());
-  permutation.resize(ref_index.size());
+  fits.data.resize(ref_index.size());
 
   // Fix k if number of frames is too small
   if (ref_index.size()-1 < k)
@@ -251,23 +201,19 @@ int main(int argc, char* argv[]) {
     // Do Work
 #pragma omp parallel for
     for (int ref_frame = 0; ref_frame < ref_index.size(); ref_frame++)
-      fits[ref_frame] =
-	distance(ref_size[ref_frame],ref_index[ref_frame],ref_data[ref_frame],
-		 fit_size[fit_frame],fit_index[fit_frame],fit_data[fit_frame]);
+      fits.data[ref_frame] =
+	::distance(ref_size[ref_frame],ref_index[ref_frame],ref_data[ref_frame],
+		   fit_size[fit_frame],fit_index[fit_frame],fit_data[fit_frame]);
 
     // Sort
-    int x = 0;
-    for (vector<int>::iterator p_itr = permutation.begin();
-	 p_itr != permutation.end(); p_itr++)
-      (*p_itr) = x++;    
-    partial_sort(permutation.begin(), permutation.begin()+k1,
-		 permutation.end(), compare);
+    fits.sort(k1);
     for (int x = 0; x < k1; x++)
-      keepers[x] = (double) fits[permutation[x]];
+      keepers[x] = (double) fits.data[fits.indices[x]];
 
     // Write out closest k RMSD alignment scores and indices
-    distances.write((char*) &(keepers[1]), (sizeof(double) / sizeof(char)) * k);
-    indices.write((char*) &(permutation[1]), (sizeof(int) / sizeof(char)) * k);
+    distances.write((char*) &(keepers[1]), (sizeof(double)/sizeof(char)) * k);
+    indices.write((char*) &(fits.indices[1]), (sizeof(int)/sizeof(char)) * k);
+
   }
 
   cout << endl << endl;

@@ -28,26 +28,9 @@
 // 
 //
 
-// Standard
-// C
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-// C++
-#include <fstream>
-#include <iostream>
-#include <vector>
-#include <algorithm>
-
-// Boost
-#include <boost/program_options.hpp>
-
 // Local
 #include "config.h"
 #include "mdsctk.h"
-
-namespace po = boost::program_options;
-using namespace std;
 
 int main(int argc, char* argv[])
 {
@@ -73,6 +56,8 @@ int main(int argc, char* argv[])
   // Option vars...
   int k_a;
   int nev;
+  double K;
+  bool pSet = false;
   string ssm_filename;
   string gsm_filename;
   string evals_filename;
@@ -85,6 +70,7 @@ int main(int argc, char* argv[])
   program_options.add_options()
     ("help,h", "show this help message and exit")
     ("k-sigma,k", po::value<int>(&k_a), "Input:  K-nn to average for sigmas (int)")
+    ("k-perplexity,K", po::value<double>(&K), "Input:  Desired perplexity within knn (real)")
     ("nevals,n", po::value<int>(&nev), "Input:  Number of eigenvalues/vectors (int)")
     ("ssm-file,s", po::value<string>(&ssm_filename)->default_value("distances.ssm"), "Input:  Symmetric sparse matrix file (string:filename)")
     ("gsm-file,g", po::value<string>(&gsm_filename)->default_value("distances.gsm"), "Input:  General sparse matrix file (string:filename)")
@@ -212,6 +198,8 @@ int main(int argc, char* argv[])
       sigma_a[x] += sorted_A[x][y];
     sigma_a[x] /= (double) k_a;
   }
+  if (pSet)
+    entropic_affinity_sigmas(n, k_a, K, sorted_A, sigma_a);
   delete [] sorted_A;
 
   // Make affinity matrices...

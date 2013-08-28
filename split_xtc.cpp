@@ -28,21 +28,9 @@
 // 
 //
 
-// C++
-#include <iostream>
-
-// Boost
-#include <boost/program_options.hpp>
-
-// GROMACS
-#include <gromacs/xtcio.h>
-
 // Local
 #include "config.h"
 #include "mdsctk.h"
-
-namespace po = boost::program_options;
-using namespace std;
 
 int main(int argc, char* argv[]) {
 

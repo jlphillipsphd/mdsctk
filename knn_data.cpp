@@ -28,45 +28,16 @@
 // 
 //
 
-// Standard
-// C
-#include <strings.h>
-#include <stdlib.h>
-#include <math.h>
-// C++
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <ctime>
-
-// Boost
-#include <boost/program_options.hpp>
-
-// OpenMP
-#include <omp.h>
-
 // Local
 #include "config.h"
 #include "mdsctk.h"
 
-namespace po = boost::program_options;
-using namespace std;
-
 // You can change this function to utilize different
 // distance metrics. The current implementation
 // uses Euclidean distance...
-double distance(int size, double* reference, double* fitting) {
-  double value = 0.0;
-  for (int x = 0; x < size; x++)
-    value += (reference[x] - fitting[x]) * (reference[x] - fitting[x]);
-  return (sqrt(value));
-}
 
-vector<double> fits;
-
-bool compare(int left, int right) {
-  return fits[left] < fits[right];
-}
+double (*distance)(int size, double* reference, double* fitting) =
+  euclidean_distance;
 
 int main(int argc, char* argv[]) {
 
@@ -145,7 +116,7 @@ int main(int argc, char* argv[]) {
   int k1 = k + 1;
   int update_interval = 1;
   vector<double> keepers;
-  vector<int> permutation;
+  permutation<double> fits;
   ofstream distances;
   ofstream indices;
 
@@ -187,8 +158,7 @@ int main(int argc, char* argv[]) {
   indices.open(i_filename.c_str());
 
   // Allocate vectors for storing the RMSDs for a structure
-  fits.resize(ref_coords->size());
-  permutation.resize(ref_coords->size());
+  fits.data.resize(ref_coords->size());
 
   // Fix k if number of frames is too small
   if (ref_coords->size()-1 < k)
@@ -215,22 +185,17 @@ int main(int argc, char* argv[]) {
     // Do Work
 #pragma omp parallel for
     for (int ref_frame = 0; ref_frame < ref_coords->size(); ref_frame++)
-      fits[ref_frame] = distance(vector_size,(*fit_coords)[fit_frame],
-				 (*ref_coords)[ref_frame]);
+      fits.data[ref_frame] = ::distance(vector_size,(*fit_coords)[fit_frame],
+					(*ref_coords)[ref_frame]);
 
     // Sort
-    int x = 0;
-    for (vector<int>::iterator p_itr = permutation.begin();
-	 p_itr != permutation.end(); p_itr++)
-      (*p_itr) = x++;    
-    partial_sort(permutation.begin(), permutation.begin()+k1,
-		 permutation.end(), compare);
+    fits.sort(k1);
     for (int x = 0; x < k1; x++)
-      keepers[x] = (double) fits[permutation[x]];
+      keepers[x] = (double) fits.data[fits.indices[x]];
 
     // Write out closest k RMSD alignment scores and indices
-    distances.write((char*) &(keepers[1]), (sizeof(double) / sizeof(char)) * k);
-    indices.write((char*) &(permutation[1]), (sizeof(int) / sizeof(char)) * k);
+    distances.write((char*) &(keepers[1]), (sizeof(double)/sizeof(char)) * k);
+    indices.write((char*) &(fits.indices[1]), (sizeof(int)/sizeof(char)) * k);
   }
 
   cout << endl << endl;

@@ -28,30 +28,9 @@
 // 
 //
 
-// Standard
-// C
-#include <string.h>
-#include <stdlib.h>
-#include <math.h>
-// C++
-#include <iostream>
-#include <fstream>
-#include <vector>
-
-// Boost
-#include <boost/program_options.hpp>
-
-// GROMACS
-#include <gromacs/tpxio.h>
-#include <gromacs/xtcio.h>
-#include <gromacs/do_fit.h>
-
 // Local
 #include "config.h"
 #include "mdsctk.h"
-
-namespace po = boost::program_options;
-using namespace std;
 
 int main(int argc, char* argv[]) {
 
@@ -96,73 +75,44 @@ int main(int argc, char* argv[]) {
   }
 
   cout << "Running with the following options:" << endl;
-  cout << "xtc-file =    " << xtc_filename << endl;
-  cout << "output-file = " << output_filename << endl;
+  cout << "topology-file = " << top_filename << endl;
+  cout << "xtc-file =      " << xtc_filename << endl;
+  cout << "output-file =   " << output_filename << endl;
   cout << endl;
   
-  int ref_natoms = -1;
-  int natoms = 0;
-  rvec* ref_coords = NULL;
-  rvec* fit_coords = NULL;
-  real *weights = NULL;
-  gmx_bool bOK = 1;
-
-  t_fileio *fit_file;
+  coord_array fit_coords = NULL;
   ofstream output;
 
-  // Used when reading XTC files...
-  int step = 1;
-  float time = 0.0;
-  matrix box;
-  float prec = 0.001;
-  char buf[256];
-  t_topology top;
-  int ePBC;
-
   // Get number of atoms and initialize weights
-  cout << "Reading reference coordinates from " << top_filename << " ... ";
-  read_tps_conf(top_filename.c_str(), buf, &top, &ePBC, &ref_coords,
-		NULL, box, TRUE);
-  ref_natoms = top.atoms.nr;
+  cout << "Reading topology coordinates from file: " << top_filename << " ... ";
+  TOP_file ref_file(top_filename);
   cout << "done." << endl;
+  cout << "Reading fitting coordinates from file: " << xtc_filename << " ... ";
+  XTC_file fit_file(xtc_filename);
 
-  fit_file = open_xtc(xtc_filename.c_str(),"r");
-  read_first_xtc(fit_file,&natoms, &step, &time, box, &fit_coords, &prec, &bOK);
-  close_xtc(fit_file);
-  if (natoms != ref_natoms) {
+  if (fit_file.get_natoms() != ref_file.get_natoms()) {
     cout << "*** ERROR ***" << endl;
     cout << "Number of atoms in topology file ("
-	 << ref_natoms << ") "
+	 << ref_file.get_natoms() << ") "
 	 << "does not match the number of atoms "
-	 << "in the XTC file (" << natoms << ")."
+	 << "in the XTC file (" << fit_file.get_natoms() << ")."
 	 << endl;
     exit(4);
   }
 
-  fit_coords = new rvec[natoms];
-  weights = new real[natoms];
-  for (int x = 0; x < natoms; x++) {
-    weights[x] = top.atoms.atom[x].m;
-  }
-  reset_x(natoms,NULL,natoms,NULL,ref_coords,weights);
-
+  // Output
   output.open(output_filename.c_str());
+
   // Read coordinates and weight-center all structures
-  cout << "Reading fitting coordinates from file: " << xtc_filename << " ... ";
-  fit_file = open_xtc(xtc_filename.c_str(),"r");
-  while (read_next_xtc(fit_file, natoms, &step, &time, box, fit_coords, &prec, &bOK)) {
-    reset_x(natoms,NULL,natoms,NULL,fit_coords,weights);
-    do_fit(natoms,weights,ref_coords,fit_coords);
-    output << time << "\t" << (rmsdev(natoms,weights,ref_coords,fit_coords) * 10.0) << endl;
+  fit_coords = fit_file.get_next_frame_ptr();
+  while (fit_coords) {
+    ref_file.center(fit_coords);
+    output << fit_file.get_time() << "\t" 
+	   << ref_file.rmsd(ref_file.get_frame_ptr(),fit_coords) << endl;
+    fit_coords = fit_file.get_next_frame_ptr();
   }
-  close_xtc(fit_file);
   output.close();
   cout << "done." << endl;
 
-  // Clean coordinates
-  delete [] ref_coords;
-  delete [] fit_coords;
-  delete [] weights;
-  
   return 0;
 }

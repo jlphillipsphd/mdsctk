@@ -28,26 +28,9 @@
 // 
 //
 
-// Standard
-// C
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-// C++
-#include <fstream>
-#include <iostream>
-#include <vector>
-#include <algorithm>
-
-// Boost
-#include <boost/program_options.hpp>
-
 // Local
 #include "config.h"
 #include "mdsctk.h"
-
-namespace po = boost::program_options;
-using namespace std;
 
 int main(int argc, char* argv[])
 {
@@ -70,6 +53,8 @@ int main(int argc, char* argv[])
   // Option vars...
   int k_a;
   int nev;
+  double K;
+  bool pSet = false;
   string ssm_filename;
   string evals_filename;
   string evecs_filename;
@@ -81,6 +66,7 @@ int main(int argc, char* argv[])
   program_options.add_options()
     ("help,h", "show this help message and exit")
     ("k-sigma,k", po::value<int>(&k_a), "Input:  K-nn to average for sigmas (int)")
+    ("k-perplexity,K", po::value<double>(&K), "Input:  Desired perplexity within knn (real)")
     ("nevals,n", po::value<int>(&nev), "Input:  Number of eigenvalues/vectors (int)")
     ("ssm-file,s", po::value<string>(&ssm_filename)->default_value("distances.ssm"), "Input:  Symmetric sparse matrix file (string:filename)")
     ("evals-file,v", po::value<string>(&evals_filename)->default_value("eigenvalues.dat"), "Output:  Eigenvalues file (string:filename)")
@@ -108,17 +94,27 @@ int main(int argc, char* argv[])
     cout << endl;
     optsOK = false;
   }
+  if (vm.count("k-perplexity")) {
+    pSet = true;
+    if (ceil(K) > (double) k_a) {
+      cout << "WARNING: --k-perplexity (" << K
+	   << ") is higher than --k-sigma (" << k_a
+	   << ")" << endl;
+    }
+  }
 
   if (!optsOK) {
     return -1;
   }
 
   cout << "Running with the following options:" << endl;
-  cout << "k-sigma =    " << k_a << endl;
-  cout << "nevals =     " << nev << endl;
-  cout << "ssm-file =   " << ssm_filename << endl;
-  cout << "evals-file = " << evals_filename << endl;
-  cout << "evecs-file = " << evecs_filename << endl;
+  cout << "k-sigma =      " << k_a << endl;
+  if (pSet)
+    cout << "k-perplexity = " << K << endl;
+  cout << "nevals =       " << nev << endl;
+  cout << "ssm-file =     " << ssm_filename << endl;
+  cout << "evals-file =   " << evals_filename << endl;
+  cout << "evecs-file =   " << evecs_filename << endl;
   cout << endl;
 
   // Defining variables;
@@ -180,14 +176,16 @@ int main(int argc, char* argv[])
     }
   for (int x = 0; x < n; x++) {
     partial_sort(sorted_A[x].begin(),
-		 sorted_A[x].begin() +
-		 ((sorted_A[x].size() < k_a)?sorted_A[x].size():k_a),
-		 sorted_A[x].end());
+    		 sorted_A[x].begin() +
+    		 ((sorted_A[x].size() < k_a)?sorted_A[x].size():k_a),
+    		 sorted_A[x].end());
     sigma_a[x] = 0;
     for (int y = 0; y < k_a && y < sorted_A[x].size(); y++)
       sigma_a[x] += sorted_A[x][y];
     sigma_a[x] /= (double) k_a;
   }
+  if (pSet)
+    entropic_affinity_sigmas(n, k_a, K, sorted_A, sigma_a);
   delete [] sorted_A;
 
   // Make affinity matrix...

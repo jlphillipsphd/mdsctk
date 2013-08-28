@@ -83,23 +83,18 @@ INSTALLATION
     (Debian/Ubuntu Packages: libarpack2 and libarpack2-dev)
     http://www.caam.rice.edu/software/ARPACK/
 
-1.4 GSL
-    You will need to install the GNU Scientific Library.
-    (Debian/Ubuntu Packages: libgsl0ldbl and libgsl0-dev)
-    http://www.gnu.org/software/gsl/
-
-1.5 BLAS/ATLAS
+1.4 BLAS/ATLAS
     You will need to install BLAS and/or ATLAS for your system.
     (Debian/Ubuntu Packages: libblas3gf and libblas-dev)
     http://www.netlib.org/blas/ or http://math-atlas.sourceforge.net/
 
-1.6 Berkeley (C++) DB Library
+1.5 Berkeley (C++) DB Library
     You will need to install libdb, libdb_cxx, and related
     C++ development headers.
     (Debian/Ubuntu Packages: libdb++-dev and dependencies)
     http://www.oracle.com/technetwork/products/berkeleydb/downloads/index.html
  
-1.7 R
+1.6 R
     You will need to install R to perform the final stages of the
     clustering process automatically, or produce replicate-cluster
     assignment plots (using the 'fields' package which is available on
@@ -145,6 +140,11 @@ any needed edits to Makefile.)
 Basic Documentation
 *******************
 
+All binaries and R scripts accept the -h and --help options at the
+command line, which will provide basic usage information. Because of
+this, provided here is simply a list of the available tools with any
+additional comments that are not found in the program descriptions.
+
 1. auto_decomp_sparse
 
    Performs self-tuning specral decomposition of the graph laplacian
@@ -154,46 +154,19 @@ Basic Documentation
    (Vol. 2, pp. 1601–1608). MIT Press. Retrieved from
    http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.84.7940
 
-   Usage: ./auto_decomp_sparse [# eigenvalues/vectors] [k_sigma]
-      Reads the symmetric CSC format sparse matrix from the files
-      sym_distances.dat, sym_row_indices.dat, & sym_col_indices.dat
-      and computes the number of requested eigenvalues/vectors of the
-      normalized laplacian using ARPACK and a gaussian kernel of width
-      sigma, where sigma is calculated using the average k-smallest
-      values in each column.
-
 2. auto_decomp_sparse_nystrom
-
-   Performs the same computation as auto_decomp_sparse and takes the
-   same command-line arguments, but also uses the Nystrom method to
-   project out-of-sample points obtained from the general CSC format
-   sparse matrix in nonsym_distances.dat, nonsym_row_indices.dat, and
-   nonsym_col_indices.dat.
    
 3. bb_xtc_to_phipsi
 
-   Usage: ./bb_xtc_to_phipsi [xtc file]...  Convert the provided xtc
-      file to phipsi angles and write the results to standard output.
-
 4. check_xtc
 
-   Usage: ./check_xtc [xtc file]
-      Report stats on the provided xtc file.
+5. clustering_nmi.r
 
-5. clustering_histogram.r
+6. clustering_pdf.r
 
-   Reads the cluster assignment data from cluster.dat and the
-   replicate assignment data from assignment.dat, and outputs the
-   corresponding joint replicate-cluster probability histogram in
-   histogram.dat.
+7. contact_profile
 
-6. clustering_nmi.r
-
-   Reads the joint replicate-cluster probability histogram from
-   histogram.dat and prints the normalized mutual information for the
-   histogram.
-
-7. decomp_sparse
+8. decomp_sparse
 
    Performs standard specral decomposition of the graph laplacian as
    developed in:
@@ -201,141 +174,33 @@ Basic Documentation
    view. Proceedings of the Seventh IEEE International Conference on
    Computer Vision (pp. 975–982). IEEE. doi:10.1109/ICCV.1999.790354
 
-   Usage: ./decomp_sparse [# eigenvalues/vectors] [sigma]
-      Reads the symmetric CSC format sparse matrix from the files
-      sym_distances.dat, sym_row_indices.dat, & sym_col_indices.dat
-      and computes the number of requested eigenvalues/vectors of the
-      normalized laplacian using a gaussian kernal of width sigma and
-      ARPACK.
+9. decomp_sparse_nystrom
 
-8. decomp_sparse_nystrom
+10. density.r
 
-   Performs the same computation as decomp_sparse and takes the same
-   command-line arguments, but also uses the Nystrom method to project
-   out-of-sample points obtained from the general CSC format sparse
-   matrix in nonsym_distances.dat, nonsym_row_indices.dat, and
-   nonsym_col_indices.dat.
+11. entropy.r
 
+12. kmeans.r
 
-9. density.r
+13. knn_data
 
-   Usage: density.r [k] <sigma>
-      Computes the kernel density estimate for the sparse distances
-      in distances.dat. The number of k nearest neighbors is required
-      but the bandwidth of the kernel, sigma, can be supplied or
-      guesstimated based the data.
+14. knn_data_sparse
 
-10. entropy.r
+15. knn_rms
 
-   Usage: entropy.r [k]
-      Computes the local entropy of the given sparse
-      matrix with indices from indices.dat and the densities
-      in density.dat. The number of nearest neighbors,
-      k, is required.
+16. make_sysparse
 
-11. kmeans.r
+17. make_gesparse
 
-   Usage: kmeans.r [k]
-      Performs standard k-means clustering on the provided
-      eigenvectors from (eigenvalues.dat and eigenvectors.dat).
-      The number of clusters requested (k), can be 2>=k<=nev
-      where nev is the number of eigenvectors. The results are
-      written to clusters.dat, and a breakdown of assignments
-      by cluster is written to clusters.ndx.
+18. phipsi_to_sincos
 
-12. knn_data
+19. plot_pdf.r
 
-    Usage: ./knn_data [# threads] [k] [vector size] [fitting data
-       file] Computes the k nearest neighbors of all pairs of vectors
-       in the given binary data files.
+20. probability.r
 
-13. knn_rms
+21. rms_test
 
-    Usage: ./knn_rms [# threads] [k] [topology file] [fitting xtc file]
-       Computes the k nearest neighbors of all pairs of structures in
-       the given xtc file. A topology PDB file should be provided for
-       determining the mass of each atom.
-
-    Output is a matrix of sorted distances and matrix of corresponding
-    indices for each distance.
-
-14. make_sysparse
-
-    A symmetric CSC matrix is constructed from the data in
-    distances.dat and indices.dat. The result is placed in
-    sym_distances.dat, sym_row_indices.dat, and sym_col_indices.dat.
-
-    Usage: ./make_sysparse [k] <output k>
-       Converts the results from knn_rms into CSC format.
-
-    Normally, the number of nearest neighbors in the input distances
-    is used for constructing the CSC matrix.  However, you can set
-    <output k> <= [k] in order to subselect the number of neighbors to
-    consider in the CSC representation. This makes it easy to store a
-    large number of neighbors using knn_* but then use a subset for,
-    say, computing approximate geodesic distances.
-
-15. make_gesparse
-
-    A general CSC matrix is constructed from the data in distances.dat
-    and indices.dat. The result is placed in nonsym_distances.dat,
-    nonsym_row_indices.dat, and nonsym_col_indices.dat.
-
-    Usage: ./make_gesparse [k] <output k>
-       Converts the results from knn_rms into CSC format.
-
-    Normally, the number of nearest neighbors in the input distances
-    is used for constructing the CSC matrix.  However, you can set
-    <output k> <= [k] in order to subselect the number of neighbors to
-    consider in the CSC representation. This makes it easy to store a
-    large number of neighbors using knn_* but then use a subset for,
-    say, computing approximate geodesic distances.
-
-16. phipsi_to_sincos
-
-    Converts the angles in phipsi.dat into polar coordinate
-    representation (sincos.dat), which are appropriate vectors for
-    distance calculations in torsion angle space.
-
-17. plot_histogram.r
-
-    Reads the cluster assignment data from cluster.dat and the
-    replicate assignment data from assignment.dat, and outputs the
-    corresponding joint replicate-cluster probability histogram as EPS
-    file using the 'fields' package in R.
-
-18. probability.r
-
-    Usage: density.r [k] <sigma>
-       Computes the kernel density estimate for the sparse distances
-       in distances.dat, and convert the results to estimated
-       probailities.
-       The number of k nearest neighbors is required but the bandwidth of
-       the kernel, sigma, can be supplied or guesstimated based the data.
-
-19. rms_test
-
-    Computes RMSD between the provided reference structure and all of
-    the structures in the XTC file. This is a nice way to verify/test
-    distance comparisons, but note that different codes produce
-    slightly different results (usually within ~5% difference).
-
-    Usage: ./rms_test [reference structure] [fitting xtc file]
-       Computes the RMSD of all structures for the given in the xtc
-       file. A template structure should be provided as the reference
-       structure.
-
-20. split_xtc
-
-    A utility to sample from an XTC file, producing suitable files for
-    using the Nystrom out-of-sample projection method.
-
-    Usage: ./split_xtc [xtc file] [n]
-       Splits the provided xtc file into two separate.  xtc files
-       (landmarks.xtc and remainder.xtc) where landmarks.xtc will
-       contain every n-th frame from the input xtc file, while
-       remainder.xtc will contain all other frames from the input
-       trajectory.
+22. split_xtc
 
 ********
 EXAMPLES

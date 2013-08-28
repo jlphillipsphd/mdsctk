@@ -28,18 +28,6 @@
 // 
 //
 
-// Standard
-// C
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-// C++
-#include <fstream>
-#include <iostream>
-
-// Boost
-#include <boost/program_options.hpp>
-
 // Local
 #include "config.h"
 #include "mdsctk.h"

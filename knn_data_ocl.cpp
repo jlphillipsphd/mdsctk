@@ -28,35 +28,10 @@
 // 
 //
 
-// Standard
-// C
-#include <strings.h>
-#include <stdlib.h>
-#include <math.h>
-// C++
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <numeric>
-#include <algorithm>
-#include <ctime>
-
-// Boost
-#include <boost/program_options.hpp>
-
 // Local
 #include "config.h"
 #include "mdsctk.h"
 #include "mdsctk_ocl.h"
-
-namespace po = boost::program_options;
-using namespace std;
-
-vector<float> fits;
-
-bool compare(int left, int right) {
-  return fits[left] < fits[right];
-}
 
 int main(int argc, char* argv[]) {
 
@@ -149,7 +124,7 @@ int main(int argc, char* argv[]) {
   ofstream distances;
   ofstream indices;
   float time = 0.0;
-  vector<int> permutation;
+  permutation< ::real> fits;
 
   const std::string kernel_source(euclidean_distance_KernelSource);
   cl::Kernel kernel = buildKernelFromString(kernel_source,
@@ -195,8 +170,7 @@ int main(int argc, char* argv[]) {
   indices.open(i_filename.c_str());
 
   // Allocate vectors for storing the RMSDs for a structure
-  fits.resize(ref_coords->size());
-  permutation.resize(ref_coords->size());
+  fits.data.resize(ref_coords->size());
 
   // Fix k if number of frames is too small
   if (ref_coords->size()-1 < k)
@@ -253,21 +227,17 @@ int main(int argc, char* argv[]) {
     ocl_device.queue.enqueueReadBuffer(bufferC, CL_TRUE,
 				       0,
 				       ref_coords->size() * sizeof(float),
-				       &fits.at(0));
+				       &fits.data.at(0));
 
     // Sort
-    int x = 0;
-    for (vector<int>::iterator p_itr = permutation.begin();
-	 p_itr != permutation.end(); p_itr++)
-      (*p_itr) = x++;    
-    partial_sort(permutation.begin(), permutation.begin()+k1,
-		 permutation.end(), compare);
+    fits.sort(k1);
     for (int x = 0; x < k1; x++)
-      keepers[x] = (double) fits[permutation[x]];
-    
+      keepers[x] = (double) fits.data[fits.indices[x]];
+
     // Write out closest k RMSD alignment scores and indices
-    distances.write((char*) &(keepers[1]), (sizeof(double) / sizeof(char)) * k);
-    indices.write((char*) &(permutation[1]), (sizeof(int) / sizeof(char)) * k);
+    distances.write((char*) &(keepers[1]), (sizeof(double)/sizeof(char)) * k);
+    indices.write((char*) &(fits.indices[1]), (sizeof(int)/sizeof(char)) * k);
+    
   }
 
   cout << endl << endl;

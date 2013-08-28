@@ -42,11 +42,15 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 configure_file (	
   "${PROJECT_SOURCE_DIR}/config.h.in"
   "${PROJECT_BINARY_DIR}/config.h"
-  )					
+  @ONLY)
 configure_file (	
   "${PROJECT_SOURCE_DIR}/config.r.in"
   "${PROJECT_BINARY_DIR}/config.r"
-  )					
+  @ONLY)
+configure_file (	
+  "${PROJECT_SOURCE_DIR}/MDSCTK.bash.in"
+  "${PROJECT_BINARY_DIR}/MDSCTK.bash"
+  @ONLY)
 
 # add the binary tree to the search path for include files
 # so that we will find config.h
@@ -61,7 +65,6 @@ set(CMAKE_BUILD_TYPE Debug)
 if(CMAKE_COMPILER_IS_GNUCXX)
     set(CMAKE_CXX_FLAGS_RELEASE
       "-O3 -Wl,-as-needed")  # Optimize
-    set(CMAKE_EXE_LINKER_FLAGS_RELEASE "-s")  # Strip binary
 endif(CMAKE_COMPILER_IS_GNUCXX)
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)

@@ -28,24 +28,9 @@
 // 
 //
 
-// Standard
-// C
-#include <math.h>
-// C++
-#include <iostream>
-#include <fstream>
-
-// Boost
-#include <boost/program_options.hpp>
-
 // Local
 #include "config.h"
 #include "mdsctk.h"
-
-namespace po = boost::program_options;
-using namespace std;
-
-#define BLKSIZE 65536
 
 int main(int argc, char* argv[]) {
 
