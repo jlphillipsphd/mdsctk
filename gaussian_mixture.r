@@ -57,7 +57,7 @@ parser$add_argument("-e","--evecs",default="eigenvectors.dat",
 parser$add_argument("-o","--output",default="clusters.dat",
                     help="(Output) Cluster assignments file [default %(default)s]")
 parser$add_argument("-u","--uncertainty",default="uncertainty.dat",
-                    help="(Output) Cluster assignments file [default %(default)s]")
+                    help="(Output) Assignment uncertainty file [default %(default)s]")
 parser$add_argument("-n","--ndx",default="clusters.ndx",
                     help="(Output) Cluster assignment index file [default %(default)s]")
 
