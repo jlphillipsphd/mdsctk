@@ -34,20 +34,51 @@
 
 int main(int argc, char* argv[]) {
 
-  if (argc != 2) {
-    cout << endl;
-    cout << "   MDSCTK " << MDSCTK_VERSION_MAJOR << "." << MDSCTK_VERSION_MINOR << endl;
-    cout << endl;
-    cout << "Usage: " << argv[0] << " [#threads]" << endl;
-    cout << "   Computes the shortest paths through the provided CSC sparse matrix." << endl;
-    cout << "   NOTE: Implicit zeros are assumed to be edges of INF weight, but all" << endl;
-    cout << "   diagonal entries are assumed zero (even if they are set to non-zero!)." << endl;
-    cout << endl;
+  const char* program_name = "dijkstra";
+  bool optsOK = true;
+  copyright(program_name);
+  cout << "   Computes the shortest paths through the provided CSC sparse matrix." << endl;
+  cout << "   NOTE: Implicit zeros are assumed to be edges of INF weight, but all" << endl;
+  cout << "   diagonal entries are assumed zero (even if they are set to non-zero!)." << endl;
+  cout << endl;
+  cout << "   Use -h or --help to see the complete list of options." << endl;
+  cout << endl;
+
+  // Option vars...
+  int nthreads = 0;
+  string ssm_filename;
+  string o_filename;
+
+  // Declare the supported options.
+  po::options_description cmdline_options;
+  po::options_description program_options("Program options");
+  program_options.add_options()
+    ("help,h", "show this help message and exit")
+    ("threads,t", po::value<int>(&nthreads)->default_value(2), "Input: Number of threads to start (int)")
+    ("ssm-file,f", po::value<string>(&ssm_filename)->default_value("distances.ssm"), "Input:  Symmetric CSC matrix file (string:filename)")
+    ("output-file,o", po::value<string>(&o_filename)->default_value("apsp.dat"), "Output: All pairs shortest paths (string:filename)")
+    ;
+  cmdline_options.add(program_options);
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, cmdline_options), vm);
+  po::notify(vm);    
+
+  if (vm.count("help")) {
+    cout << "usage: " << program_name << " [options]" << endl;
+    cout << cmdline_options << endl;
+    return 1;
+  }
+
+  if (!optsOK) {
     return -1;
   }
 
-  int     nb;  // Block size for reading data
-  int     nthreads;  // # threads
+  cout << "Running with the following options:" << endl;
+  cout << "threads =     " << nthreads << endl;
+  cout << "ssm-file =    " << ssm_filename << endl;
+  cout << "output-file = " << o_filename << endl;
+  cout << endl;
 
   // Boost data types
   typedef boost::adjacency_list < boost::listS, boost::vecS, boost::directedS,
@@ -60,12 +91,11 @@ int main(int argc, char* argv[]) {
   ofstream apsp;
 
   // Read sparse matrix data
-  apsp.open("apsp.dat");
-  nthreads=atoi(argv[1]);
+  apsp.open(o_filename.c_str());
   omp_set_num_threads(nthreads);
 
   cout << "Reading sparse matrix data...";
-  CSC_matrix *A = new CSC_matrix("distances.ssm");
+  CSC_matrix *A = new CSC_matrix(ssm_filename.c_str());
   int n = A->n;
 
   // Read row index and matrix entries (a)

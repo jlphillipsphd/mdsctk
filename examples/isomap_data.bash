@@ -48,16 +48,16 @@ echo "Creating CSC format sparse matrix..."
 ${MDSCTK_HOME}/make_sysparse -k ${KNN}
 
 echo "Calculating approximate geodesic distances..."
-${MDSCTK_HOME}/dijkstra ${NTHREADS}
+${MDSCTK_HOME}/dijkstra -t ${NTHREADS}
 
 echo "Performing spectral decomposition..."
-${MDSCTK_HOME}/decomp_dense -n ${NCLUSTERS} -q 0.3
+${MDSCTK_HOME}/decomp_dense
 
 ## Make a plot of the resulting 2D embedding...
 Rscript \
     -e 'data <- matrix(scan("eigenvectors.dat",n=1000*2),ncol=2)' \
     -e 'postscript("isomap.eps",width=5,height=5,onefile=FALSE,horizontal=FALSE)' \
     -e 'plot(data,col=rainbow(1000),pch=5)' \
-    -e 'dev.off()'
+    -e 'temp <- dev.off()'
 
 echo "See isomap.eps for results (eg. evince isomap.eps)..."

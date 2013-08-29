@@ -28,28 +28,6 @@
 // 
 //
 
-// Standard
-// C
-#include <strings.h>
-#include <stdlib.h>
-#include <math.h>
-// C++
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <ctime>
-
-// Boost
-#include <boost/program_options.hpp>
-
-// OpenMP
-#include <omp.h>
-
-// GROMACS
-#include <gromacs/tpxio.h>
-#include <gromacs/xtcio.h>
-#include <gromacs/do_fit.h>
-
 // Local
 #include "config.h"
 #include "mdsctk.h"

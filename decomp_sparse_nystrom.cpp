@@ -101,12 +101,13 @@ int main(int argc, char* argv[])
   }
 
   cout << "Running with the following options:" << endl;
-  cout << "sigma =      " << sigma_a << endl;
-  cout << "nevals =     " << nev << endl;
-  cout << "ssm-file =   " << ssm_filename << endl;
-  cout << "gsm-file =   " << gsm_filename << endl;
-  cout << "evals-file = " << evals_filename << endl;
-  cout << "evecs-file = " << evecs_filename << endl;
+  cout << "sigma =          " << sigma_a << endl;
+  cout << "nevals =         " << nev << endl;
+  cout << "ssm-file =       " << ssm_filename << endl;
+  cout << "gsm-file =       " << gsm_filename << endl;
+  cout << "evals-file =     " << evals_filename << endl;
+  cout << "evecs-file =     " << evecs_filename << endl;
+  cout << "residuals-file = " << residuals_filename << endl;
   cout << endl;
 
   // General
