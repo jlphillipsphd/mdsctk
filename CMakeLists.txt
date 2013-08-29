@@ -216,6 +216,9 @@ mark_as_advanced(LIBGMXANA_INCLUDE_DIR LIBGMXANA_LIBRARY)
 include_directories(${LIBGMXANA_INCLUDE_DIRS})
 set(LIBS ${LIBS} ${LIBGMXANA_LIBRARIES})
 
+# Framework library
+add_library(mdsctk STATIC mdsctk.cpp)
+
 # Build tools and scripts...
 set(MDSCTK_TOOLS
   auto_decomp_sparse
@@ -237,19 +240,23 @@ set(MDSCTK_TOOLS
   split_xtc)
 
 foreach(TOOL ${MDSCTK_TOOLS})
-  add_executable(${TOOL} ${TOOL}.cpp mdsctk.cpp)
-  target_link_libraries(${TOOL} ${LIBS})
+  add_executable(${TOOL} ${TOOL}.cpp)
+  target_link_libraries(${TOOL} ${LIBS} mdsctk)
 endforeach(TOOL ${MDSCTK_TOOLS})
 
 ## OpenCL tools...
 if(HAVE_OPENCL_H AND HAVE_LIBOPENCL)
-set(MDSCTK_OCL_TOOLS
-  knn_data_ocl)
 
-foreach(TOOL ${MDSCTK_OCL_TOOLS})
-  add_executable(${TOOL} ${TOOL}.cpp mdsctk.cpp mdsctk_ocl.cpp)
-  target_link_libraries(${TOOL} ${LIBS})
-endforeach(TOOL ${MDSCTK_OCL_TOOLS})
+  add_library(mdsctk_ocl STATIC mdsctk_ocl.cpp)
+
+  set(MDSCTK_OCL_TOOLS
+    knn_data_ocl)
+
+  foreach(TOOL ${MDSCTK_OCL_TOOLS})
+    add_executable(${TOOL} ${TOOL}.cpp)
+    target_link_libraries(${TOOL} ${LIBS} mdsctk mdsctk_ocl)
+  endforeach(TOOL ${MDSCTK_OCL_TOOLS})
+  
 else(HAVE_OPENCL_H AND HAVE_LIBOPENCL)
   message(STATUS "WARNING:")
   message(STATUS "WARNING: OpenCL accelerated tools will NOT be built.")

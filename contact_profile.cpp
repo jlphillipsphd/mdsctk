@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
   po::options_description program_options("Program options");
   program_options.add_options()
     ("help,h", "show this help message and exit")
-    ("threads,t", po::value<int>(&nthreads)->default_value(2), "Input: Number of threads to start (int)")
+    ("threads,t", po::value<int>(&nthreads)->default_value(omp_get_max_threads()>omp_get_num_procs()?omp_get_num_procs():omp_get_max_threads()), "Input:  Number of threads to start (int)")
     ("epsilon,e", po::value<double>(&eps)->default_value(9.0), "Input:  Contact cutoff (real)")
     //    ("sigma,q", po::value<double>(&sigma)->default_value(1), "Input:  Standard deviation of gaussian kernel (real)")
     ("topology-file,p", po::value<string>(&top_filename)->default_value("topology.pdb"), "Input:  Topology file [.pdb,.gro,.tpr] (string:filename)")

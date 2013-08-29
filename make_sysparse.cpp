@@ -322,7 +322,7 @@ int main(int argc, char *argv[]) {
     + sc_filename.str() + " "
     + sr_filename.str() + " "
     + sd_filename.str() + " >> " + o_filename;
-  if (!system(mycall.c_str()))
+  if (system(mycall.c_str()))
     cout << "Could not create symmetric CSC matrix file: " << o_filename << endl;
 
   cout << endl << endl;

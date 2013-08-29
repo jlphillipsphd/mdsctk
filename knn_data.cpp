@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
   po::options_description program_options("Program options");
   program_options.add_options()
     ("help,h", "show this help message and exit")
-    ("threads,t", po::value<int>(&nthreads)->default_value(2), "Input: Number of threads to start (int)")
+    ("threads,t", po::value<int>(&nthreads)->default_value(omp_get_max_threads()>omp_get_num_procs()?omp_get_num_procs():omp_get_max_threads()), "Input:  Number of threads to start (int)")
     ("knn,k", po::value<int>(&k), "Input:  K-nearest neighbors (int)")
     ("size,s", po::value<int>(&vector_size), "Input:  Data vector length (int)")
     ("reference-file,r", po::value<string>(&ref_filename)->default_value("reference.pts"), "Input:  Reference data file (string:filename)")

@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
   po::options_description program_options("Program options");
   program_options.add_options()
     ("help,h", "show this help message and exit")
-    ("threads,t", po::value<int>(&nthreads)->default_value(2), "Input: Number of threads to start (int)")
+    ("threads,t", po::value<int>(&nthreads)->default_value(omp_get_max_threads()>omp_get_num_procs()?omp_get_num_procs():omp_get_max_threads()), "Input:  Number of threads to start (int)")
     ("ssm-file,f", po::value<string>(&ssm_filename)->default_value("distances.ssm"), "Input:  Symmetric CSC matrix file (string:filename)")
     ("output-file,o", po::value<string>(&o_filename)->default_value("apsp.dat"), "Output: All pairs shortest paths (string:filename)")
     ;

@@ -92,14 +92,14 @@ if (nclusters > length(e.values) | nclusters < 2) {
 e.vectors <- matrix(scan(myargs$evecs,quiet=TRUE),ncol=length(e.values))
 
 set.seed(0) # Change for different results...
-clusters <- kmeans(e.vectors[,seq(1,nclusters)],
+clusters <- kmeans(as.matrix(e.vectors[,seq(2,nclusters)]),
                    nclusters,
                    iter.max=30,
                    nstart=10)$cluster
 
-cat("Cluster assignment probabilities:\n")
+cat("Cluster assignment percentage:\n")
 for (x in seq(1,nclusters)) {
-    cat(sprintf("%5d: %g\n",x,100*length(which(clusters==x))/length(clusters)))
+    cat(sprintf("%5d: %-10g\n",x,100*length(which(clusters==x))/length(clusters)))
 }
 cat("\n")
 
