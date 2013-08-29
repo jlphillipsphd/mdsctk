@@ -185,8 +185,8 @@ int main(int argc, char* argv[]) {
     // Do Work
 #pragma omp parallel for
     for (int ref_frame = 0; ref_frame < ref_coords->size(); ref_frame++)
-      fits.data[ref_frame] = ::euclidean_distance(vector_size,(*fit_coords)[fit_frame],
-						  (*ref_coords)[ref_frame]);
+      fits.data[ref_frame] = ::distance(vector_size,(*fit_coords)[fit_frame],
+					(*ref_coords)[ref_frame]);
 
     // Sort
     fits.sort(k1);

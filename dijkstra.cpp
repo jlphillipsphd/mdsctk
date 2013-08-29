@@ -28,9 +28,6 @@
 // 
 //
 
-// OpenMP
-#include <omp.h>
-
 // Local
 #include "config.h"
 #include "mdsctk.h"
