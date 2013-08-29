@@ -35,7 +35,6 @@
 // You can change this function to utilize different
 // distance metrics. The current implementation
 // uses Euclidean distance...
-
 double (*distance)(int size, double* reference, double* fitting) =
   euclidean_distance;
 

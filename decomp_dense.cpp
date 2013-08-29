@@ -162,7 +162,7 @@ int main(int argc, char* argv[]) {
 
   for (int x = n-1; x >= 0; x--) {
 
-    // Scale the vector
+    // Scale the vectors
     for (int y = 0; y < n; y++)
       a[n*x+y] *= sqrt(fabs(w[x]));
 
