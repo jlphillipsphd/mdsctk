@@ -319,7 +319,8 @@ int main(int argc, char *argv[]) {
     + nsc_filename.str() + " "
     + nsr_filename.str() + " "
     + nsd_filename.str() + " >> " + o_filename;
-  system(mycall.c_str());
+  if (!system(mycall.c_str()))
+    cout << "Could not create general CSC matrix file: " << o_filename << endl;
 
   // Delete dynamically allocated data
   delete [] current_indices;

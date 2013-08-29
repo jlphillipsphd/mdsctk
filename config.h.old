@@ -30,4 +30,4 @@
 
 // the configured options and settings for MDSCTK
 #define MDSCTK_VERSION_MAJOR 1
-#define MDSCTK_VERSION_MINOR 1
+#define MDSCTK_VERSION_MINOR 2

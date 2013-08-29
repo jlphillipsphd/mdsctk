@@ -59,6 +59,20 @@ Here are some of the things that MDSCTK does well:
 
 4. Nystrom approximation technique to cluster out-of-sample data.
 
+New features:
+
+1. Basic implementation of Isomap.
+
+2. Sparse contact map calculation.
+
+3. Knn codes for sparse vectors (complements the contact maps).
+
+4. New codes for estimating entropy, probability, and density.
+
+5. Overall more consistent interface among codes/scripts.
+
+6. Bash environment setup script.
+
 ************
 INSTALLATION
 ************
@@ -93,12 +107,21 @@ INSTALLATION
     C++ development headers.
     (Debian/Ubuntu Packages: libdb++-dev and dependencies)
     http://www.oracle.com/technetwork/products/berkeleydb/downloads/index.html
+
+1.6 Boost C++ Graph and Program Options Libraries
+    You will need to install libboost-program-options-dev and
+    libboost-graph-dev at least, but I would recommend just installing
+    libboost-dev which will grab all of the boost development files.
+    (Debian/Ubuntu Packages: libboost-program-options-dev,
+    libboost-graph-dev, and dependencies (or just install the entire
+    boost development files for simplicity: libboost-dev)
+    http://www.boost.org/
  
-1.6 R
+1.7 R
     You will need to install R to perform the final stages of the
     clustering process automatically, or produce replicate-cluster
-    assignment plots (using the 'fields' package which is available on
-    the CRAN after installation).
+    assignment plots (using the 'fields' and 'argparse' packages which
+    are available on the CRAN after installation).
     (Debian/Ubuntu Packages: r-base and r-base-dev)
     http://www.r-project.org/
 
@@ -111,14 +134,13 @@ INSTALLATION
     $ make
 
 2.2 Setup environment (bash example follows...)
-    $ export MDSCTK_HOME=path to MDSCTK
-    $ export PATH=${PATH}:${MDSCTK_HOME}
+    $ source MDSCTK.bash
 
-All binaries should now be built. You will need to set the
-environment variable MDSCTK_HOME to the main source directory. You
-might also consider putting the source directory in your PATH for ease
-of use. Setting MDSCTK_HOME is NECESSARY for some scripts/programs,
-but having the source directory in your PATH is optional.
+You will need to set the environment variable MDSCTK_HOME to the main
+source directory manually if you are not using bash. You might also
+consider putting the source directory in your PATH for ease of
+use. Setting MDSCTK_HOME is NECESSARY for some scripts/programs, but
+having the source directory in your PATH is optional.
 
 There are a lot of uni/linux configurations out there, and I am not
 familiar with all of them. If you experience problems, more than
@@ -246,10 +268,10 @@ Each command in the script performs a specific task that creates the
 input files for the next command. Follow along by opening
 cluster_rms.bash in your favorite editor:
 
-1. knn_rms [# threads] [k] [topology file] [fitting xtc file]
+1. knn_rms -t [# threads] -k [k] -p [topology file] -r [fitting xtc file] -d [distances file] -i [indices file]
 
-   Input: 2 100 trp-cage.pdb trp-cage.xtc
-   Output: distances.dat indices.dat
+   Input: -t 2 -k 100 -p trp-cage.pdb -r trp-cage.xtc
+   Output: -d distances.dat -i indices.dat (defaults)
 
    This program performs parallel computation of the RMS distances
    between all pairs of structures in the provided XTC file.
@@ -287,10 +309,10 @@ cluster_rms.bash in your favorite editor:
    if one is interested in using the output with other
    programs/scripts.
 
-2. make_sysparse [k] <output k>
+2. make_sysparse -k [k] -n [output k] -d [distance file] -i [index file] -o [CSC matrix file]
 
-   Input: 100 (distances.dat indices.dat)
-   Output: sym_row_indices.dat sym_col_indices.dat sym_distances.dat
+   Input: -k 100 (distances.dat indices.dat are defaults)
+   Output: distances.ssm
 
    This program converts the data files from the last step
    (distances.dat and indices.dat) into symmetric Compressed Sparse
@@ -309,11 +331,10 @@ cluster_rms.bash in your favorite editor:
    For details on the CSC format, refer to:
    http://netlib.org/linalg/html_templates/node92.html#SECTION00931200000000000000
 
-3. auto_decomp_sparse [# eigenvalues/vectors] [k]
+3. auto_decomp_sparse -n [# eigenvalues/vectors] -k [k-sigma] -s [CSC matrix file] -v [eigenvalues file] -e [eigenvectors file] -r [residuals file]
 
-   Input: 10 10 (sym_row_indices.dat sym_col_indices.dat
-   sym_distances.dat)
-   Output: eigenvalues.dat eigenvectors.dat residuals.dat
+   Input: -n 10 -k 10 (distance.ssm by default)
+   Output: eigenvalues.dat eigenvectors.dat residuals.dat (defaults)
 
    This program reads the CSC distance matrix from the sym_*.dat
    files and computes the graph laplacian using an automatically tuned
@@ -343,10 +364,10 @@ cluster_rms.bash in your favorite editor:
    keeping too many vectors will slow down the computation, and result
    in a large eigenvectors.dat file, so be reasonable.
 
-4. kmeans.r
+4. kmeans.r -k [#clusters] -v [eigenvalues file] -e [eigenvectors file] -o [clusters file] -n [clusters index file]
 
-   Input: (eigenvectors.dat)
-   Output: clusters.dat
+   Input: -k 10 (eigenvalues.dat eigenvectors.dat by default)
+   Output: clusters.dat clusters.ndx (again by default)
 
    This is an R script that performs k-means clustering on the
    resulting eigenvectors, and outputs the cluster assignments for
@@ -385,10 +406,10 @@ cluster_rms.bash in your favorite editor:
    that this assignment is based off of some other practical reason
    for why certain frames may belong together.
 
-6. clustering_histogram.r
+6. clustering_pdf.r -a [assignment file] -c [clusters file] -o [pdf file]
 
-   Input: (clusters.dat assignment.dat)
-   Output: histogram.dat
+   Input: (clusters.dat assignment.dat by default)
+   Output: pdf.dat (again, by default)
 
    This script takes the cluster assignment and frame assignment data
    and calculates the joint replicate-cluster assignment
@@ -399,11 +420,11 @@ cluster_rms.bash in your favorite editor:
    the following steps to make a quantitative prediction as to how
    well the different assignment groups overlap in conformation space.
 
-   This histogram.dat file contains a CxR probability matrix.
+   This pdf.dat file contains a CxR probability matrix.
  
-7. clustering_nmi.r
+7. clustering_nmi.r -p [pdf file]
 
-   Input: (histogram.dat)
+   Input: (pdf.dat by default)
    Output: Normalized Mutual Information - NMI
 
    This script takes the probablities above and computes the
@@ -417,10 +438,10 @@ cluster_rms.bash in your favorite editor:
    to assess simlation convergence, divergence, or just conformational
    evolution over time (as in the example).
 
-8. plot_histogram.r
+8. plot_pdf.r -p [pdf file] -o [pdf eps]
 
-   Input: (histogram.dat)
-   Output: histogram.eps
+   Input: (pdf.dat by default)
+   Output: pdf.eps (again. by default)
 
    If you have the 'fields' package installed in R, then this script
    will create a 3D plot of p(R,C). This allows visual examination of
@@ -467,3 +488,12 @@ classification of the entire data set. The workflow is similar to the
 one used in the example above, except that the neighbor calculations
 for the out-of-sample data are needed, and the appropriate MDSCTK
 utilities (*_nystrom) are used.
+
+The cluster_contacts*.bash scripts show how to produce and use sparse
+input vectors (in this case, contact maps).
+
+The isomap_data.bash script illustrates how to perform Isomap on a
+data set, and can be produced from RMSD, Phi-Psi angle, or contact map
+data as well. However, the Nystrom extension, and even basic landmark
+MDS, has not been added to this feature just yet, so you will only be
+able to run this algorithm on relatively small data sets.

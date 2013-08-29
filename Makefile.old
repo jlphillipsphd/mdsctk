@@ -11,15 +11,20 @@ CPP=g++
 F77=gfortran
 ## Extra libs are not yet needed, but future versions will need their features.
 ## LIBS=-L${GMXLDLIB} -lgsl -lcblas -larpack -llapack -lblas -ldb_cxx -lpthread -lgmx -lgmxana 
-LIBS=-L${GMXLDLIB} -lgsl -larpack -lblas -ldb_cxx -lpthread -lgmx -lgmxana 
+LIBS=-L${GMXLDLIB} -lgsl -larpack -llapack -lblas -ldb_cxx -lpthread -lgmx -lgmxana -lboost_program_options
+OPENCL_LIBS=-L/opt/intel/opencl-1.2-3.0.67279/lib64 -lOpenCL
 
 TARGETS=auto_decomp_sparse \
 auto_decomp_sparse_nystrom \
 bb_xtc_to_phipsi \
 check_xtc \
+contact_profile \
+decomp_dense \
 decomp_sparse \
 decomp_sparse_nystrom \
+dijkstra \
 knn_data \
+knn_data_sparse \
 knn_rms \
 make_gesparse \
 make_sysparse \
@@ -27,12 +32,19 @@ phipsi_to_sincos \
 rms_test \
 split_xtc
 
+OCL_TARGETS=knn_data_ocl
+
 # Targets
 all : $(TARGETS)
 
+opencl : $(OCL_TARGETS)
+
 # Executables
-$(TARGETS) : % : %.o
+$(TARGETS) : % : %.o mdsctk.o
 	$(CPP) $(CFLAGS) $(OPTIONS) $^ $(LIBS) -o $@
+
+$(OCL_TARGETS) : % : %.o mdsctk.o mdsctk_ocl.o
+	$(CPP) $(CFLAGS) $(OPTIONS) $^ $(LIBS) $(OPENCL_LIBS) -o $@
 
 # Objects
 %.o : %.cpp
@@ -42,4 +54,4 @@ clean :
 	rm -f *.o
 
 dist-clean : clean
-	rm -f $(TARGETS)
+	rm -f $(TARGETS) $(OCL_TARGETS)
