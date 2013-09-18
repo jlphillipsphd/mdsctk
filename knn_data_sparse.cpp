@@ -119,8 +119,7 @@ int main(int argc, char* argv[]) {
   vector<double*> fit_data;
   int k1 = k + 1;
   int update_interval = 1;
-  vector<double> keepers;
-  permutation<double> fits;
+  permutation<double> *fits;
   ifstream index;
   ifstream data;
   ofstream distances;
@@ -128,6 +127,8 @@ int main(int argc, char* argv[]) {
   int n;
   int *myindex;
   double *mydata;
+  int blksize = 1024;
+  int max_blks = 1024 * 1024 * 1024 / 8;
 
   // Setup threads
   omp_set_num_threads(nthreads);
@@ -174,20 +175,42 @@ int main(int argc, char* argv[]) {
   indices.open(i_filename.c_str());
 
   // Allocate vectors for storing the RMSDs for a structure
-  fits.data.resize(ref_index.size());
+  max_blks /= fit_index.size();
+  if (blksize > max_blks)
+    blksize = max_blks;
+  if (blksize > fit_index.size())
+    blksize = fit_index.size();
+  cout << "Block size: " << blksize << endl;     
+  fits = new permutation<double>[blksize];
+  for (int x = 0; x < blksize; x++)
+    fits[x].data.resize(ref_index.size());
 
   // Fix k if number of frames is too small
   if (ref_index.size()-1 < k)
     k = ref_index.size()-1;
   k1 = k + 1;
-  keepers.resize(k1);
 
   // Timers...
   time_t start = std::time(0);
   time_t last = start;
 
   // Compute fits
-  for (int fit_frame = 0; fit_frame < fit_index.size(); fit_frame++) {
+  int remainder = fit_index.size() % blksize;
+#pragma omp parallel for
+  for (int frame = 0; frame < remainder; frame++) {
+    for (int ref_frame = 0; ref_frame < ref_index.size(); ref_frame++)
+      fits[frame].data[ref_frame] =
+	::distance(ref_size[ref_frame],ref_index[ref_frame],ref_data[ref_frame],
+		   fit_size[frame],fit_index[frame],fit_data[frame]);
+    fits[frame].sort(k1);
+  }
+
+  // Write out closest k RMSD alignment scores and indices
+  for (int frame = 0; frame < remainder; frame++) {
+    distances.write((char*) &(fits[frame].data[1]), (sizeof(double)/sizeof(char)) * k);
+    indices.write((char*) &(fits[frame].indices[1]), (sizeof(int)/sizeof(char)) * k);
+  }
+  for (int fit_frame = remainder; fit_frame < fit_index.size(); fit_frame += blksize) {
     
     // Update user of progress
     if (std::time(0) - last > update_interval) {
@@ -197,23 +220,22 @@ int main(int argc, char* argv[]) {
 	   << string(std::ctime(&eta)).substr(0,20);
       cout.flush();
     }
-
+    
     // Do Work
 #pragma omp parallel for
-    for (int ref_frame = 0; ref_frame < ref_index.size(); ref_frame++)
-      fits.data[ref_frame] =
-	::distance(ref_size[ref_frame],ref_index[ref_frame],ref_data[ref_frame],
-		   fit_size[fit_frame],fit_index[fit_frame],fit_data[fit_frame]);
-
-    // Sort
-    fits.sort(k1);
-    for (int x = 0; x < k1; x++)
-      keepers[x] = (double) fits.data[fits.indices[x]];
+    for (int frame = 0; frame < blksize; frame++) {
+      for (int ref_frame = 0; ref_frame < ref_index.size(); ref_frame++)
+	fits[frame].data[ref_frame] =
+	  ::distance(ref_size[ref_frame],ref_index[ref_frame],ref_data[ref_frame],
+		     fit_size[frame+fit_frame],fit_index[frame+fit_frame],fit_data[frame+fit_frame]);
+      fits[frame].sort(k1);
+    }
 
     // Write out closest k RMSD alignment scores and indices
-    distances.write((char*) &(keepers[1]), (sizeof(double)/sizeof(char)) * k);
-    indices.write((char*) &(fits.indices[1]), (sizeof(int)/sizeof(char)) * k);
-
+    for (int frame = 0; frame < blksize; frame++) {
+      distances.write((char*) &(fits[frame].data[1]), (sizeof(double)/sizeof(char)) * k);
+      indices.write((char*) &(fits[frame].indices[1]), (sizeof(int)/sizeof(char)) * k);
+    }
   }
 
   cout << endl << endl;

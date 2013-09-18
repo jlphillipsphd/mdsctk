@@ -224,7 +224,7 @@ int main(int argc, char* argv[]) {
 	// d = exp(-(d*d) / (2.0 * weights[(i*gnx2)+j]));
 	// if (d > eps)
 	//   contact[(i*gnx2)+j] = d;
-	if (d > eps)
+	if (d < eps)
 	  contact[(i*gnx2)+j] = 1.0;
       } // j
     } // i
