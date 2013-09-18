@@ -90,9 +90,12 @@ if (nclusters > length(e.values) | nclusters < 2) {
 }
 
 e.vectors <- matrix(scan(myargs$evecs,quiet=TRUE),ncol=length(e.values))
+e.vectors <- as.matrix(e.vectors[,seq(1,nclusters)])
+e.vectors <- apply(e.vectors,2,sqrt(rowSums(e.vectors^2)),FUN="/")
+temp <- gc()
 
 set.seed(0) # Change for different results...
-clusters <- kmeans(as.matrix(e.vectors[,seq(2,nclusters)]),
+clusters <- kmeans(e.vectors,
                    nclusters,
                    iter.max=30,
                    nstart=10)$cluster

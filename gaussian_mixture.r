@@ -99,9 +99,11 @@ if (nclusters > length(e.values) | nclusters < 2) {
 }
 
 e.vectors <- matrix(scan(myargs$evecs,quiet=TRUE),ncol=length(e.values))
+e.vectors <- as.matrix(e.vectors[,seq(1,nclusters)])
+temp <- gc()
 
 set.seed(0) # Change for different results...
-clusters <- Mclust(as.matrix(e.vectors[,seq(2,nclusters)]),
+clusters <- Mclust(e.vectors,
                    nclusters)
 uncert <- clusters$uncertainty
 clusters <- clusters$classification

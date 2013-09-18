@@ -32,6 +32,12 @@
 #include "config.h"
 #include "mdsctk.h"
 
+// RMS distance function
+double distance(int natoms, ::real weights[], coord_array reference, coord_array fitting) {
+  do_fit(natoms,weights,reference,fitting);
+  return ((double) rmsdev(natoms,weights,reference,fitting) * 10.0);
+}
+
 int main(int argc, char* argv[]) {
 
   const char* program_name = "knn_rms";
@@ -117,13 +123,14 @@ int main(int argc, char* argv[]) {
   t_fileio *fit_file;
   rvec *mycoords = NULL;
   gmx_bool bOK = 1;
-  vector<double> keepers;
-  permutation< ::real> fits;
+  permutation<double> *fits;
   ofstream distances;
   ofstream indices;
   vector<coord_array> *ref_coords = NULL;
   vector<coord_array> *fit_coords = NULL;
   ::real *weights = NULL;
+  int blksize = 1024;
+  int max_blks = 1024 * 1024 * 1024 / 8;
 
   // Setup threads
   omp_set_num_threads(nthreads);
@@ -193,20 +200,44 @@ int main(int argc, char* argv[]) {
   indices.open(i_filename.c_str());
 
   // Allocate vectors for storing the RMSDs for a structure
-  fits.data.resize(ref_coords->size());
+  max_blks /= fit_coords->size();
+  if (blksize > max_blks)
+    blksize = max_blks;
+  if (blksize > fit_coords->size())
+    blksize = fit_coords->size();
+  cout << "Block size: " << blksize << endl;     
+  fits = new permutation<double>[blksize];
+  for (int x = 0; x < blksize; x++)
+    fits[x].data.resize(ref_coords->size());
 
   // Fix k if number of frames is too small
   if (ref_coords->size()-1 < k)
     k = ref_coords->size()-1;
   k1 = k + 1;
-  keepers.resize(k1);
 
   // Timer for ETA
   time_t start = std::time(0);
   time_t last = start;
 
-  // Compute fits
-  for (int fit_frame = 0; fit_frame < fit_coords->size(); fit_frame++) {
+  int remainder = fit_coords->size() % blksize;
+#pragma omp parallel for
+  for (int frame = 0; frame < remainder; frame++) {
+    rvec ref[natoms];
+    rvec fit[natoms];
+    memcpy(fit,(*fit_coords)[frame],sizeof(rvec)*natoms);
+    for (int ref_frame = 0; ref_frame < ref_coords->size(); ref_frame++) {
+      memcpy(ref,(*ref_coords)[ref_frame],sizeof(rvec)*natoms);
+      fits[frame].data[ref_frame] = distance(natoms,weights,ref,fit);
+    }
+    fits[frame].sort(k1);
+  }
+
+  // Write out closest k RMSD alignment scores and indices
+  for (int frame = 0; frame < remainder; frame++) {
+    distances.write((char*) &(fits[frame].data[1]), (sizeof(double)/sizeof(char)) * k);
+    indices.write((char*) &(fits[frame].indices[1]), (sizeof(int)/sizeof(char)) * k);
+  }
+  for (int fit_frame = remainder; fit_frame < fit_coords->size(); fit_frame += blksize) {
     
     // Update user of progress
     if (std::time(0) - last > update_interval) {
@@ -219,24 +250,23 @@ int main(int argc, char* argv[]) {
     
     // Do Work
 #pragma omp parallel for
-    for (int ref_frame = 0; ref_frame < ref_coords->size(); ref_frame++) {
-      do_fit(natoms,weights,
-	     (*fit_coords)[fit_frame],
-	     (*ref_coords)[ref_frame]);
-      fits.data[ref_frame] = rmsdev(natoms,weights,
-				    (*fit_coords)[fit_frame],
-				    (*ref_coords)[ref_frame]) * 10.0;
+    for (int frame = 0; frame < blksize; frame++) {
+      rvec ref[natoms];
+      rvec fit[natoms];
+      memcpy(fit,(*fit_coords)[frame+fit_frame],sizeof(rvec)*natoms);
+      for (int ref_frame = 0; ref_frame < ref_coords->size(); ref_frame++) {
+	memcpy(ref,(*ref_coords)[ref_frame],sizeof(rvec)*natoms);
+	fits[frame].data[ref_frame] = distance(natoms,weights,ref,fit);
+      }
+      fits[frame].sort(k1);
     }
 
-    // Sort
-    fits.sort(k1);
-    for (int x = 0; x < k1; x++)
-      keepers[x] = (double) fits.data[fits.indices[x]];
-
     // Write out closest k RMSD alignment scores and indices
-    distances.write((char*) &(keepers[1]), (sizeof(double)/sizeof(char)) * k);
-    indices.write((char*) &(fits.indices[1]), (sizeof(int)/sizeof(char)) * k);
-
+    for (int frame = 0; frame < blksize; frame++) {
+      distances.write((char*) &(fits[frame].data[1]), (sizeof(double)/sizeof(char)) * k);
+      indices.write((char*) &(fits[frame].indices[1]), (sizeof(int)/sizeof(char)) * k);
+    }
+    
   }
 
   cout << endl << endl;

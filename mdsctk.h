@@ -93,6 +93,8 @@ struct CSC_matrix {
   int     *pcol;
   double  *M;   // Pointer to an array that stores the
 		// elements of the matrix.
+  //void rslice(vector<int>& r, CSC_matrix& csc);
+  //void rcslice(vector<int>& r, CSC_matrix& csc);
   void cleanup();
   double& operator[](int);
 };
@@ -154,6 +156,7 @@ template <class T> struct permutation {
       for (int x = 0; x < data.size(); x++)
 	indices[x] = x;
       std::sort(indices.begin(),indices.end(),*this);
+      std::sort(data.begin(),data.end());
     }
     else {
       indices.resize(data.size());
@@ -161,12 +164,16 @@ template <class T> struct permutation {
 	indices[x] = x;
       std::partial_sort(indices.begin(),indices.begin()+k,
 			indices.end(),*this);
+      std::partial_sort(data.begin(),data.begin()+k,
+			data.end());
     }
   }
   bool operator()(int left, int right) const { return data[left]<data[right]; }
 };
 
 void copyright(const char* program_name = NULL);
+
+double getEPS();
 
 // Sparse Routines
 void sp_dsymv(int n, int *irow, int *pcol, double *A,
@@ -176,6 +183,8 @@ void sp_dgemv(int n, int *irow, int *pcol, double *A,
 
 // Distance metrics
 double euclidean_distance(int size, double* reference, double* fitting);
+
+double correlation_distance(int size, double* reference, double* fitting);
 
 double euclidean_distance_sparse(int ref_size, int* ref_index, double* ref_data,
 				 int fit_size, int* fit_index, double* fit_data);
@@ -222,6 +231,14 @@ extern "C" {
 	      double* w, double* work, int* lwork, int* info );
 
   // BLAS
+  void dsymv_(const char* uplo, const int* n,
+  	      const double* alpha, const double* a, const int* lda,
+  	      const double* x, const int* incx, const double* beta,
+  	      double* y, const int* incy);
+  void dgemv_(const char* trans, const int* m, const int* n,
+  	      const double* alpha, const double* a, const int* lda,
+  	      const double* x, const int* incx, const double* beta,
+  	      double* y, const int* incy);
   void daxpy_(const int *n, const double *da, const double *dx,
 	      const int *incx, double *dy, const int *incy);
   double dnrm2_(const int *n, const double *dx, const int *incx);

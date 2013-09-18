@@ -108,13 +108,14 @@ int main(int argc, char* argv[])
   }
 
   cout << "Running with the following options:" << endl;
-  cout << "k-sigma =      " << k_a << endl;
+  cout << "k-sigma =        " << k_a << endl;
   if (pSet)
-    cout << "k-perplexity = " << K << endl;
-  cout << "nevals =       " << nev << endl;
-  cout << "ssm-file =     " << ssm_filename << endl;
-  cout << "evals-file =   " << evals_filename << endl;
-  cout << "evecs-file =   " << evecs_filename << endl;
+    cout << "k-perplexity =   " << K << endl;
+  cout << "nevals =         " << nev << endl;
+  cout << "ssm-file =       " << ssm_filename << endl;
+  cout << "residuals-file = " << residuals_filename << endl;
+  cout << "evals-file =     " << evals_filename << endl;
+  cout << "evecs-file =     " << evecs_filename << endl;
   cout << endl;
 
   // Defining variables;
@@ -132,9 +133,7 @@ int main(int argc, char* argv[])
   ofstream residuals;
 
   // EPS
-  double eps = 1.0;
-  do { eps /= 2.0; } while (1.0 + (eps / 2.0) != 1.0);
-  eps = sqrt(eps);
+  double eps = getEPS();
 
   // Open files
   eigenvalues.open(evals_filename.c_str());

@@ -119,6 +119,15 @@ void TOP_file::center(coord_array frame) {
   return rmsdev(natoms,mass,ref_frame,fit_frame) * 10.0;
 }
 
+void TOP_file::read_topology() {
+  int ePBC;
+  matrix box;
+  char buf[256];
+  read_tps_conf(filename.c_str(), buf, &top, &ePBC, &frame,
+		NULL, box, TRUE);
+}
+
+
 XTC_file::XTC_file(const string init_filename) : filename(init_filename),
 						 file(NULL),
 						 step(1),
@@ -135,14 +144,6 @@ XTC_file::XTC_file(const string init_filename) : filename(init_filename),
     file = open_xtc(filename.c_str(),"r");
     frame = new rvec[natoms];
   }
-}
-
-void TOP_file::read_topology() {
-  int ePBC;
-  matrix box;
-  char buf[256];
-  read_tps_conf(filename.c_str(), buf, &top, &ePBC, &frame,
-		NULL, box, TRUE);
 }
 
 XTC_file::~XTC_file() {
@@ -195,6 +196,12 @@ void copyright(const char* program_name) {
 
 }
 
+double getEPS() {
+  double eps = 1.0;
+  do { eps /= 2.0; } while (1.0 + (eps / 2.0) != 1.0);
+  eps = sqrt(eps);
+  return (eps);
+}
 
 // Sparse Routines
 void sp_dsymv(int n, int *irow, int *pcol, double *A,
@@ -239,6 +246,31 @@ double euclidean_distance(int size, double* reference, double* fitting) {
   for (int x = 0; x < size; x++)
     value += (reference[x] - fitting[x]) * (reference[x] - fitting[x]);
   return (sqrt(value));
+}
+
+double correlation_distance(int size, double* reference, double* fitting) {
+  double rvalue = 0.0;
+  double rsvalue = 0.0;
+  double fvalue = 0.0;
+  double fsvalue = 0.0;
+  double dsize = (double) size;
+  double value = 0.0;
+  for (int x = 0; x < size; x++) {
+    rvalue += reference[x];
+    rsvalue += reference[x]*reference[x];
+    fvalue += fitting[x];
+    fsvalue += fitting[x]*fitting[x];
+  }
+  rsvalue = sqrt(((dsize*rsvalue)-(rvalue*rvalue))/(dsize*(dsize-1.0)));
+  rvalue /= dsize;
+  fsvalue = sqrt(((dsize*fsvalue)-(fvalue*fvalue))/(dsize*(dsize-1.0)));
+  fvalue /= dsize;
+  for (int x = 0; x < size; x++)
+    value += (reference[x]-rvalue)*(fitting[x]-fvalue);
+  value = (1.0 - (value / ((dsize - 1.0) * rsvalue * fsvalue))) / 2.0;
+  if (value < 0.0)
+    value = 0.0;
+  return sqrt(value);
 }
 
 double euclidean_distance_sparse(int ref_size, int* ref_index, double* ref_data,
@@ -439,8 +471,8 @@ void entropic_affinity_sigmas(int n, int k, double K,
     b0 = log((1.0/s[*j])*(1.0/s[*j])/2.0);
   }
 
-  for (int x = 0; x < n; x++)
-    cout << x << " " << s[x] << endl;
+  // for (int x = 0; x < n; x++)
+  //   cout << x << " " << s[x] << endl;
     
   delete [] B_lower;
   delete [] B_upper;
