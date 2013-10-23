@@ -35,12 +35,12 @@
 const double RAD2DEG = 180.0 / M_PI;
 const size_t update_interval = 3;
 
-CSC_matrix::CSC_matrix(const string filename) : n(0),
-						nnz(0),
-						irow(NULL),
-						pcol(NULL),
-						M(NULL)
-{
+CSC_matrix::CSC_matrix() {
+  init();
+}
+
+CSC_matrix::CSC_matrix(const string filename) {
+  init();
   ifstream csc;
   csc.open(filename.c_str());
   csc.read((char*) &n, (sizeof(int) / sizeof(char)));
@@ -56,8 +56,64 @@ CSC_matrix::CSC_matrix(const string filename) : n(0),
   csc.close();
 }
 
+CSC_matrix::CSC_matrix(const CSC_matrix& Rhs) {
+  init();
+  copy(Rhs);
+}
+
 CSC_matrix::~CSC_matrix() {
   cleanup();
+}
+
+CSC_matrix& CSC_matrix::operator=(const CSC_matrix &Rhs) {
+  if (this != &Rhs) {
+    cleanup();
+    copy(Rhs);
+  }
+  return *this;
+}
+
+void CSC_matrix::syslice(vector<int>& rc, CSC_matrix& csc) {
+  vector<int> new_pcol;
+  vector<int> new_irow;
+  vector<double> new_M;
+  
+  int new_nnz = 0;
+  for (int x = 0; x < rc.size(); x++) {
+    new_pcol.push_back(new_nnz);
+    // cout << "Starting new column (" << x << ") using " << rc[x] << endl;
+    int z = 0;
+    for (int y = pcol[rc[x]]; y < pcol[rc[x]+1]; y++) {
+      for (; z < rc.size() && rc[z] <= irow[y]; z++) {
+	// cout << "Working: "
+	//      << x << "(" << rc[x] << ") "
+	//      << y << "(" << irow[y] << ") "
+	//      << z << "(" << rc[z] << ")";
+	if (rc[z] == irow[y]) {
+	  // cout << " [INS] " << z << " " << x;
+	  new_irow.push_back(z);
+	  new_M.push_back(M[y]);
+	  new_nnz++;
+	}
+	// cout << endl;
+      }
+    }
+  }
+  new_pcol.push_back(new_nnz);
+  
+  // Construct the newbie...
+  csc.cleanup();
+  csc.n = rc.size();
+  csc.nnz = new_nnz;
+  csc.pcol = new int[new_pcol.size()];
+  csc.irow = new int[new_irow.size()];
+  csc.M = new double[new_M.size()];
+
+  std::copy(new_pcol.begin(),new_pcol.end(),csc.pcol);
+  std::copy(new_irow.begin(),new_irow.end(),csc.irow);
+  std::copy(new_M.begin(),new_M.end(),csc.M);
+
+  return;
 }
 
 void CSC_matrix::cleanup() {
@@ -72,6 +128,25 @@ void CSC_matrix::cleanup() {
   irow=NULL;
   pcol=NULL;
   M=NULL;
+}
+
+void CSC_matrix::init() {
+  n=0;
+  nnz=0;
+  irow=NULL;
+  pcol=NULL;
+  M=NULL;
+}
+
+void CSC_matrix::copy(const CSC_matrix &Rhs) {
+  n=Rhs.n;
+  nnz=Rhs.nnz;
+  pcol = new int[n+1];
+  irow = new int[nnz];
+  M = new double[nnz];
+  memcpy(pcol,Rhs.pcol,sizeof(int)*(n+1));
+  memcpy(irow,Rhs.irow,sizeof(int)*nnz);
+  memcpy(M,Rhs.M,sizeof(double)*n);  
 }
 
 double& CSC_matrix::operator[](int x) {
@@ -561,6 +636,185 @@ void crossprod(::real C[],
   return angle;
 }
 
+void sample(int n, int k, int *sample) {
+  int t = 0;
+  int m = 0;
+  double u = 0.0;
+  while (m < k) {
+    u = rand() / (RAND_MAX + 1.0);
+    if ((n-t)*u >= k-m)
+      t++;
+    else
+      sample[m++] = t++;	
+  }
+  return;
+}
+
+// Note FORTRAN convention...
+void kmeans(int n, int d, int k, double *data, int *labels, int nstarts, int maxit) {
+  int *kset = new int[k];
+  double fit = (numeric_limits<double>::max)();
+  int *clabels = new int[n];
+  double *fits = new double[k];
+  double *centers = new double[k*d];
+
+  // cout << "Pointer " << kset << endl;
+
+  // Preliminary initialization
+  for (int x = 0; x < n; x++) {
+    clabels[x] = 0;
+  }
+  for (int x = 0; x < k; x++) {
+    fits[x] = (numeric_limits<double>::max)();
+    for (int y = 0; y < d; y++) {
+      centers[(x*d)+y] = 0.0;
+    }
+  }
+
+  // cout << "Preliminary startup..." << endl;
+
+  // Start computation
+  for (int start = 0; start < nstarts; start++) {
+    
+    // Initialize run
+    // cout << "Starting run #" << start << endl;
+
+    // Get random centers...
+    sample(n,k,kset);
+    for (int x = 0; x < k; x++) {
+      for (int y = 0; y < d; y++) 
+	centers[(x*d)+y] = data[(y*n)+kset[x]];
+      fits[x] = 0.0;
+    }
+
+    // cout << "Initial centers: " << endl;
+    // for (int x = 0; x < k; x++) {
+    //   cout << x << " (" << kset[x] << ") ";
+    //   for (int y = 0; y < d; y++)
+    // 	cout << centers[(x*d)+y] << " ";
+    //   cout << endl;
+    // }
+
+    // Calc fits
+    for (int x = 0; x < n; x++) {
+      int currenti = -1;
+      double currentd = (numeric_limits<double>::max)();
+      for (int y = 0; y < k; y++) {
+	double dist = 0.0;
+	for (int z = 0; z < d; z++) {
+	  dist += SQR((data[(z*n)+x] - centers[(y*d)+z]));
+	}
+	if (dist < currentd) {
+	  currenti = y;
+	  currentd = dist;
+	}
+      }
+      // cout << "Pt: " << x << "( ";
+      // for (int y = 0; y < d; y++)
+      // 	cout << data[(y*n)+x] << " ";
+      // cout << ") " << currenti << " " << currentd << endl;
+      fits[currenti] += currentd;
+      clabels[x] = currenti;
+    }
+
+    // cout << "Initial assignment: " << endl;
+    // for (int x = 0; x < n; x++)
+    //   cout << clabels[x] << " ";
+    // cout << endl;
+
+    // Iterate
+    for (int it = 0; it < maxit; it++) {
+
+      // Calc new centers
+      for (int x = 0; x < k; x++) {
+	kset[x] = 0;
+	fits[x] = 0.0;
+	for (int y = 0; y < d; y++)
+	  centers[(x*d)+y] = 0.0;
+      }
+      for (int x = 0; x < n; x++) {
+	for (int y = 0; y < d; y++) {
+	  centers[(clabels[x]*d)+y] += data[(y*n)+x];
+	}
+	kset[clabels[x]]++;
+      }
+      for (int x = 0; x < k; x++)
+	for (int y = 0; y < d; y++)
+	  centers[(x*d)+y] /= (double) kset[x];
+
+      // cout << "New centers: " << endl;
+      // for (int x = 0; x < k; x++) {
+      // 	cout << x << " ";
+      // 	for (int y = 0; y < d; y++)
+      // 	  cout << centers[(x*d)+y] << " ";
+      // 	cout << endl;
+      // }
+      
+      // Compute change in assignment -- if any...
+      bool change = false;
+      for (int x = 0; x < n; x++) {
+	int currenti = -1;
+	double currentd = (numeric_limits<double>::max)();
+	for (int y = 0; y < k; y++) {
+	  double dist = 0.0;
+	  for (int z = 0; z < d; z++) {
+	    dist += SQR((data[(z*n)+x] - centers[(y*d)+z]));
+	  }
+	  if (dist < currentd) {
+	    currenti = y;
+	    currentd = dist;
+	  }
+	}
+	if (currenti != clabels[x])
+	  change = true;
+	fits[currenti] += currentd;
+	clabels[x] = currenti;
+      }
+
+      // double ss = 0.0;
+      // for (int x = 0; x < k; x++)
+      // 	ss += fits[x];
+      // cout << "Iteration " << it << ": " << ss << endl;
+
+      if (!change) {
+	// cout << "Terminating on iteration " << it << endl;
+	break;
+      }
+      
+    } // end it
+
+    // cout << "Final assignment: " << endl;
+    // for (int x = 0; x < n; x++)
+    //   cout << clabels[x] << " ";
+    // cout << endl;
+
+    // Update current partition if better than others...
+    double ss = 0.0;
+    for (int x = 0; x < k; x++)
+      ss += fits[x];
+    if (ss < fit) {
+      fit = ss;
+      memcpy(labels,clabels,sizeof(int)*n);
+    }
+  }
+
+  // cout << "Pointer " << kset << endl;
+
+  delete [] kset;
+  delete [] clabels;
+  delete [] fits;
+  delete [] centers;
+  return;
+}
+
+vector<int> select(vector<int> &set, int k, int *labels) {
+  vector<int> myset;
+  for (int x = 0; x < set.size(); x++)
+    if (labels[x] == k)
+      myset.push_back(set[x]);
+  return myset;
+}
+
 int runARPACK(int nev, CSC_matrix &A, double* &d, double* &Z) {
   // ARPACK variables...
   int ido = 0;
@@ -589,7 +843,8 @@ int runARPACK(int nev, CSC_matrix &A, double* &d, double* &Z) {
   char HowMny = 'A';
   int *lselect = new int[ncv];
   d = new double[nev];
-  Z = &V[1];
+  // Z = &V[1];
+  Z = V;
   int ldz = A.n;
   double sigma = 0.0;
  
@@ -617,7 +872,7 @@ int runARPACK(int nev, CSC_matrix &A, double* &d, double* &Z) {
 	  &workd[1], &workl[1],
 	  &lworkl, &info);
 
-  return iparam[5];
+  ido = iparam[5];
 
   delete [] resid;
   delete [] lselect;
@@ -626,4 +881,101 @@ int runARPACK(int nev, CSC_matrix &A, double* &d, double* &Z) {
   delete [] workd;
   delete [] workl;
 
+  return ido;
 }
+
+int runARPACK2(int nev, CSC_matrix &A, double* &d, double* &Z) {
+  // ARPACK variables...
+  int ido = 0;
+  char bmat = 'I';
+  char which[2];
+  which[0] = 'L';
+  which[1] = 'R';
+  double tol = 0.0;
+  double *resid = new double[A.n];
+  // NOTE: Need about one order of magnitude more arnoldi vectors to
+  // converge for the normalized Laplacian (according to residuals...)
+  int ncv = ((10*nev+1)>A.n)?A.n:(10*nev+1);
+  double *V = new double[(ncv*A.n)+1];
+  int ldv = A.n;
+  int *iparam = new int[12];
+  iparam[1] = 1;
+  iparam[3] = 100 * nev;
+  iparam[4] = 1;
+  iparam[7] = 1;
+  int *ipntr = new int[15];
+  double *workd = new double[(3*A.n)+1];
+  int lworkl = ncv*(3*ncv+9);
+  double *workl = new double[lworkl+1];
+  int info = 0;
+  int rvec = 1;
+  char HowMny = 'A';
+  int *lselect = new int[ncv];
+  d = new double[nev+1];
+  double *di = new double[nev+1];
+  // Z = &V[1];
+  Z = V;
+  int ldz = A.n;
+  double sigmar = 0.0;
+  double sigmai = 0.0;
+  double *workev = new double[(3*ncv)+1];
+
+  while (ido != 99) {
+    dnaupd_(&ido, &bmat, &A.n, which,
+	    &nev, &tol, resid,
+	    &ncv, &V[1], &ldv,
+	    &iparam[1], &ipntr[1], &workd[1],
+	    &workl[1], &lworkl, &info);
+    
+    if (ido == -1 || ido == 1) {
+      // Matrix-vector multiplication
+      sp_dgemv(A.n,A.irow,A.pcol,A.M,
+	       &workd[ipntr[1]],
+	       &workd[ipntr[2]]);
+    }
+  }
+    
+  dneupd_(&rvec, &HowMny, lselect,
+	  d, di, Z, &ldz,
+	  &sigmar, &sigmai, &workev[1],
+	  &bmat, &A.n,
+	  which, &nev, &tol,
+	  resid, &ncv, &V[1],
+	  &ldv, &iparam[1], &ipntr[1],
+	  &workd[1], &workl[1],
+	  &lworkl, &info);
+
+  ido = iparam[5];
+
+  cout << "Number of eigenvalues/vectors found: " << ido << endl;
+
+  cout << "Resid:" << endl;
+  for (int x = 0; x < nev; x++)
+    cout << resid[x] << " ";
+  cout << endl;
+
+  for (int x = nev-1; x >= 0; x--) {
+    cout << "Eigval: " << d[x] << " +i" << di[x] << " (" << (1.0/(1.0-d[x])) << ")" << endl;
+  }
+
+  ofstream out;
+  out.open("eigenvectors.dat");
+  for (int x = nev-1; x >= 0; x--) {
+    for (int y = 0; y < 2*A.n; y++)
+      out << Z[2*(x*A.n)+y] << " ";
+  out << endl;
+  }
+  out.close();
+
+  delete [] di;
+  delete [] resid;
+  delete [] lselect;
+  delete [] iparam;
+  delete [] ipntr;
+  delete [] workd;
+  delete [] workl;
+  delete [] workev;
+
+  return ido;
+}
+

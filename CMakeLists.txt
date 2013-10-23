@@ -223,6 +223,7 @@ add_library(mdsctk STATIC mdsctk.cpp)
 set(MDSCTK_TOOLS
   auto_decomp_sparse
   auto_decomp_sparse_nystrom
+  auto_heir_decomp_sparse
   bb_xtc_to_phipsi
   check_xtc
   contact_profile

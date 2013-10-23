@@ -54,6 +54,7 @@ int main(int argc, char *argv[]) {
   // Option vars...
   int k;
   int maxk;
+  bool s;
   string i_filename;
   string d_filename;
   string o_filename;
@@ -65,6 +66,7 @@ int main(int argc, char *argv[]) {
     ("help,h", "show this help message and exit")
     ("knn,k", po::value<int>(&maxk), "Input:  K-nearest neighbors (int)")
     ("output-knn,n", po::value<int>(&k), "Input:  K-nn to keep in output (int)")
+    ("symmetric,s", po::bool_switch(&s)->default_value(false), "Input:  Enforce symmetry (bool)")
     ("index-file,i", po::value<string>(&i_filename)->default_value("indices.dat"), "Input:  Index file (string:filename)")
     ("distance-file,d", po::value<string>(&d_filename)->default_value("distances.dat"), "Input:  Distances file (string:filename)")
     ("output-file,o", po::value<string>(&o_filename)->default_value("distances.gsm"), "Output: General sparse matrix file (string:filename)")    
@@ -252,15 +254,22 @@ int main(int argc, char *argv[]) {
       }
 
       // This is a non-symmetric system, so no double entries...
-      // myedge.to = current_index;
-      // myedge.from = current_indices[x];
-      // mydistance = current_distances[x];
-      // if (db.put(NULL, &key, &data, 0) != 0) {
-      // 	cout << "Ccould not insert edge: "
-      // 	     << myedge.from << " "
-      // 	     << myedge.to << " -> "
-      // 	     << mydistance << endl;
-      // }
+      if (s) {
+	myedge.to = current_index;
+	myedge.from = current_indices[x];
+	mydistance = current_distances[x];
+	if (db.get(NULL, &key, &data, 0) == DB_NOTFOUND) {
+	  myedge.to = current_index;
+	  myedge.from = current_indices[x];
+	  mydistance = current_distances[x];
+	  if (db.put(NULL, &key, &data, 0) != 0) {
+	    cout << "Ccould not insert edge: "
+		 << myedge.from << " "
+		 << myedge.to << " -> "
+		 << mydistance << endl;
+	  }
+	}
+      }
     }
 
     // Read a set of distances and indices

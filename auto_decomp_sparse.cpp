@@ -156,12 +156,11 @@ int main(int argc, char* argv[])
       sorted_A[A.irow[y]].push_back(A.M[y]);
     }
   for (int x = 0; x < A.n; x++) {
-    partial_sort(sorted_A[x].begin(),
-    		 sorted_A[x].begin() +
-    		 ((sorted_A[x].size() < k_a)?sorted_A[x].size():k_a),
-    		 sorted_A[x].end());
+    while (sorted_A[x].size() > k_a)
+      sorted_A[x].pop_back();
+    sort(sorted_A[x].begin(),sorted_A[x].end());
     sigma_a[x] = 0;
-    for (int y = 0; y < k_a && y < sorted_A[x].size(); y++)
+    for (int y = 0; y < sorted_A[x].size(); y++)
       sigma_a[x] += sorted_A[x][y];
     sigma_a[x] /= (double) k_a;
   }
@@ -253,7 +252,7 @@ int main(int argc, char* argv[])
   // ARPACK
   delete [] Ax;
   delete [] d;
-  delete [] &(Z[-1]); // Special case...
+  delete [] Z;
 
   return 0;
 

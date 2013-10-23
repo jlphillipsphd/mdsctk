@@ -34,7 +34,7 @@
 // Standard
 // C
 #include <stddef.h>
-#include <stdlib.h>
+//#include <stdlib.h>
 #include <math.h>
 // C++
 #include <iostream>
@@ -42,6 +42,7 @@
 #include <vector>
 #include <algorithm>
 #include <ctime>
+#include <cstdlib>
 
 // OpenMP
 #include <omp.h>
@@ -85,18 +86,23 @@ struct edge {
 
 // CSC Matrix
 struct CSC_matrix {
+  CSC_matrix();
   CSC_matrix(const string filename);
+  CSC_matrix(const CSC_matrix&);
   ~CSC_matrix();
+  CSC_matrix& operator=(const CSC_matrix&);
   int     n;   // Dimension of the matrix (#cols)
   int     nnz;
   int     *irow;
   int     *pcol;
   double  *M;   // Pointer to an array that stores the
 		// elements of the matrix.
-  //void rslice(vector<int>& r, CSC_matrix& csc);
-  //void rcslice(vector<int>& r, CSC_matrix& csc);
-  void cleanup();
+  //void geslice(vector<int>& r, CSC_matrix& csc);
+  void syslice(vector<int>& rc, CSC_matrix& csc);
   double& operator[](int);
+  void init();
+  void cleanup();
+  void copy(const CSC_matrix&);
 };
 
 // TOP_file
@@ -198,14 +204,23 @@ void split_edges(int current_index, Dbc *cursor,
 		 vector<int> &indices, vector<double> &distances);
 int compare_edge(Db *db, const Dbt *key1, const Dbt *key2);
 
+// Math
 void crossprod(::real C[],
 	       ::real x1, ::real y1, ::real z1,
 	       ::real x2, ::real y2, ::real z2);
 
 ::real torsion(::real pos1[], ::real pos2[], ::real pos3[], ::real pos4[], bool degrees);
 
+void sample(int n, int k, int *sample);
+
+void kmeans(int n, int d, int k, double *data, int *labels,
+	    int nstarts = 25, int maxit = 30);
+
+vector<int> select(vector<int> &set, int k, int *labels);
+
 // Runtime
 int runARPACK(int nev, CSC_matrix &A, double* &d, double* &Z);
+int runARPACK2(int nev, CSC_matrix &A, double* &d, double* &Z);
 
 // ARPACK, BLAS, LAPACK, etc.
 extern "C" {
@@ -220,6 +235,22 @@ extern "C" {
   void dseupd_(int *rvec, char *HowMny, int *select,
 	       double *d, double *Z, int *ldz,
 	       double *sigma, char *bmat, int *n,
+	       char *which, int *nev, double *tol,
+	       double *resid, int *ncv, double *V,
+	       int *ldv, int *iparam, int *ipntr,
+	       double *workd, double *workl,
+	       int *lworkl, int *info);
+
+  void dnaupd_(int *ido, char *bmat, int *n, char *which,
+	       int *nev, double *tol, double *resid,
+	       int *ncv, double *V, int *ldv,
+	       int *iparam, int *ipntr, double *workd,
+	       double *workl, int *lworkl, int *info);
+
+  void dneupd_(int *rvec, char *HowMny, int *select,
+	       double *dr, double* di, double *Z, int *ldz,
+	       double *sigmar, double *sigmai, double* workev,
+	       char *bmat, int *n,
 	       char *which, int *nev, double *tol,
 	       double *resid, int *ncv, double *V,
 	       int *ldv, int *iparam, int *ipntr,
