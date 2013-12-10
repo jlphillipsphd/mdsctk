@@ -16,6 +16,7 @@ OPENCL_LIBS=-L/opt/intel/opencl-1.2-3.0.67279/lib64 -lOpenCL
 
 TARGETS=auto_decomp_sparse \
 auto_decomp_sparse_nystrom \
+auto_heir_decomp_sparse \
 bb_xtc_to_phipsi \
 check_xtc \
 contact_profile \
