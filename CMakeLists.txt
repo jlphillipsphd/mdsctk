@@ -86,6 +86,9 @@ check_include_file_cxx(db_cxx.h      HAVE_DB_CXX_H)
 if(NOT HAVE_DB_CXX_H)
   message(FATAL_ERROR "ERROR: unable to find Berekely DB C++ header file.")
 endif(NOT HAVE_DB_CXX_H)
+if(NOT DB_CXX_INCLUDE_PATH STREQUAL "")
+include_directories(${DB_CXX_INCLUDE_PATH})
+endif(NOT DB_CXX_INCLUDE_PATH STREQUAL "")
 
 ## OpenCL
 set(OPENCL_INCLUDE_PATH ""
