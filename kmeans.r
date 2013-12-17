@@ -98,7 +98,9 @@ set.seed(0) # Change for different results...
 clusters <- kmeans(e.vectors,
                    nclusters,
                    iter.max=30,
-                   nstart=10)$cluster
+                   nstart=10)
+centroids <- clusters$centers
+clusters <- clusters$cluster
 
 cat("Cluster assignment percentage:\n")
 for (x in seq(1,nclusters)) {
@@ -111,11 +113,15 @@ write(clusters,myout,ncolumns=1)
 close(myout)
 
 myout <- file(myargs$ndx,"w")
+myout2 <- file("representatives.dat","w")
 for (n in seq(1,ncol(e.vectors))) {
     writeLines(sprintf("[cluster_%d]",n),con=myout)
     write(which(clusters==n),myout,ncolumns=20)
     writeLines("",con=myout)
+    centdist <- colSums(apply(e.vectors[which(clusters==n),],1,centroids[n,],FUN="-")^2)
+    write(which(centdist==min(centdist)),myout2,ncolumns=1)
 }
 close(myout)
+close(myout2)
 
 q(save="no")

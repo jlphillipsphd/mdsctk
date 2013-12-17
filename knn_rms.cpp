@@ -56,6 +56,7 @@ int main(int argc, char* argv[]) {
   // Option vars...
   int nthreads = 0;
   int k = 0;
+  int blksize = 1024;
   string top_filename;
   string ref_filename;
   string fit_filename;
@@ -69,6 +70,7 @@ int main(int argc, char* argv[]) {
     ("help,h", "show this help message and exit")
     ("threads,t", po::value<int>(&nthreads)->default_value(omp_get_max_threads()>omp_get_num_procs()?omp_get_num_procs():omp_get_max_threads()), "Input:  Number of threads to start (int)")
     ("knn,k", po::value<int>(&k), "Input:  K-nearest neighbors (int)")
+    ("block-size,b", po::value<int>(&blksize)->default_value(1024), "Input:  Workgroup block size in # frames (int)")
     ("topology-file,p", po::value<string>(&top_filename)->default_value("topology.pdb"), "Input:  Topology file [.pdb,.gro,.tpr] (string:filename)")
     ("reference-file,r", po::value<string>(&ref_filename)->default_value("reference.xtc"), "Input:  Reference [.xtc] file (string:filename)")
     ("fit-file,f", po::value<string>(&fit_filename), "Input:  Fitting [.xtc] file (string:filename)")
@@ -129,7 +131,6 @@ int main(int argc, char* argv[]) {
   vector<coord_array> *ref_coords = NULL;
   vector<coord_array> *fit_coords = NULL;
   ::real *weights = NULL;
-  int blksize = 1024;
   int max_blks = 1024 * 1024 * 1024 / 8;
 
   // Setup threads
