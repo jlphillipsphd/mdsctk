@@ -56,12 +56,13 @@ int main(int argc, char* argv[]) {
   // Option vars...
   int nthreads = 0;
   int k = 0;
-  int blksize = 1024;
+  int blksize = 128;
   string top_filename;
   string ref_filename;
   string fit_filename;
   string d_filename;
   string i_filename;
+  bool sort;
 
   // Declare the supported options.
   po::options_description cmdline_options;
@@ -70,7 +71,8 @@ int main(int argc, char* argv[]) {
     ("help,h", "show this help message and exit")
     ("threads,t", po::value<int>(&nthreads)->default_value(omp_get_max_threads()>omp_get_num_procs()?omp_get_num_procs():omp_get_max_threads()), "Input:  Number of threads to start (int)")
     ("knn,k", po::value<int>(&k), "Input:  K-nearest neighbors (int)")
-    ("block-size,b", po::value<int>(&blksize)->default_value(1024), "Input:  Workgroup block size in # frames (int)")
+    ("sort,s",po::value<bool>(&sort)->default_value(true),"Input:  Find K-nn,false=full distance matix (bool)")
+    ("block-size,b", po::value<int>(&blksize)->default_value(128), "Input:  Workgroup block size in # frames (int)")
     ("topology-file,p", po::value<string>(&top_filename)->default_value("topology.pdb"), "Input:  Topology file [.pdb,.gro,.tpr] (string:filename)")
     ("reference-file,r", po::value<string>(&ref_filename)->default_value("reference.xtc"), "Input:  Reference [.xtc] file (string:filename)")
     ("fit-file,f", po::value<string>(&fit_filename), "Input:  Fitting [.xtc] file (string:filename)")
@@ -88,7 +90,7 @@ int main(int argc, char* argv[]) {
     cout << cmdline_options << endl;
     return 1;
   }
-  if (!vm.count("knn")) {
+  if (!vm.count("knn") && sort) {
     cout << "ERROR: --knn not supplied." << endl;
     cout << endl;
     optsOK = false;
@@ -214,7 +216,6 @@ int main(int argc, char* argv[]) {
   // Fix k if number of frames is too small
   if (ref_coords->size()-1 < k)
     k = ref_coords->size()-1;
-  k1 = k + 1;
 
   // Timer for ETA
   time_t start = std::time(0);
@@ -230,13 +231,20 @@ int main(int argc, char* argv[]) {
       memcpy(ref,(*ref_coords)[ref_frame],sizeof(rvec)*natoms);
       fits[frame].data[ref_frame] = distance(natoms,weights,ref,fit);
     }
-    fits[frame].sort(k1);
+    if (sort)
+      fits[frame].sort(k1);
   }
 
   // Write out closest k RMSD alignment scores and indices
   for (int frame = 0; frame < remainder; frame++) {
-    distances.write((char*) &(fits[frame].data[1]), (sizeof(double)/sizeof(char)) * k);
-    indices.write((char*) &(fits[frame].indices[1]), (sizeof(int)/sizeof(char)) * k);
+    if (sort) {
+      distances.write((char*) &(fits[frame].data[1]), (sizeof(double)/sizeof(char)) * k);
+      indices.write((char*) &(fits[frame].indices[1]), (sizeof(int)/sizeof(char)) * k);
+    }
+    else {
+      distances.write((char*) &(fits[frame].data[0]), (sizeof(double)/sizeof(char)) * ref_coords->size());
+      indices.write((char*) &(fits[frame].indices[0]), (sizeof(int)/sizeof(char)) * ref_coords->size());
+    }
   }
   for (int fit_frame = remainder; fit_frame < fit_coords->size(); fit_frame += blksize) {
     
@@ -259,13 +267,20 @@ int main(int argc, char* argv[]) {
 	memcpy(ref,(*ref_coords)[ref_frame],sizeof(rvec)*natoms);
 	fits[frame].data[ref_frame] = distance(natoms,weights,ref,fit);
       }
-      fits[frame].sort(k1);
+      if (sort)
+	fits[frame].sort(k1);
     }
 
     // Write out closest k RMSD alignment scores and indices
     for (int frame = 0; frame < blksize; frame++) {
-      distances.write((char*) &(fits[frame].data[1]), (sizeof(double)/sizeof(char)) * k);
-      indices.write((char*) &(fits[frame].indices[1]), (sizeof(int)/sizeof(char)) * k);
+      if (sort) {
+	distances.write((char*) &(fits[frame].data[1]), (sizeof(double)/sizeof(char)) * k);
+	indices.write((char*) &(fits[frame].indices[1]), (sizeof(int)/sizeof(char)) * k);
+      }
+      else {
+	distances.write((char*) &(fits[frame].data[0]), (sizeof(double)/sizeof(char)) * ref_coords->size());
+	indices.write((char*) &(fits[frame].indices[0]), (sizeof(int)/sizeof(char)) * ref_coords->size());
+      }
     }
     
   }
