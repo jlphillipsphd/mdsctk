@@ -221,6 +221,7 @@ set(LIBS ${LIBS} ${LIBGMXANA_LIBRARIES})
 
 # Build tools and scripts...
 set(MDSCTK_TOOLS
+  angles_to_sincos
   auto_decomp_sparse
   auto_decomp_sparse_nystrom
   bb_xtc_to_phipsi
@@ -236,7 +237,6 @@ set(MDSCTK_TOOLS
   knn_rms
   make_sysparse
   make_gesparse
-  phipsi_to_sincos
   rms_test
   split_xtc)
 

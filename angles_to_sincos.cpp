@@ -34,7 +34,7 @@
 
 int main(int argc, char* argv[]) {
 
-  const char* program_name = "phipsi_to_sincos";
+  const char* program_name = "angles_to_sincos";
   bool optsOK = true;
   copyright(program_name);
   cout << "   Convert the (binary-double) angles from the input file" << endl;
