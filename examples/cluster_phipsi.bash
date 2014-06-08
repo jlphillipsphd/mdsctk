@@ -57,7 +57,7 @@ echo "Computing Phi-Psi angles..."
 ${MDSCTK_HOME}/bb_xtc_to_phipsi -x ${XTC}
 
 echo "Converting angles to polar coordinates..."
-${MDSCTK_HOME}/phipsi_to_sincos
+${MDSCTK_HOME}/angles_to_sincos
 
 echo "Computing Euclidean distances between all vector pairs..."
 ${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -s ${NSINCOS} -r sincos.dat

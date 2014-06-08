@@ -58,7 +58,7 @@ echo "Computing Phi-Psi angles..."
 ${MDSCTK_HOME}/bb_xtc_to_phipsi -x ${XTC}
 
 echo "Converting angles to polar coordinates..."
-${MDSCTK_HOME}/phipsi_to_sincos
+${MDSCTK_HOME}/angles_to_sincos
 mv sincos.dat landmarks.dat
 
 echo "Computing Euclidean distances between all landmark vector pairs..."
@@ -71,7 +71,7 @@ echo "Computing Phi-Psi angles (out-of-sample)..."
 ${MDSCTK_HOME}/bb_xtc_to_phipsi -x ${OSXTC}
 
 echo "Converting angles to polar coordinates..."
-${MDSCTK_HOME}/phipsi_to_sincos
+${MDSCTK_HOME}/angles_to_sincos
 
 echo "Computing Euclidean distances between landmark and out-of-sample vector pairs..."
 ${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -s ${NSINCOS} -r landmarks.dat -f sincos.dat
