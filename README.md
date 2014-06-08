@@ -7,8 +7,9 @@ Version: 1.2.0
 Date: 2013-08-20
 
 Author:
-Joshua L. Phillips <jphillips@lanl.gov>
+Joshua L. Phillips <jphillips@lanl.gov>, <Joshua.Phillips@mtsu.edu>
 T-6/CNLS, Los Alamos National Laboratory
+Department of Computer Science, Middle Tennessee State University
 
 Thanks for considering MDSCTK for your spectral analysis needs!
 
@@ -27,6 +28,15 @@ To help us fund development, we humbly ask that you cite the MDSCTK papers:
   Proc. of the 2008 IEEE Int. Conf. on Bioinf. and Biomed. Workshops
   (pp. 17–24). Philadelphia, PA: IEEE. (2008)
   doi:10.1109/BIBMW.2008.4686204
+
+This work was supported by NSF Award Number 0960480 and was supported
+in part by NIH Grants GM077520 and in part by the U.S. Department of
+Energy, Office of Science, Offices of Advanced Scientific Computing
+Research, and Biological & Environmental Research through the
+U.C. Merced Center for Computational Biology. JLP was also supported
+by an N. C. Metropolis Postdoctoral Fellowship through the Los Alamos
+National Laboratory Advanced Scientific Computing program and the
+Center for Nonlinear Studies.
 
 *************
 GENERAL INFO:
