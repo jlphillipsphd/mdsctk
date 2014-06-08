@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
   }
 
   cout << "Running with the following options:" << endl;
-  cout << "input-file =    " << input_filename << endl;
+  cout << "input-file  = " << input_filename << endl;
   cout << "output-file = " << output_filename << endl;
   cout << endl;
 

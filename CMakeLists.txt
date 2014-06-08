@@ -224,6 +224,7 @@ set(MDSCTK_TOOLS
   auto_decomp_sparse
   auto_decomp_sparse_nystrom
   bb_xtc_to_phipsi
+  ca_xtc_to_thetaphi
   check_xtc
   contact_profile
   decomp_dense
