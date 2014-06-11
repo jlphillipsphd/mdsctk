@@ -53,6 +53,7 @@ int main(int argc, char* argv[]) {
   // Option vars...
   int nthreads = 0;
   int k = 0;
+  int blksize = 1024;
   string ref_index_filename;
   string ref_data_filename;
   string fit_index_filename;
@@ -67,6 +68,7 @@ int main(int argc, char* argv[]) {
     ("help,h", "show this help message and exit")
     ("threads,t", po::value<int>(&nthreads)->default_value(omp_get_max_threads()>omp_get_num_procs()?omp_get_num_procs():omp_get_max_threads()), "Input:  Number of threads to start (int)")
     ("knn,k", po::value<int>(&k), "Input:  K-nearest neighbors (int)")
+    ("block-size,b", po::value<int>(&blksize)->default_value(128), "Input:  Workgroup block size in # frames (int)")
     ("reference-index-file,R", po::value<string>(&ref_index_filename)->default_value("reference.svi"), "Input:  Reference index file (string:filename)")
     ("reference-data-file,r", po::value<string>(&ref_data_filename)->default_value("reference.svd"), "Input:  Reference data file (string:filename)")
     ("fit-index-file,F", po::value<string>(&fit_index_filename), "Input:  Fitting index file (string:filename)")
@@ -127,7 +129,6 @@ int main(int argc, char* argv[]) {
   int n;
   int *myindex;
   double *mydata;
-  int blksize = 1024;
   int max_blks = 1024 * 1024 * 1024 / 8;
 
   // Setup threads

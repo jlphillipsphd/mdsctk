@@ -53,6 +53,7 @@ int main(int argc, char* argv[]) {
   int nthreads = 0;
   int k = 0;
   int vector_size = 0;
+  int blksize = 128;
   bool c;
   string ref_filename;
   string fit_filename;
@@ -67,6 +68,7 @@ int main(int argc, char* argv[]) {
     ("threads,t", po::value<int>(&nthreads)->default_value(omp_get_max_threads()>omp_get_num_procs()?omp_get_num_procs():omp_get_max_threads()), "Input:  Number of threads to start (int)")
     ("knn,k", po::value<int>(&k), "Input:  K-nearest neighbors (int)")
     ("size,s", po::value<int>(&vector_size), "Input:  Data vector length (int)")
+    ("block-size,b", po::value<int>(&blksize)->default_value(128), "Input:  Workgroup block size in # frames (int)")
     ("correlation,c", po::bool_switch(&c)->default_value(false), "Input:  Use correlation distance (bool)")
     ("reference-file,r", po::value<string>(&ref_filename)->default_value("reference.pts"), "Input:  Reference data file (string:filename)")
     ("fit-file,f", po::value<string>(&fit_filename), "Input:  Fitting data file (string:filename)")
@@ -122,7 +124,6 @@ int main(int argc, char* argv[]) {
   permutation<double> *fits;
   ofstream distances;
   ofstream indices;
-  int blksize = 1024;
   int max_blks = 1024 * 1024 * 1024 / 8;
 
   // Setup threads
