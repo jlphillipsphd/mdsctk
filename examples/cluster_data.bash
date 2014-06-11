@@ -7,9 +7,9 @@
 ## 
 ##       Molecular Dynamics Spectral Clustering ToolKit
 ## 
-##                        VERSION 1.2.0
+##                        VERSION 1.2.2
 ## Written by Joshua L. Phillips.
-## Copyright (c) 2013, Joshua L. Phillips.
+## Copyright (c) 2012-2014, Joshua L. Phillips.
 ## check out http://github.com/douradopalmares/mdsctk/ for more information.
 ##
 ## This program is free software; you can redistribute it and/or
