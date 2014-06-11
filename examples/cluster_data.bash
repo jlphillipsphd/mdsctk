@@ -44,7 +44,7 @@ SCALING=10    ## (must be <= KNN) for calculating scaling factors...
 DIM=2         ## Data dimensionality
 
 echo "Computing distances between all point pairs..."
-${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -s ${DIM} -r rings.pts
+${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -v ${DIM} -r rings.pts
 
 echo "Creating CSC format sparse matrix..."
 ${MDSCTK_HOME}/make_sysparse -k ${KNN}

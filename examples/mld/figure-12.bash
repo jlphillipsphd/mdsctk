@@ -66,8 +66,8 @@ angles_to_sincos \
     -o trp-cage-unsmoothed-sincos.dat
 
 echo "Computing distances between all point pairs..."
-#${MDSCTK_HOME}/knn_data_ocl -k ${KNN} -s ${DIM} \
-${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -s ${DIM} \
+#${MDSCTK_HOME}/knn_data_ocl -k ${KNN} -v ${DIM} \
+${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -v ${DIM} \
     -r trp-cage-unsmoothed-sincos.dat \
     -d trp-cage-unsmoothed-distances.dat \
     -i trp-cage-unsmoothed-indices.dat
@@ -81,7 +81,7 @@ echo "Frequency smoothing..."
 echo "Smoothing Level - Frequency cutoff percent - ${SMOOTH}\%"
 
 echo "Smoothing phi-psi angle space..."
-smooth_angles.r -p ${SMOOTH} -f -s ${NANGLES} \
+smooth_angles.r -p ${SMOOTH} -f -v ${NANGLES} \
     -a trp-cage-unsmoothed-phipsi.dat \
     -o trp-cage-smoothed-phipsi.dat
 
@@ -91,8 +91,8 @@ angles_to_sincos \
     -o trp-cage-smoothed-sincos.dat
 
 echo "Computing distances between all point pairs..."
-#${MDSCTK_HOME}/knn_data_ocl -k ${KNN} -s ${DIM} \
-${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -s ${DIM} \
+#${MDSCTK_HOME}/knn_data_ocl -k ${KNN} -v ${DIM} \
+${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -v ${DIM} \
     -r trp-cage-smoothed-sincos.dat \
     -d trp-cage-smoothed-distances.dat \
     -i trp-cage-smoothed-indices.dat

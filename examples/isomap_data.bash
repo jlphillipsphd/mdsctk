@@ -42,7 +42,7 @@ KNN=12        ## Number of nearest neighbors to keep
 DIM=3         ## Data dimensionality
 
 echo "Computing distances between all point pairs..."
-${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -s ${DIM} -r swissroll.pts
+${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -v ${DIM} -r swissroll.pts
 
 echo "Creating CSC format sparse matrix..."
 ${MDSCTK_HOME}/make_sysparse -k ${KNN}

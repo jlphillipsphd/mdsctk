@@ -61,7 +61,7 @@ echo "Converting angles to polar coordinates..."
 ${MDSCTK_HOME}/phipsi_to_sincos
 
 echo "Computing Euclidean distances between all vector pairs..."
-${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -s ${NSINCOS} -r sincos.dat
+${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -v ${NSINCOS} -r sincos.dat
 
 echo "Creating CSC format sparse matrix..."
 ${MDSCTK_HOME}/make_sysparse -k ${KNN}

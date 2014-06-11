@@ -47,7 +47,7 @@ cat("\n")
 cat("   Use -h or --help to see the complete list of options.\n")
 cat("\n")
 
-parser$add_argument("-s","--size",type="integer",
+parser$add_argument("-v","--vectorsize",type="integer",
                     help="Length of angle vectors",metavar="integer")
 parser$add_argument("-p","--percent",default=10,type="double",
                     help="Smoothing percentage [default %(default)d]",metavar="double")
@@ -60,8 +60,8 @@ parser$add_argument("-o","--output",default="smoothedangles.dat",
 
 myargs <- parser$parse_args()
 
-if (is.null(myargs$size)) {
-    cat("ERROR: --size not supplied.\n")
+if (is.null(myargs$vectorsize)) {
+    cat("ERROR: --vectorsize not supplied.\n")
     cat("\n")
     q()
 }
@@ -69,18 +69,18 @@ if (is.null(myargs$size)) {
 myfrac <- myargs$percent / 100
 
 cat("Running with the following options:\n")
-cat(paste("size      = ",myargs$size,"\n"))
+cat(paste("vectorsize = ",myargs$vectorsize,"\n"))
 if (myargs$frequency) {
-    cat(paste("smoothing = ","frequency-based","\n"))
+    cat(paste("smoothing  = ","frequency-based","\n"))
 } else {
-    cat(paste("smoothing = ","amplitude-based","\n"))
+    cat(paste("smoothing  = ","amplitude-based","\n"))
 }
-cat(paste("percent   = ",myargs$percent,"\n"))
-cat(paste("angles    = ",myargs$angles,"\n"))
-cat(paste("output    = ",myargs$output,"\n"))
+cat(paste("percent    = ",myargs$percent,"\n"))
+cat(paste("angles     = ",myargs$angles,"\n"))
+cat(paste("output     = ",myargs$output,"\n"))
 cat("\n")
 
-data <- apply(matrix(complex(modulus=1,argument=read.binary(myargs$angles,file.info(myargs$angles)$size/8)),nrow=myargs$size),1,fft)
+data <- apply(matrix(complex(modulus=1,argument=read.binary(myargs$angles,file.info(myargs$angles)$size/8)),nrow=myargs$vectorsize),1,fft)
 
 if (myargs$frequency) {
     ## Frequency-based

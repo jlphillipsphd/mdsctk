@@ -62,7 +62,7 @@ ${MDSCTK_HOME}/angles_to_sincos
 mv sincos.dat landmarks.dat
 
 echo "Computing Euclidean distances between all landmark vector pairs..."
-${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -s ${NSINCOS} -r landmarks.dat
+${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -v ${NSINCOS} -r landmarks.dat
 
 echo "Creating CSC format symmetric sparse matrix..."
 ${MDSCTK_HOME}/make_sysparse -k ${KNN}
@@ -74,7 +74,7 @@ echo "Converting angles to polar coordinates..."
 ${MDSCTK_HOME}/angles_to_sincos
 
 echo "Computing Euclidean distances between landmark and out-of-sample vector pairs..."
-${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -s ${NSINCOS} -r landmarks.dat -f sincos.dat
+${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -v ${NSINCOS} -r landmarks.dat -f sincos.dat
 
 echo "Creating CSC format non-symmetric sparse matrix..."
 ${MDSCTK_HOME}/make_gesparse -k ${KNN}

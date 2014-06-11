@@ -66,8 +66,8 @@ angles_to_sincos \
     -o nup116-unsmoothed-sincos.dat
 
 echo "Computing distances between all point pairs..."
-#${MDSCTK_HOME}/knn_data_ocl -k ${KNN} -s ${DIM} \
-${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -s ${DIM} \
+#${MDSCTK_HOME}/knn_data_ocl -k ${KNN} -v ${DIM} \
+${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -v ${DIM} \
     -r nup116-unsmoothed-sincos.dat \
     -d nup116-unsmoothed-distances.dat \
     -i nup116-unsmoothed-indices.dat
@@ -81,7 +81,7 @@ echo "Frequency smoothing..."
 echo "Smoothing Level - Frequency cutoff percent - ${SMOOTH}\%"
 
 echo "Smoothing phi-psi angle space..."
-smooth_angles.r -p ${SMOOTH} -f -s ${NANGLES} \
+smooth_angles.r -p ${SMOOTH} -f -v ${NANGLES} \
     -a nup116-unsmoothed-phipsi.dat \
     -o nup116-smoothed-phipsi.dat
 
@@ -91,8 +91,8 @@ angles_to_sincos \
     -o nup116-smoothed-sincos.dat
 
 echo "Computing distances between all point pairs..."
-#${MDSCTK_HOME}/knn_data_ocl -k ${KNN} -s ${DIM} \
-${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -s ${DIM} \
+#${MDSCTK_HOME}/knn_data_ocl -k ${KNN} -v ${DIM} \
+${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -v ${DIM} \
     -r nup116-smoothed-sincos.dat \
     -d nup116-smoothed-distances.dat \
     -i nup116-smoothed-indices.dat

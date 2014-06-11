@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
   program_options.add_options()
     ("help,h", "show this help message and exit")
     ("knn,k", po::value<int>(&k), "Input:  K-nearest neighbors (int)")
-    ("size,s", po::value<int>(&vector_size), "Input:  Data vector length (int)")
+    ("vector-size,v", po::value<int>(&vector_size), "Input:  Data vector length (int)")
     ("reference-file,r", po::value<string>(&ref_filename)->default_value("reference.pts"), "Input:  Reference data file (string:filename)")
     ("fit-file,f", po::value<string>(&fit_filename), "Input:  Fitting data file (string:filename)")
     ("distance-file,d", po::value<string>(&d_filename)->default_value("distances.dat"), "Output: K-nn distances file (string:filename)")
@@ -94,8 +94,8 @@ int main(int argc, char* argv[]) {
     cout << endl;
     optsOK = false;
   }
-  if (!vm.count("size")) {
-    cout << "ERROR: --size not supplied." << endl;
+  if (!vm.count("vector-size")) {
+    cout << "ERROR: --vector-size not supplied." << endl;
     cout << endl;
     optsOK = false;
   }
@@ -108,7 +108,7 @@ int main(int argc, char* argv[]) {
 
   cout << "Running with the following options:" << endl;
   cout << "knn =            " << k << endl;
-  cout << "size =           " << vector_size << endl;
+  cout << "vector-size =    " << vector_size << endl;
   cout << "reference-file = " << ref_filename << endl;
   cout << "fit-file =       " << fit_filename << endl;
   cout << "distance-file =  " << d_filename << endl;

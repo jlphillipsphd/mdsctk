@@ -67,7 +67,7 @@ int main(int argc, char* argv[]) {
     ("help,h", "show this help message and exit")
     ("threads,t", po::value<int>(&nthreads)->default_value(omp_get_max_threads()>omp_get_num_procs()?omp_get_num_procs():omp_get_max_threads()), "Input:  Number of threads to start (int)")
     ("knn,k", po::value<int>(&k), "Input:  K-nearest neighbors (int)")
-    ("size,s", po::value<int>(&vector_size), "Input:  Data vector length (int)")
+    ("vector-size,v", po::value<int>(&vector_size), "Input:  Data vector length (int)")
     ("block-size,b", po::value<int>(&blksize)->default_value(128), "Input:  Workgroup block size in # frames (int)")
     ("correlation,c", po::bool_switch(&c)->default_value(false), "Input:  Use correlation distance (bool)")
     ("reference-file,r", po::value<string>(&ref_filename)->default_value("reference.pts"), "Input:  Reference data file (string:filename)")
@@ -91,8 +91,8 @@ int main(int argc, char* argv[]) {
     cout << endl;
     optsOK = false;
   }
-  if (!vm.count("size")) {
-    cout << "ERROR: --size not supplied." << endl;
+  if (!vm.count("vector-size")) {
+    cout << "ERROR: --vector-size not supplied." << endl;
     cout << endl;
     optsOK = false;
   }
@@ -109,7 +109,7 @@ int main(int argc, char* argv[]) {
   cout << "Running with the following options:" << endl;
   cout << "threads =        " << nthreads << endl;
   cout << "knn =            " << k << endl;
-  cout << "size =           " << vector_size << endl;
+  cout << "vector-size =    " << vector_size << endl;
   cout << "reference-file = " << ref_filename << endl;
   cout << "fit-file =       " << fit_filename << endl;
   cout << "distance-file =  " << d_filename << endl;

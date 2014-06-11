@@ -44,13 +44,13 @@ SCALING=10    ## (must be <= KNN) for calculating scaling factors...
 DIM=2         ## Data dimensionality
 
 echo "Computing distances between all landmark point pairs..."
-${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -s ${DIM} -r rings.pts
+${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -v ${DIM} -r rings.pts
 
 echo "Creating CSC format symmetric sparse matrix..."
 ${MDSCTK_HOME}/make_sysparse -k ${KNN}
 
 echo "Computing distances between landmarks and all remaining point pairs..."
-${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -s ${DIM} -r rings.pts -f rings-outofsample.pts
+${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -v ${DIM} -r rings.pts -f rings-outofsample.pts
 
 echo "Creating CSC format non-symmetric sparse matrix..."
 ${MDSCTK_HOME}/make_gesparse -k ${KNN}

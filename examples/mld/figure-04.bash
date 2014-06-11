@@ -67,8 +67,8 @@ for NOISE in 00.00 00.01 00.10 01.00 03.00 10.00; do
 	-o halffolded-unsmoothed-${NOISE}-sincos.dat
 
     echo "Computing distances between all point pairs..."
-    #${MDSCTK_HOME}/knn_data_ocl -k ${KNN} -s ${DIM} \
-    ${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -s ${DIM} \
+    #${MDSCTK_HOME}/knn_data_ocl -k ${KNN} -v ${DIM} \
+    ${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -v ${DIM} \
 	-r halffolded-unsmoothed-${NOISE}-sincos.dat \
 	-d halffolded-unsmoothed-${NOISE}-distances.dat \
 	-i halffolded-unsmoothed-${NOISE}-indices.dat
@@ -88,7 +88,7 @@ for SMOOTH in 00 01 05 10 50; do
     echo "Smoothing Level - Frequency cutoff percent - ${SMOOTH}\% (sigma_{theta,phi} = ${NOISE})"
 
     echo "Smoothing theta-phi angle space..."
-    smooth_angles.r -p ${SMOOTH} -f -s ${NANGLES} \
+    smooth_angles.r -p ${SMOOTH} -f -v ${NANGLES} \
 	-a halffolded-unsmoothed-${NOISE}-thetaphi.dat \
 	-o halffolded-smoothed-${SMOOTH}-thetaphi.dat
     
@@ -98,8 +98,8 @@ for SMOOTH in 00 01 05 10 50; do
 	-o halffolded-smoothed-${SMOOTH}-sincos.dat
 
     echo "Computing distances between all point pairs..."
-    #${MDSCTK_HOME}/knn_data_ocl -k ${KNN} -s ${DIM} \
-    ${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -s ${DIM} \
+    #${MDSCTK_HOME}/knn_data_ocl -k ${KNN} -v ${DIM} \
+    ${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -v ${DIM} \
 	-r halffolded-smoothed-${SMOOTH}-sincos.dat \
 	-d halffolded-smoothed-${SMOOTH}-distances.dat \
 	-i halffolded-smoothed-${SMOOTH}-indices.dat

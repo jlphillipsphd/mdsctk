@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
   // Option vars...
   int nthreads = 0;
   int k = 0;
-  int blksize = 1024;
+  int blksize = 128;
   string ref_index_filename;
   string ref_data_filename;
   string fit_index_filename;
