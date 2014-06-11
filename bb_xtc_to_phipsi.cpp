@@ -103,31 +103,29 @@ int main(int argc, char* argv[]) {
   output.open(output_filename.c_str());
 
   // Convert coordinates
-  for (int x = 1; x < argc; x++) {
-    myfile = open_xtc(xtc_filename.c_str(),"r");
-    while (read_next_xtc(myfile, natoms, &step, &time, box, mycoords, &prec, &bOK)) {
-      int i_mat = 0;    
-      for (int x = 0; x < natoms-3;) {
-	mymat[i_mat++] = (double) torsion(mycoords[x],mycoords[x+1],
-					  mycoords[x+2],mycoords[x+3],false);
-	x += 2;
-	
-	mymat[i_mat++] = (double) torsion(mycoords[x],mycoords[x+1],
-					  mycoords[x+2],mycoords[x+3],false);
-	x += 1;
-      }
-      output.write((char*) mymat, (sizeof(double) / sizeof(char)) * (2*(natoms/3)-2));   
-      frames++;
+  myfile = open_xtc(xtc_filename.c_str(),"r");
+  while (read_next_xtc(myfile, natoms, &step, &time, box, mycoords, &prec, &bOK)) {
+    int i_mat = 0;    
+    for (int x = 0; x < natoms-3;) {
+      mymat[i_mat++] = (double) torsion(mycoords[x],mycoords[x+1],
+					mycoords[x+2],mycoords[x+3],false);
+      x += 2;
+      
+      mymat[i_mat++] = (double) torsion(mycoords[x],mycoords[x+1],
+					mycoords[x+2],mycoords[x+3],false);
+      x += 1;
     }
-    close_xtc(myfile);
+    output.write((char*) mymat, (sizeof(double) / sizeof(char)) * (2*(natoms/3)-2));   
+    frames++;
   }
+  close_xtc(myfile);
   output.close();
-
+  
   cout << "Wrote " << frames
        << " vectors of length " << (2*(natoms/3)-2)
        << " (" << (frames*(2*(natoms/3)-2)) << " total values)." << endl;
   cout << endl;
-
+  
   // Clean up
   delete [] mycoords;
   delete [] mymat;

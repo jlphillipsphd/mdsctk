@@ -224,10 +224,12 @@ add_library(mdsctk STATIC mdsctk.cpp)
 
 # Build tools and scripts...
 set(MDSCTK_TOOLS
+  angles_to_sincos
   auto_decomp_sparse
   auto_decomp_sparse_nystrom
   auto_heir_decomp_sparse
   bb_xtc_to_phipsi
+  ca_xtc_to_thetaphi
   check_xtc
   contact_profile
   decomp_dense
@@ -239,7 +241,6 @@ set(MDSCTK_TOOLS
   knn_rms
   make_sysparse
   make_gesparse
-  phipsi_to_sincos
   rms_test
   split_xtc)
 

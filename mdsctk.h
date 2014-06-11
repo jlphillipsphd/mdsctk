@@ -205,6 +205,9 @@ void split_edges(int current_index, Dbc *cursor,
 int compare_edge(Db *db, const Dbt *key1, const Dbt *key2);
 
 // Math
+::real theta(::real pos1[], ::real pos2[], ::real pos3[],
+	     bool degrees);
+
 void crossprod(::real C[],
 	       ::real x1, ::real y1, ::real z1,
 	       ::real x2, ::real y2, ::real z2);

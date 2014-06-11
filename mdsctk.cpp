@@ -592,6 +592,34 @@ void split_edges(int current_index, Dbc *cursor, vector<int> &indices, vector<do
   }
 }
 
+::real theta(::real pos1[], ::real pos2[], ::real pos3[],
+	      bool degrees) {
+  ::real L[3], Lnorm;
+  ::real R[3], Rnorm;
+  ::real angle;
+  
+  L[0] = pos1[0] - pos2[0];
+  L[1] = pos1[1] - pos2[1];
+  L[2] = pos1[2] - pos2[2];
+
+  R[0] = pos3[0] - pos2[0];
+  R[1] = pos3[1] - pos2[1];
+  R[2] = pos3[2] - pos2[2];
+
+  Lnorm = sqrt(L[0]*L[0] + L[1]*L[1] + L[2]*L[2]);
+  Rnorm = sqrt(R[0]*R[0] + R[1]*R[1] + R[2]*R[2]);
+  angle = -(L[0]*R[0] + L[1]*R[1] + L[2]*R[2]) / (Lnorm * Rnorm);
+  
+  if (angle > 1.0) angle = 1.0;
+  if (angle < -1.0) angle = -1.0;
+  
+  angle = acos( angle );
+  if (degrees)
+    angle = angle * RAD2DEG;
+  
+  return angle;
+}
+
 void crossprod(::real C[],
 	       ::real x1, ::real y1, ::real z1,
 	       ::real x2, ::real y2, ::real z2) {

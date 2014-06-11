@@ -96,6 +96,59 @@ entropy.pointwise <- function(data,dens) {
                 2,FUN=function(vec){-sum(log2(vec))/length(vec)}))
 }
 
+## Pointwise Scanning Maximum Likelihood Dimension (with windowed smoothing)
+de.ml <- function(data,k=c(2,3,4,6,8,16,32,64,128,256),window.size=0) {
+  ## Note that the mg estimator tends to underestimate a uniformly
+  ## sampled hypercube since the manifold is not closed. It does
+  ## a better job in the interior of the space (like most methods).
+
+    ## Just use subset of k if not enough data is present
+    k <- k[k<=nrow(data)]
+    
+    numerator <- matrix(0,length(k),ncol(data))
+    denominator <- matrix(0,length(k),ncol(data))
+    
+    ## Only need square distances...
+    lT <- log(data^2) * 0.5
+    ## Normally we would sort, but we assume sorted data...
+    ## lT <- log(apply(data^2,2,sort)) * 0.5
+    
+    ## This is needed for data that hasn't already ridded
+    ## itself of self distances...
+    ## lT[1,] <- 0
+    ## For us... we need to include it explicitly (weird huh?)
+    lT <- rbind(0,lT)
+    
+    ## Important for stability...
+    lT[is.infinite(lT)] <- 0
+    
+    for (r in seq(1,length(k))) {
+        slT <- colSums(lT[seq(1,k[r]),])
+        lR <- lT[k[r]+1,]
+        numerator[r,] <- ((k[r]-1) * lR) - slT
+        denominator[r,] <- rep((k[r]-1),ncol(data))
+    }
+
+    if (window.size > 0) {
+        elements <- apply(cbind(pmax((1:ncol(data)) - window.size + 1, 1),
+                                1:ncol(data)), 1, function(x) seq(x[1], 
+                                                                  x[2]))
+        elements <- elements[!(sapply(elements, length) < window.size)]
+        mywinfunc <- function(which, d, n) { length(which) / sum(colSums(as.matrix(n[,which])) /
+                                                                 colSums(as.matrix(d[,which]))) }
+        mg.estimator <- sapply(elements, mywinfunc, d=denominator, n=numerator)
+        ## Do we really need the flat line before the rest?
+        ## mg.estimator <- c(rep(mg.estimator[1],window.size-1),mg.estimator)
+    } else {
+        mg.estimator <- rbind(k,(rowSums(denominator) / rowSums(numerator)))
+    }
+
+    ## Divide-by-zero means zero-dimensional system...
+    mg.estimator[mg.estimator==Inf] <- 0
+    
+    return(mg.estimator)
+}
+
 normalmutualinf <- function(data) {
   s <- 0
   e <- 0
