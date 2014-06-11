@@ -111,6 +111,7 @@ int main(int argc, char* argv[]) {
   cout << "Running with the following options:" << endl;
   cout << "threads =        " << nthreads << endl;
   cout << "knn =            " << k << endl;
+  cout << "sort =           " << sort << endl;
   cout << "vector-size =    " << vector_size << endl;
   cout << "reference-file = " << ref_filename << endl;
   cout << "fit-file =       " << fit_filename << endl;

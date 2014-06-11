@@ -51,6 +51,7 @@ int main(int argc, char* argv[]) {
   string fit_filename;
   string d_filename;
   string i_filename;
+  bool sort;
   int ocl_device_id;
 
   // Declare the supported options.
@@ -59,6 +60,7 @@ int main(int argc, char* argv[]) {
   program_options.add_options()
     ("help,h", "show this help message and exit")
     ("knn,k", po::value<int>(&k), "Input:  K-nearest neighbors (int)")
+    ("sort,s",po::value<bool>(&sort)->default_value(true),"Input:  Find K-nn,false=full distance matix (bool)")
     ("vector-size,v", po::value<int>(&vector_size), "Input:  Data vector length (int)")
     ("reference-file,r", po::value<string>(&ref_filename)->default_value("reference.pts"), "Input:  Reference data file (string:filename)")
     ("fit-file,f", po::value<string>(&fit_filename), "Input:  Fitting data file (string:filename)")
@@ -89,7 +91,7 @@ int main(int argc, char* argv[]) {
   if (vm.count("list-devices")) {
     return 0;
   }
-  if (!vm.count("knn")) {
+  if (!vm.count("knn") && sort) {
     cout << "ERROR: --knn not supplied." << endl;
     cout << endl;
     optsOK = false;
@@ -108,6 +110,7 @@ int main(int argc, char* argv[]) {
 
   cout << "Running with the following options:" << endl;
   cout << "knn =            " << k << endl;
+  cout << "sort =           " << sort << endl;
   cout << "vector-size =    " << vector_size << endl;
   cout << "reference-file = " << ref_filename << endl;
   cout << "fit-file =       " << fit_filename << endl;
@@ -228,15 +231,21 @@ int main(int argc, char* argv[]) {
 				       0,
 				       ref_coords->size() * sizeof(float),
 				       &fits.data.at(0));
-
+    
     // Sort
-    fits.sort(k1);
-    for (int x = 0; x < k1; x++)
-      keepers[x] = (double) fits.data[fits.indices[x]];
-
-    // Write out closest k RMSD alignment scores and indices
-    distances.write((char*) &(keepers[1]), (sizeof(double)/sizeof(char)) * k);
-    indices.write((char*) &(fits.indices[1]), (sizeof(int)/sizeof(char)) * k);
+    if (sort) {
+      fits.sort(k1);
+      for (int x = 0; x < k1; x++)
+	keepers[x] = (double) fits.data[fits.indices[x]];
+      
+      // Write out closest k RMSD alignment scores and indices
+      distances.write((char*) &(keepers[1]), (sizeof(double)/sizeof(char)) * k);
+      indices.write((char*) &(fits.indices[1]), (sizeof(int)/sizeof(char)) * k);
+    }
+    else {
+      distances.write((char*) &(fits.data[0]), (sizeof(double)/sizeof(char)) * ref_coords->size());
+      indices.write((char*) &(fits.indices[0]), (sizeof(int)/sizeof(char)) * ref_coords->size());
+    }
     
   }
 

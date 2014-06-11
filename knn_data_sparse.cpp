@@ -60,6 +60,7 @@ int main(int argc, char* argv[]) {
   string fit_data_filename;
   string d_filename;
   string i_filename;
+  bool sort;
 
   // Declare the supported options.
   po::options_description cmdline_options;
@@ -68,6 +69,7 @@ int main(int argc, char* argv[]) {
     ("help,h", "show this help message and exit")
     ("threads,t", po::value<int>(&nthreads)->default_value(omp_get_max_threads()>omp_get_num_procs()?omp_get_num_procs():omp_get_max_threads()), "Input:  Number of threads to start (int)")
     ("knn,k", po::value<int>(&k), "Input:  K-nearest neighbors (int)")
+    ("sort,s",po::value<bool>(&sort)->default_value(true),"Input:  Find K-nn,false=full distance matix (bool)")
     ("block-size,b", po::value<int>(&blksize)->default_value(128), "Input:  Workgroup block size in # frames (int)")
     ("reference-index-file,R", po::value<string>(&ref_index_filename)->default_value("reference.svi"), "Input:  Reference index file (string:filename)")
     ("reference-data-file,r", po::value<string>(&ref_data_filename)->default_value("reference.svd"), "Input:  Reference data file (string:filename)")
@@ -87,7 +89,7 @@ int main(int argc, char* argv[]) {
     cout << cmdline_options << endl;
     return 1;
   }
-  if (!vm.count("knn")) {
+  if (!vm.count("knn") && sort) {
     cout << "ERROR: --knn not supplied." << endl;
     cout << endl;
     optsOK = false;
@@ -104,6 +106,7 @@ int main(int argc, char* argv[]) {
   cout << "Running with the following options:" << endl;
   cout << "threads =              " << nthreads << endl;
   cout << "knn =                  " << k << endl;
+  cout << "sort =                 " << sort << endl;
   cout << "reference-index-file = " << ref_index_filename << endl;
   cout << "reference-file =       " << ref_data_filename << endl;
   cout << "fit-index-file =       " << fit_index_filename << endl;
@@ -203,13 +206,20 @@ int main(int argc, char* argv[]) {
       fits[frame].data[ref_frame] =
 	::distance(ref_size[ref_frame],ref_index[ref_frame],ref_data[ref_frame],
 		   fit_size[frame],fit_index[frame],fit_data[frame]);
-    fits[frame].sort(k1);
+    if (sort)
+      fits[frame].sort(k1);
   }
 
   // Write out closest k RMSD alignment scores and indices
   for (int frame = 0; frame < remainder; frame++) {
-    distances.write((char*) &(fits[frame].data[1]), (sizeof(double)/sizeof(char)) * k);
-    indices.write((char*) &(fits[frame].indices[1]), (sizeof(int)/sizeof(char)) * k);
+    if (sort) {
+      distances.write((char*) &(fits[frame].data[1]), (sizeof(double)/sizeof(char)) * k);
+      indices.write((char*) &(fits[frame].indices[1]), (sizeof(int)/sizeof(char)) * k);
+    }
+    else {
+      distances.write((char*) &(fits[frame].data[0]), (sizeof(double)/sizeof(char)) * ref_index.size());
+      indices.write((char*) &(fits[frame].indices[0]), (sizeof(int)/sizeof(char)) * ref_index.size());
+    }
   }
   for (int fit_frame = remainder; fit_frame < fit_index.size(); fit_frame += blksize) {
     
@@ -229,13 +239,20 @@ int main(int argc, char* argv[]) {
 	fits[frame].data[ref_frame] =
 	  ::distance(ref_size[ref_frame],ref_index[ref_frame],ref_data[ref_frame],
 		     fit_size[frame+fit_frame],fit_index[frame+fit_frame],fit_data[frame+fit_frame]);
-      fits[frame].sort(k1);
+      if (sort)
+	fits[frame].sort(k1);
     }
 
     // Write out closest k RMSD alignment scores and indices
     for (int frame = 0; frame < blksize; frame++) {
-      distances.write((char*) &(fits[frame].data[1]), (sizeof(double)/sizeof(char)) * k);
-      indices.write((char*) &(fits[frame].indices[1]), (sizeof(int)/sizeof(char)) * k);
+      if (sort) {
+	distances.write((char*) &(fits[frame].data[1]), (sizeof(double)/sizeof(char)) * k);
+	indices.write((char*) &(fits[frame].indices[1]), (sizeof(int)/sizeof(char)) * k);
+      }
+      else {
+	distances.write((char*) &(fits[frame].data[0]), (sizeof(double)/sizeof(char)) * ref_index.size());
+	indices.write((char*) &(fits[frame].indices[0]), (sizeof(int)/sizeof(char)) * ref_index.size());
+      }
     }
   }
 
