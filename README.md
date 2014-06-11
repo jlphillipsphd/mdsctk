@@ -177,7 +177,9 @@ command line, which will provide basic usage information. Because of
 this, provided here is simply a list of the available tools with any
 additional comments that are not found in the program descriptions.
 
-1. auto_decomp_sparse
+1. angles_to_sincos
+
+2. auto_decomp_sparse
 
    Performs self-tuning specral decomposition of the graph laplacian
    based off of ideas developed in:
@@ -192,23 +194,23 @@ additional comments that are not found in the program descriptions.
    2013, vol. 28, no. 3, pp. 477–485. Retrieved from
    http://jmlr.org/proceedings/papers/v28/vladymyrov13.pdf
 
-2. auto_decomp_sparse_nystrom
+3. auto_decomp_sparse_nystrom
    
-3. bb_xtc_to_phipsi
+4. bb_xtc_to_phipsi
 
-4. check_xtc
+5. check_xtc
 
-5. clustering_nmi.r
+6. clustering_nmi.r
 
-6. clustering_pdf.r
+7. clustering_pdf.r
 
-7. contact_profile
+8. contact_profile
 
-8. decomp_dense
+9. decomp_dense
 
    Performs standard metric scaling of a dense matrix.
 
-9. decomp_sparse
+10. decomp_sparse
 
    Performs standard specral decomposition of the graph laplacian as
    developed in:
@@ -216,11 +218,11 @@ additional comments that are not found in the program descriptions.
    view. Proceedings of the Seventh IEEE International Conference on
    Computer Vision (pp. 975–982). IEEE. doi:10.1109/ICCV.1999.790354
 
-10. decomp_sparse_nystrom
+11. decomp_sparse_nystrom
 
-11. density.r
+12. density.r
 
-12. dijkstra
+13. dijkstra
 
     Computes all pairs of shortest paths for a sparse CSC matrix,
     yeilding a dense matrix for performing metric scaling using
@@ -229,33 +231,35 @@ additional comments that are not found in the program descriptions.
     geometric framework for nonlinear dimensionality reduction,”
     Science, vol. 290, no. 5500, pp. 2319–2323, Dec. 2000.
 
-13. entropy.r
+14. entropy.r
 
-14. kmeans.r
+15. kmeans.r
 
-15. knn_data
+16. knn_data
 
-16. knn_data_ocl
+17. knn_data_ocl
 
     Proof-of-concept CPU/GPU acceleration using OpenCL.
 
-17. knn_data_sparse
+18. knn_data_sparse
 
-18. knn_rms
+19. knn_rms
 
-19. make_sysparse
+20. make_sysparse
 
-20. make_gesparse
+21. make_gesparse
 
-21. phipsi_to_sincos
+22. mld_estimate.r
 
-22. plot_pdf.r
+23. plot_pdf.r
 
-23. probability.r
+24. probability.r
 
-24. rms_test
+25. rms_test
 
-25. split_xtc
+26. smooth_angles.r
+
+27. split_xtc
 
 ********
 EXAMPLES

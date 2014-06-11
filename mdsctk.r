@@ -134,8 +134,8 @@ de.ml <- function(data,k=c(2,3,4,6,8,16,32,64,128,256),window.size=0) {
                                 1:ncol(data)), 1, function(x) seq(x[1], 
                                                                   x[2]))
         elements <- elements[!(sapply(elements, length) < window.size)]
-        mywinfunc <- function(which, d, n) { colSums(as.matrix(d[,which])) /
-                                                 colSums(as.matrix(n[,which])) }
+        mywinfunc <- function(which, d, n) { length(which) / sum(colSums(as.matrix(n[,which])) /
+                                                                 colSums(as.matrix(d[,which]))) }
         mg.estimator <- sapply(elements, mywinfunc, d=denominator, n=numerator)
         ## Do we really need the flat line before the rest?
         ## mg.estimator <- c(rep(mg.estimator[1],window.size-1),mg.estimator)
