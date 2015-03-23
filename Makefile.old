@@ -19,7 +19,7 @@ angles_to_sincos \
 auto_decomp_sparse_nystrom \
 auto_heir_decomp_sparse \
 bb_xtc_to_phipsi \
-ca_xtc_to_phipsi \
+ca_xtc_to_thetaphi \
 check_xtc \
 contact_profile \
 decomp_dense \
