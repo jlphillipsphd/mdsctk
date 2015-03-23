@@ -15,9 +15,11 @@ LIBS=-L${GMXLDLIB} -lgsl -larpack -llapack -lblas -ldb_cxx -lpthread -lgmx -lgmx
 OPENCL_LIBS=-L/opt/intel/opencl-1.2-3.0.67279/lib64 -lOpenCL
 
 TARGETS=auto_decomp_sparse \
+angles_to_sincos \
 auto_decomp_sparse_nystrom \
 auto_heir_decomp_sparse \
 bb_xtc_to_phipsi \
+ca_xtc_to_phipsi \
 check_xtc \
 contact_profile \
 decomp_dense \
@@ -29,7 +31,6 @@ knn_data_sparse \
 knn_rms \
 make_gesparse \
 make_sysparse \
-phipsi_to_sincos \
 rms_test \
 split_xtc
 
