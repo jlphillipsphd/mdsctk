@@ -52,6 +52,7 @@
 #include <gromacs/xtcio.h>
 #include <gromacs/index.h>
 #include <gromacs/do_fit.h>
+#include <gromacs/centerofmass.h>
 
 // Boost
 #include <boost/program_options.hpp>
@@ -116,13 +117,18 @@ public:
   coord_array get_frame_ptr();
   void center(coord_array frame);
   ::real rmsd(coord_array ref_frame, coord_array fit_frame);
-
+  void com(coord_array frame, int n, atom_id index[], rvec com);
+  void get_index(const string ndx_filename, int &ndx_n, int* &ndx_index, char* &ndx_group);
+  
 private:
   string filename;
   int natoms;
   ::real *mass;
   coord_array frame;
   t_topology top;
+  int ePBC;
+  matrix box;
+  char buf[256];
 
   void read_topology();
 };

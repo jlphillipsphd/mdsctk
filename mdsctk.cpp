@@ -194,10 +194,19 @@ void TOP_file::center(coord_array frame) {
   return rmsdev(natoms,mass,ref_frame,fit_frame) * 10.0;
 }
 
+void TOP_file::com(coord_array frame, int n, atom_id index[], rvec com) {
+  gmx_calc_com(&top,frame,n,index,com);
+}
+
+void TOP_file::get_index(const string ndx_filename, int &ndx_n, int* &ndx_index, char* &ndx_group) {
+  if (ndx_filename == "")
+    ::get_index(&(top.atoms),NULL,1,&ndx_n,&ndx_index,&ndx_group);
+  else
+    ::get_index(&(top.atoms),ndx_filename.c_str(),1,&ndx_n,&ndx_index,&ndx_group);
+}
+
+
 void TOP_file::read_topology() {
-  int ePBC;
-  matrix box;
-  char buf[256];
   read_tps_conf(filename.c_str(), buf, &top, &ePBC, &frame,
 		NULL, box, TRUE);
 }
