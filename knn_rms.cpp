@@ -33,8 +33,8 @@
 #include "mdsctk.h"
 
 // RMS distance function
-double distance(int natoms, ::real weights[], coord_array reference, coord_array fitting) {
-  do_fit(natoms,weights,reference,fitting);
+double distance(int natoms, ::real weights[], coord_array reference, coord_array fitting, bool dofit = true) {
+  if (dofit) do_fit(natoms,weights,reference,fitting);
   return ((double) rmsdev(natoms,weights,reference,fitting) * 10.0);
 }
 
@@ -63,7 +63,8 @@ int main(int argc, char* argv[]) {
   string d_filename;
   string i_filename;
   bool sort;
-
+  bool nofit;
+  
   // Declare the supported options.
   po::options_description cmdline_options;
   po::options_description program_options("Program options");
@@ -72,7 +73,8 @@ int main(int argc, char* argv[]) {
     ("threads,t", po::value<int>(&nthreads)->default_value(omp_get_max_threads()>omp_get_num_procs()?omp_get_num_procs():omp_get_max_threads()), "Input:  Number of threads to start (int)")
     ("knn,k", po::value<int>(&k), "Input:  K-nearest neighbors (int)")
     ("sort,s",po::value<bool>(&sort)->default_value(true),"Input:  Find K-nn,false=full distance matix (bool)")
-    ("block-size,b", po::value<int>(&blksize)->default_value(128), "Input:  Workgroup block size in # frames (int)")
+    ("nofit,n",po::value<bool>(&nofit)->default_value(false),"Input:  DO NOT rotate+fit before RMSD calculation (bool)")
+      ("block-size,b", po::value<int>(&blksize)->default_value(128), "Input:  Workgroup block size in # frames (int)")
     ("topology-file,p", po::value<string>(&top_filename)->default_value("topology.pdb"), "Input:  Topology file [.pdb,.gro,.tpr] (string:filename)")
     ("reference-file,r", po::value<string>(&ref_filename)->default_value("reference.xtc"), "Input:  Reference [.xtc] file (string:filename)")
     ("fit-file,f", po::value<string>(&fit_filename), "Input:  Fitting [.xtc] file (string:filename)")
@@ -106,6 +108,7 @@ int main(int argc, char* argv[]) {
   cout << "threads =        " << nthreads << endl;
   cout << "knn =            " << k << endl;
   cout << "sort =           " << sort << endl;
+  cout << "nofit =          " << nofit << endl;
   cout << "topology-file =  " << top_filename << endl;
   cout << "reference-file = " << ref_filename << endl;
   cout << "fit-file =       " << fit_filename << endl;
@@ -230,7 +233,7 @@ int main(int argc, char* argv[]) {
     memcpy(fit,(*fit_coords)[frame],sizeof(rvec)*natoms);
     for (int ref_frame = 0; ref_frame < ref_coords->size(); ref_frame++) {
       memcpy(ref,(*ref_coords)[ref_frame],sizeof(rvec)*natoms);
-      fits[frame].data[ref_frame] = distance(natoms,weights,ref,fit);
+      fits[frame].data[ref_frame] = distance(natoms,weights,ref,fit,!nofit);
     }
     if (sort)
       fits[frame].sort(k1);
@@ -266,7 +269,7 @@ int main(int argc, char* argv[]) {
       memcpy(fit,(*fit_coords)[frame+fit_frame],sizeof(rvec)*natoms);
       for (int ref_frame = 0; ref_frame < ref_coords->size(); ref_frame++) {
 	memcpy(ref,(*ref_coords)[ref_frame],sizeof(rvec)*natoms);
-	fits[frame].data[ref_frame] = distance(natoms,weights,ref,fit);
+	fits[frame].data[ref_frame] = distance(natoms,weights,ref,fit,!nofit);
       }
       if (sort)
 	fits[frame].sort(k1);

@@ -148,7 +148,8 @@ int main(int argc, char* argv[]) {
   }
   myfile.close();
   cout << "done." << endl;
-  
+  cout << "Number of reference coordinates: " << ref_coords->size() << endl;
+
   cout << "Reading fitting coordinates from file: " << fit_filename << " ... ";
   myfile.open(fit_filename.c_str());
   myfile.read((char*) mycoords, (sizeof(double)/sizeof(char)) * vector_size);
@@ -161,6 +162,7 @@ int main(int argc, char* argv[]) {
   delete [] mycoords;
   mycoords = NULL;
   cout << "done." << endl;
+  cout << "Number of fitting coordinates: " << fit_coords->size() << endl;
 
   // Open output files
   distances.open(d_filename.c_str());

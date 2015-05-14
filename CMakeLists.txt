@@ -106,6 +106,10 @@ check_include_file_cxx(CL/cl.h      HAVE_OPENCL_H)
 if(NOT HAVE_OPENCL_H)
   message(STATUS "WARNING: unable to find OpenCL header file.")
 endif(NOT HAVE_OPENCL_H)
+if(NOT OPENCL_INCLUDE_PATH STREQUAL "")
+include_directories(${OPENCL_INCLUDE_PATH})
+endif(NOT OPENCL_INCLUDE_PATH STREQUAL "")
+
 
 ## Basic library checks
 include(CheckLibraryExists)
@@ -218,6 +222,7 @@ set(MDSCTK_TOOLS
   bb_xtc_to_phipsi
   ca_xtc_to_thetaphi
   check_xtc
+  com_test
   contact_profile
   decomp_dense
   decomp_sparse
