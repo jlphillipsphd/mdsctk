@@ -91,13 +91,18 @@ include_directories(${DB_CXX_INCLUDE_PATH})
 endif(NOT DB_CXX_INCLUDE_PATH STREQUAL "")
 
 ## OpenCL
+## Still need to resolve an issue where cl.hpp cannot
+## be found, but cl.h CAN be found. Need to find a way
+## to check even after finding cl.h or fix it so that
+## the scripts will actually find cl.hpp (which is the
+## header we actually use in the code).
 set(OPENCL_INCLUDE_PATH ""
-  CACHE STRING "Location of CL/cl.hpp")
+  CACHE STRING "Location of CL/cl.h")
 unset(HAVE_OPENCL_H CACHE)
 if(NOT OPENCL_INCLUDE_PATH STREQUAL "")
 set(CMAKE_REQUIRED_FLAGS "-I${OPENCL_INCLUDE_PATH}")
 endif(NOT OPENCL_INCLUDE_PATH STREQUAL "")
-check_include_file_cxx(CL/cl.hpp      HAVE_OPENCL_H)
+check_include_file_cxx(CL/cl.h      HAVE_OPENCL_H)
 if(NOT HAVE_OPENCL_H)
   message(STATUS "WARNING: unable to find OpenCL header file.")
 endif(NOT HAVE_OPENCL_H)
