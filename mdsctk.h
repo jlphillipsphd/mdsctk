@@ -47,17 +47,17 @@
 // OpenMP
 #include <omp.h>
 
-// GROMACS
-#include <gromacs/tpxio.h>
-#include <gromacs/xtcio.h>
-#include <gromacs/index.h>
-#include <gromacs/do_fit.h>
-
 // Boost
 #include <boost/program_options.hpp>
 #include <boost/graph/graph_traits.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
+
+// GROMACS
+#include <gromacs/fileio/tpxio.h>
+#include <gromacs/fileio/xtcio.h>
+#include <gromacs/legacyheaders/index.h>
+#include <gromacs/math/do_fit.h>
 
 // Berkeley DB
 #include <db_cxx.h>
