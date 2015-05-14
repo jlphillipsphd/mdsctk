@@ -222,7 +222,6 @@ set(MDSCTK_TOOLS
   bb_xtc_to_phipsi
   ca_xtc_to_thetaphi
   check_xtc
-  com_test
   contact_profile
   decomp_dense
   decomp_sparse
