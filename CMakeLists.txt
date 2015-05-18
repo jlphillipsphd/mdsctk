@@ -156,14 +156,6 @@ if(NOT OPENCL_LIBRARY_PATH STREQUAL "")
 set(CMAKE_REQUIRED_FLAGS "-L${OPENCL_LIBRARY_PATH}")
 endif(NOT OPENCL_LIBRARY_PATH STREQUAL "")
 check_library_exists(OpenCL clGetPlatformIDs "" HAVE_LIBOPENCL)
-if(HAVE_LIBOPENCL)
-  set(LIBS ${LIBS} OpenCL)
-  if(NOT OPENCL_LIBRARY_PATH STREQUAL "")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${OPENCL_LIBRARY_PATH}")
-  endif(NOT OPENCL_LIBRARY_PATH STREQUAL "")
-else(HAVE_LIBOPENCL)
-  message(STATUS "WARNING: unable to find OpenCL library (libOpenCL.so).")
-endif(HAVE_LIBOPENCL)
 
 # PKGCONFIG checks
 find_package(PkgConfig REQUIRED)
@@ -243,6 +235,12 @@ endforeach(TOOL ${MDSCTK_TOOLS})
 ## OpenCL tools...
 if(HAVE_OPENCL_H AND HAVE_LIBOPENCL)
 
+  message(STATUS "A library with OpenCL API found.")
+  set(LIBS ${LIBS} OpenCL)
+  if(NOT OPENCL_LIBRARY_PATH STREQUAL "")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${OPENCL_LIBRARY_PATH}")
+  endif(NOT OPENCL_LIBRARY_PATH STREQUAL "")
+  
   add_library(mdsctk_ocl STATIC mdsctk_ocl.cpp)
 
   set(MDSCTK_OCL_TOOLS
@@ -252,9 +250,11 @@ if(HAVE_OPENCL_H AND HAVE_LIBOPENCL)
     add_executable(${TOOL} ${TOOL}.cpp)
     target_link_libraries(${TOOL} ${LIBS} mdsctk mdsctk_ocl)
   endforeach(TOOL ${MDSCTK_OCL_TOOLS})
-  
+
+
 else(HAVE_OPENCL_H AND HAVE_LIBOPENCL)
   message(STATUS "WARNING:")
+  message(STATUS "WARNING: Unable to find OpenCL library (libOpenCL.so).")
   message(STATUS "WARNING: OpenCL accelerated tools will NOT be built.")
   message(STATUS "WARNING:")
 endif(HAVE_OPENCL_H AND HAVE_LIBOPENCL)
