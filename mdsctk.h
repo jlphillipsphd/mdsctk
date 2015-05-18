@@ -59,6 +59,10 @@
 #include <gromacs/legacyheaders/index.h>
 #include <gromacs/math/do_fit.h>
 
+// GROMACS internal function that I would like to use...
+// Calculate a single center of mass.
+extern int gmx_calc_com(t_topology *top, rvec x[], int nrefat, atom_id index[], rvec xout);
+
 // Berkeley DB
 #include <db_cxx.h>
 
