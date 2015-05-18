@@ -54,6 +54,9 @@
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 
 // GROMACS
+#include <gromacs/commandline.h>
+#include <gromacs/selection.h>
+#include <gromacs/trajectoryanalysis.h>
 #include <gromacs/fileio/tpxio.h>
 #include <gromacs/fileio/xtcio.h>
 #include <gromacs/legacyheaders/index.h>
