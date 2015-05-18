@@ -37,6 +37,7 @@ int main(int argc, char* argv[])
 
   const char* program_name = "auto_decomp_sparse_nystrom";
   bool optsOK = true;
+  gmx::initForCommandLine(&argc,&argv);
   copyright(program_name);
   cout << "   Reads the symmetric CSC format sparse matrix from" << endl;
   cout << "   input-file, and computes the number of requested" << endl;

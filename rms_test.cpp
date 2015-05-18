@@ -36,6 +36,7 @@ int main(int argc, char* argv[]) {
 
   const char* program_name = "rms_test";
   bool optsOK = true;
+  gmx::initForCommandLine(&argc,&argv);
   copyright(program_name);
   cout << "   Computes the RMSD of all structures for the given" << endl;
   cout << "   in the xtc file. The topology file provided will be" << endl;

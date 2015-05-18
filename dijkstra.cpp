@@ -36,6 +36,7 @@ int main(int argc, char* argv[]) {
 
   const char* program_name = "dijkstra";
   bool optsOK = true;
+  gmx::initForCommandLine(&argc,&argv);
   copyright(program_name);
   cout << "   Computes the shortest paths through the provided CSC sparse matrix." << endl;
   cout << "   NOTE: Implicit zeros are assumed to be edges of INF weight, but all" << endl;

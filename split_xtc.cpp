@@ -36,6 +36,7 @@ int main(int argc, char* argv[]) {
 
   const char* program_name = "split_xtc";
   bool optsOK = true;
+  gmx::initForCommandLine(&argc,&argv);
   copyright(program_name);
   cout << "   Splits the provided xtc file into two separate." << endl;
   cout << "   xtc files (landmarks.xtc and remainder.xtc) where" << endl;

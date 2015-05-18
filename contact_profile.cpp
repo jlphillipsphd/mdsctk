@@ -36,6 +36,7 @@ int main(int argc, char* argv[]) {
 
   const char* program_name = "contact_profile";
   bool optsOK = true;
+  gmx::initForCommandLine(&argc,&argv);
   copyright(program_name);
   cout << "   Computes the standard atomic contacts for structures in" << endl;
   cout << "   the given xtc file. A topology PDB file and atom index file" << endl;

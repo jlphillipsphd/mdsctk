@@ -37,6 +37,7 @@ int main(int argc, char* argv[]) {
 
   const char* program_name = "knn_data_ocl";
   bool optsOK = true;
+  gmx::initForCommandLine(&argc,&argv);
   copyright(program_name);
   cout << "   Computes the k nearest neighbors of all pairs of" << endl;
   cout << "   vectors in the given binary data files." << endl;

@@ -36,6 +36,7 @@ int main(int argc, char* argv[]) {
   
   const char* program_name = "ca_xtc_to_thetaphi";
   bool optsOK = true;
+  gmx::initForCommandLine(&argc,&argv);
   copyright(program_name);
   cout << "   Convert the provided XTC file to theta and phi angles and" << endl;
   cout << "   write the results to the selected output file." << endl;

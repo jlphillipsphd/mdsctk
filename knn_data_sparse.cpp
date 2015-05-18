@@ -43,6 +43,7 @@ int main(int argc, char* argv[]) {
 
   const char* program_name = "knn_data_sparse";
   bool optsOK = true;
+  gmx::initForCommandLine(&argc,&argv);
   copyright(program_name);
   cout << "   Computes the k nearest neighbors of all pairs of" << endl;
   cout << "   vectors in the given sparse binary data files." << endl;

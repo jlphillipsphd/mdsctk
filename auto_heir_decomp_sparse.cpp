@@ -112,6 +112,7 @@ int main(int argc, char* argv[])
 
   const char* program_name = "auto_heir_decomp_sparse";
   bool optsOK = true;
+  gmx::initForCommandLine(&argc,&argv);
   copyright(program_name);
   cout << "   Reads the symmetric CSC format sparse matrix from" << endl;
   cout << "   input-file, and heirarchically decomposes the " << endl;

@@ -42,6 +42,7 @@ int main(int argc, char* argv[]) {
 
   const char* program_name = "knn_rms";
   bool optsOK = true;
+  gmx::initForCommandLine(&argc,&argv);
   copyright(program_name);
   cout << "   Computes the k nearest neighbors of all reference" << endl;
   cout << "   structures in the given xtc file for each structure" << endl;

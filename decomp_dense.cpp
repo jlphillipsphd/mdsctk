@@ -40,6 +40,7 @@ int main(int argc, char* argv[]) {
 
   const char* program_name = "decomp_dense";
   bool optsOK = true;
+  gmx::initForCommandLine(&argc,&argv);
   copyright(program_name);
   cout << "   Reads the lower-triangle of a dense matrix from" << endl;
   cout << "   input-file, and computes the number of requested" << endl;

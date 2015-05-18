@@ -36,6 +36,7 @@ int main(int argc, char* argv[]) {
 
   const char* program_name = "check_xtc";
   bool optsOK = true;
+  gmx::initForCommandLine(&argc,&argv);
   copyright(program_name);
   cout << "   Report stats on the provided xtc file." << endl;
   cout << endl;

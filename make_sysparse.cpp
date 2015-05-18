@@ -36,6 +36,7 @@ int main(int argc, char *argv[]) {
 
   const char* program_name = "make_sysparse";
   bool optsOK = true;
+  gmx::initForCommandLine(&argc,&argv);
   copyright(program_name);
   cout << "   Converts the results from knn_* into symmetric CSC format." << endl;
   cout << endl;
