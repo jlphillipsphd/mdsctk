@@ -3,8 +3,8 @@ mdsctk
 
 MDSCTK - Molecular Dynamics Spectral Clustering Toolkit
 
-Version: 1.2.0
-Date: 2013-08-20
+Version: 1.2.5
+Date: 2015-05-18
 
 Author:
 Joshua L. Phillips <jphillips@lanl.gov>, <Joshua.Phillips@mtsu.edu>
