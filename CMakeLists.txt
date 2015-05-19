@@ -221,6 +221,7 @@ set(MDSCTK_TOOLS
   decomp_sparse
   decomp_sparse_nystrom
   dijkstra
+  flatten_xtc
   knn_data
   knn_data_sparse
   knn_rms
