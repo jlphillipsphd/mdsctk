@@ -89,19 +89,17 @@ if (!suppressPackageStartupMessages(require("mclust",character.only=TRUE))) {
 nclusters <- myargs$k
 e.values <- as.double(scan(myargs$evals,quiet=TRUE))
 
-if (nclusters > length(e.values) | nclusters < 2) {
+if (nclusters < 2) {
     cat("\n")
     cat("ERROR:\n")
-    cat(sprintf("Number of eigenvalues: %d\n",length(e.values)))
     cat(sprintf("Number of clusters requested: %d\n",nclusters))
-    cat("The number of clusters requested must be >=2 and\n")
-    cat("<= number of eigenvalues.\n")
+    cat("The number of clusters requested must be >=2.\n")
     cat("\n")
     q()    
 }
 
 e.vectors <- matrix(scan(myargs$evecs,quiet=TRUE),ncol=length(e.values))
-e.vectors <- as.matrix(e.vectors[,seq(1,nclusters)])
+e.vectors <- as.matrix(e.vectors[,seq(1,min(nclusters,length(e.values)))])
 temp <- gc()
 
 set.seed(0) # Change for different results...
