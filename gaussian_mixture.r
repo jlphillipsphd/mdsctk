@@ -125,7 +125,7 @@ write(uncert,myout,ncolumns=1)
 close(myout)
 
 myout <- file(myargs$ndx,"w")
-for (n in seq(1,ncol(e.vectors))) {
+for (n in seq(1,nclusters)) {
     writeLines(sprintf("[cluster_%d]",n),con=myout)
     write(which(clusters==n),myout,ncolumns=20)
     writeLines("",con=myout)

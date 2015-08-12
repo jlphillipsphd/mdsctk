@@ -119,12 +119,13 @@ close(myout)
 
 myout <- file(myargs$ndx,"w")
 myout2 <- file(myargs$rep,"w")
-for (n in seq(1,ncol(e.vectors))) {
+for (n in seq(1,nclusters)) {
+    indices <- which(clusters==n)
     writeLines(sprintf("[cluster_%d]",n),con=myout)
-    write(which(clusters==n),myout,ncolumns=20)
+    write(indices,myout,ncolumns=20)
     writeLines("",con=myout)
-    centdist <- colSums(as.matrix(apply(as.matrix(e.vectors[which(clusters==n),]),1,as.matrix(centroids[n,]),FUN="-")^2))
-    write(which(centdist==min(centdist)),myout2,ncolumns=1)
+    centdist <- rowSums(sweep(as.matrix(e.vectors[indices,]),2,centroids[n,],FUN="-")^2)
+    write(indices[which(centdist==min(centdist))[1]],myout2,ncolumns=1)
 }
 close(myout)
 close(myout2)
