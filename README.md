@@ -7,8 +7,8 @@ Version: 1.2.5
 Date: 2015-05-18
 
 Author:
-Joshua L. Phillips <jphillips@lanl.gov>, <Joshua.Phillips@mtsu.edu>
-T-6/CNLS, Los Alamos National Laboratory
+Joshua L. Phillips <Joshua.Phillips@mtsu.edu>
+Assistant Professor
 Department of Computer Science, Middle Tennessee State University
 
 Thanks for considering MDSCTK for your spectral analysis needs!
