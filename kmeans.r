@@ -60,6 +60,8 @@ parser$add_argument("-o","--output",default="clusters.dat",
                     help="(Output) Cluster assignments file [default %(default)s]")
 parser$add_argument("-n","--ndx",default="clusters.ndx",
                     help="(Output) Cluster assignment index file [default %(default)s]")
+parser$add_argument("-r","--rep",default="representatives.dat",
+                    help="(Output) Cluster representative data points [default %(default)s]")
 
 myargs <- parser$parse_args()
 
@@ -75,25 +77,26 @@ cat(paste("evals =  ",myargs$evals,"\n"))
 cat(paste("evecs =  ",myargs$evecs,"\n"))
 cat(paste("output = ",myargs$output,"\n"))
 cat(paste("ndx =    ",myargs$ndx,"\n"))
+cat(paste("rep =    ",myargs$rep,"\n"))
 cat("\n")
 
 nclusters <- myargs$k
 e.values <- as.double(scan(myargs$evals,quiet=TRUE))
 
-if (nclusters > length(e.values) | nclusters < 2) {
+if (nclusters < 2) {
     cat("\n")
     cat("ERROR:\n")
-    cat(sprintf("Number of eigenvalues: %d\n",length(e.values)))
     cat(sprintf("Number of clusters requested: %d\n",nclusters))
-    cat("The number of clusters requested must be >=2 and\n")
-    cat("<= number of eigenvalues.\n")
+    cat("The number of clusters requested must be >=2.\n")
     cat("\n")
     q()    
 }
 
 e.vectors <- matrix(scan(myargs$evecs,quiet=TRUE),ncol=length(e.values))
-e.vectors <- as.matrix(e.vectors[,seq(1,nclusters)])
-e.vectors <- apply(e.vectors,2,sqrt(rowSums(e.vectors^2)),FUN="/")
+e.vectors <- as.matrix(e.vectors[,seq(1,min(nclusters,length(e.values)))])
+# JLP - 2015-08-12
+# Not sure if the following option should be standard, probably not...
+# e.vectors <- apply(e.vectors,2,sqrt(rowSums(e.vectors^2)),FUN="/")
 temp <- gc()
 
 set.seed(0) # Change for different results...
@@ -115,13 +118,14 @@ write(clusters,myout,ncolumns=1)
 close(myout)
 
 myout <- file(myargs$ndx,"w")
-myout2 <- file("representatives.dat","w")
-for (n in seq(1,ncol(e.vectors))) {
+myout2 <- file(myargs$rep,"w")
+for (n in seq(1,nclusters)) {
+    indices <- which(clusters==n)
     writeLines(sprintf("[cluster_%d]",n),con=myout)
-    write(which(clusters==n),myout,ncolumns=20)
+    write(indices,myout,ncolumns=20)
     writeLines("",con=myout)
-    centdist <- colSums(apply(e.vectors[which(clusters==n),],1,centroids[n,],FUN="-")^2)
-    write(which(centdist==min(centdist)),myout2,ncolumns=1)
+    centdist <- rowSums(sweep(as.matrix(e.vectors[indices,]),2,centroids[n,],FUN="-")^2)
+    write(indices[which(centdist==min(centdist))[1]],myout2,ncolumns=1)
 }
 close(myout)
 close(myout2)
