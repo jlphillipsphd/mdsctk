@@ -138,8 +138,8 @@ INSTALLATION
 2 Compilation
 
 2.1 Unpacking/Compilation
-    $ tar xzf mdsctk-1.0.0.tar.gz
-    $ cd mdsctk-1.0.0
+    $ tar xzf mdsctk-1.2.5.tar.gz
+    $ cd mdsctk-1.2.5
     $ cmake .
     $ make
 
