@@ -10,7 +10,7 @@
 ##                        VERSION 1.2.2
 ## Written by Joshua L. Phillips.
 ## Copyright (c) 2012-2014, Joshua L. Phillips.
-## check out http://github.com/douradopalmares/mdsctk/ for more information.
+## check out http://github.com/jlphillipsphd/mdsctk/ for more information.
 ##
 ## This program is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License
@@ -25,7 +25,7 @@
 ## To help us fund MDSCTK development, we humbly ask that you cite
 ## the papers on the package - you can find them in the top README file.
 ## 
-## For more info, check our website at http://github.com/douradopalmares/mdsctk/
+## For more info, check our website at http://github.com/jlphillipsphd/mdsctk/
 ## 
 ##
 
