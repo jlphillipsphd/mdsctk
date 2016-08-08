@@ -6,10 +6,11 @@
 // 
 //       Molecular Dynamics Spectral Clustering ToolKit
 // 
-//                        VERSION 1.2.2
+//                        VERSION 1.2.3
 // Written by Joshua L. Phillips.
-// Copyright (c) 2012-2014, Joshua L. Phillips.
-// check out http://cnls.lanl.gov/~jphillips/ for more information.
+// Copyright (c) 2012-2016, Joshua L. Phillips.
+// Check out http://www.cs.mtsu.edu/~jphillips/software.html for more
+// information.
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -18,13 +19,14 @@
 // 
 // If you want to redistribute modifications, please consider that
 // derived work must not be called official MDSCTK. Details are found
-// in the README & COPYING files - if they are missing, get the
-// official version at cnls.lanl.gov/~jphillips/.
+// in the README & LICENSE files - if they are missing, get the
+// official version at github.com/douradopalmares/mdsctk/.
 // 
 // To help us fund MDSCTK development, we humbly ask that you cite
 // the papers on the package - you can find them in the top README file.
 // 
-// For more info, check our website at http://cnls.lanl.gov/~jphillips/
+// For more info, check our website at
+// http://www.cs.mtsu.edu/~jphillips/software.html
 // 
 //
 

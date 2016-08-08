@@ -85,6 +85,9 @@ int main(int argc, char* argv[]) {
   coord_array fit_coords = NULL;
   ofstream output;
 
+  // Initialize GROMACS
+  gmx::initForCommandLine(&argc,&argv);
+
   // Get number of atoms and initialize weights
   cout << "Reading topology coordinates from file: " << top_filename << " ... ";
   TOP_file ref_file(top_filename);

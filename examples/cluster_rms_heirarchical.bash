@@ -76,4 +76,4 @@ echo "Computing normalized mutual information..."
 ${MDSCTK_HOME}/clustering_nmi.r
 
 ## If you have GROMACS
-trjconv -f ${XTC} -sub clusters.ndx
+gmx trjconv -f ${XTC} -sub clusters.ndx

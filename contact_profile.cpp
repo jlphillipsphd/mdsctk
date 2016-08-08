@@ -124,6 +124,9 @@ int main(int argc, char* argv[]) {
   ofstream   index;
   ofstream   data;
 
+  // Initialize GROMACS
+  gmx::initForCommandLine(&argc,&argv);
+
   // Remove C stdout (silly GROMACS warnings going every which stream!)
   int myout = dup(1);
   dup2(2,1);

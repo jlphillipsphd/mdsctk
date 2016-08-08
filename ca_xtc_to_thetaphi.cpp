@@ -95,7 +95,10 @@ int main(int argc, char* argv[]) {
   float prec = 0.001;
   int frames = 0;
   gmx_bool bOK = 1;
-  
+
+  // Initialize GROMACS
+  gmx::initForCommandLine(&argc,&argv);
+
   // Get number of atoms and allocate data structures
   myfile = open_xtc(xtc_filename.c_str(),"r");
   read_first_xtc(myfile,&natoms, &step, &time, box, &mycoords, &prec, &bOK);

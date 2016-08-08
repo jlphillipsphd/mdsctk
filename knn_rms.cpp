@@ -138,6 +138,9 @@ int main(int argc, char* argv[]) {
   ::real *weights = NULL;
   int max_blks = 1024 * 1024 * 1024 / 8;
 
+  // Initialize GROMACS
+  gmx::initForCommandLine(&argc,&argv);
+  
   // Setup threads
   omp_set_num_threads(nthreads);
 
