@@ -6,10 +6,11 @@
 # 
 #       Molecular Dynamics Spectral Clustering ToolKit
 # 
-#                        VERSION 1.2.2
+#                        VERSION 1.2.3
 # Written by Joshua L. Phillips.
-# Copyright (c) 2012-2014, Joshua L. Phillips.
-# check out http://github.com/douradopalmares/mdsctk/ for more information.
+# Copyright (c) 2012-2016, Joshua L. Phillips.
+# Check out http://www.cs.mtsu.edu/~jphillips/software.html for more
+# information.
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -24,7 +25,8 @@
 # To help us fund MDSCTK development, we humbly ask that you cite
 # the papers on the package - you can find them in the top README file.
 # 
-# For more info, check our website at http://github.com/douradopalmares/mdsctk/
+# For more info, check our website at
+# http://www.cs.mtsu.edu/~jphillips/software.html
 # 
 #
 
@@ -106,6 +108,10 @@ check_include_file_cxx(CL/cl.h      HAVE_OPENCL_H)
 if(NOT HAVE_OPENCL_H)
   message(STATUS "WARNING: unable to find OpenCL header file.")
 endif(NOT HAVE_OPENCL_H)
+if(NOT OPENCL_INCLUDE_PATH STREQUAL "")
+include_directories(${OPENCL_INCLUDE_PATH})
+endif(NOT OPENCL_INCLUDE_PATH STREQUAL "")
+
 
 ## Basic library checks
 include(CheckLibraryExists)
@@ -152,14 +158,6 @@ if(NOT OPENCL_LIBRARY_PATH STREQUAL "")
 set(CMAKE_REQUIRED_FLAGS "-L${OPENCL_LIBRARY_PATH}")
 endif(NOT OPENCL_LIBRARY_PATH STREQUAL "")
 check_library_exists(OpenCL clGetPlatformIDs "" HAVE_LIBOPENCL)
-if(HAVE_LIBOPENCL)
-  set(LIBS ${LIBS} OpenCL)
-  if(NOT OPENCL_LIBRARY_PATH STREQUAL "")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${OPENCL_LIBRARY_PATH}")
-  endif(NOT OPENCL_LIBRARY_PATH STREQUAL "")
-else(HAVE_LIBOPENCL)
-  message(STATUS "WARNING: unable to find OpenCL library (libOpenCL.so).")
-endif(HAVE_LIBOPENCL)
 
 # PKGCONFIG checks
 find_package(PkgConfig REQUIRED)
@@ -206,24 +204,6 @@ mark_as_advanced(LIBGMX_INCLUDE_DIR LIBGMX_LIBRARY)
 include_directories(${LIBGMX_INCLUDE_DIRS})
 set(LIBS ${LIBS} ${LIBGMX_LIBRARIES})
 
-# GROMACS-libgmxana
-pkg_check_modules(PC_LIBGMXANA REQUIRED libgmxana)
-set(LIBGMXANA_DEFINITIONS ${PC_LIBGMXANA_CFLAGS_OTHER})
-find_path(LIBGMXANA_INCLUDE_DIR gromacs/tpxio.h
-  HINTS ${PC_LIBGMXANA_INCLUDEDIR} ${PC_LIBGMXANA_INCLUDE_DIRS}
-  PATH_SUFFIXES gromacs)
-find_library(LIBGMXANA_LIBRARY NAMES gmxana libgmxana 
-  HINTS ${PC_LIBGMXANA_LIBDIR} ${PC_LIBGMXANA_LIBRARY_DIRS})
-set(LIBGMXANA_INCLUDE_DIRS ${LIBGMXANA_INCLUDE_DIR})
-set(LIBGMXANA_LIBRARIES ${LIBGMXANA_LIBRARY})
-
-find_package_handle_standard_args(libgmxana DEFAULT_MSG
-  LIBGMXANA_LIBRARY LIBGMXANA_INCLUDE_DIR)
-mark_as_advanced(LIBGMXANA_INCLUDE_DIR LIBGMXANA_LIBRARY)
-
-include_directories(${LIBGMXANA_INCLUDE_DIRS})
-set(LIBS ${LIBS} ${LIBGMXANA_LIBRARIES})
-
 # Framework library
 add_library(mdsctk STATIC mdsctk.cpp)
 
@@ -257,6 +237,12 @@ endforeach(TOOL ${MDSCTK_TOOLS})
 ## OpenCL tools...
 if(HAVE_OPENCL_H AND HAVE_LIBOPENCL)
 
+  message(STATUS "A library with OpenCL API found.")
+  set(LIBS ${LIBS} OpenCL)
+  if(NOT OPENCL_LIBRARY_PATH STREQUAL "")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -L${OPENCL_LIBRARY_PATH}")
+  endif(NOT OPENCL_LIBRARY_PATH STREQUAL "")
+  
   add_library(mdsctk_ocl STATIC mdsctk_ocl.cpp)
 
   set(MDSCTK_OCL_TOOLS
@@ -266,9 +252,11 @@ if(HAVE_OPENCL_H AND HAVE_LIBOPENCL)
     add_executable(${TOOL} ${TOOL}.cpp)
     target_link_libraries(${TOOL} ${LIBS} mdsctk mdsctk_ocl)
   endforeach(TOOL ${MDSCTK_OCL_TOOLS})
-  
+
+
 else(HAVE_OPENCL_H AND HAVE_LIBOPENCL)
   message(STATUS "WARNING:")
+  message(STATUS "WARNING: Unable to find OpenCL library (libOpenCL.so).")
   message(STATUS "WARNING: OpenCL accelerated tools will NOT be built.")
   message(STATUS "WARNING:")
 endif(HAVE_OPENCL_H AND HAVE_LIBOPENCL)
