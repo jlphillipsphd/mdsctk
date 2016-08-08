@@ -52,6 +52,8 @@ cat("\n")
 
 parser$add_argument("-k","--k",type="integer",
                     help="Number of clusters",metavar="integer")
+parser$add_argument("-s","--s",type="integer",
+                    help="Number of eigenvectors to use [default k]",metavar="integer")
 parser$add_argument("-v","--evals",default="eigenvalues.dat",
                     help="File containing eigenvalues [default %(default)s]")
 parser$add_argument("-e","--evecs",default="eigenvectors.dat",
@@ -71,8 +73,13 @@ if (is.null(myargs$k)) {
     q()
 }
 
+if (is.null(myargs$s)) {
+    myargs$s <- myargs$k
+}
+
 cat("Running with the following options:\n")
 cat(paste("k =      ",myargs$k,"\n"))
+cat(paste("s =      ",myargs$s,"\n"))
 cat(paste("evals =  ",myargs$evals,"\n"))
 cat(paste("evecs =  ",myargs$evecs,"\n"))
 cat(paste("output = ",myargs$output,"\n"))
@@ -81,8 +88,6 @@ cat(paste("rep =    ",myargs$rep,"\n"))
 cat("\n")
 
 nclusters <- myargs$k
-e.values <- as.double(scan(myargs$evals,quiet=TRUE))
-
 if (nclusters < 2) {
     cat("\n")
     cat("ERROR:\n")
@@ -92,8 +97,20 @@ if (nclusters < 2) {
     q()    
 }
 
+nvectors <- myargs$s
+e.values <- as.double(scan(myargs$evals,quiet=TRUE))
+if (nvectors > length(e.values)) {
+    cat("\n")
+    cat("WARNING:\n")
+    cat(sprintf("The number of vectors requested (%d) is greated than the number\n",nvectors))
+    cat(sprintf("of eigenvalues (%d).\n",length(e.values)))
+    cat(sprintf("Will continue with s = %d...\n",length(e.values)))
+    cat("\n")
+    nvectors <- min(nvectors,length(e.values))
+}
+
 e.vectors <- matrix(scan(myargs$evecs,quiet=TRUE),ncol=length(e.values))
-e.vectors <- as.matrix(e.vectors[,seq(1,min(nclusters,length(e.values)))])
+e.vectors <- as.matrix(e.vectors[,seq(1,nvectors)])
 # JLP - 2015-08-12
 # Not sure if the following option should be standard, probably not...
 # e.vectors <- apply(e.vectors,2,sqrt(rowSums(e.vectors^2)),FUN="/")

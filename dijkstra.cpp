@@ -127,6 +127,10 @@ int main(int argc, char* argv[]) {
   cout << "Total number of edges (symmetric): " << num_edges(g) / 2 << endl;
   cout << "Computing shortest paths using Dijkstra's algorithm..." << endl;
 
+  if (nthreads > 1) {
+    cout << "Timing information not available for nthreads > 1..." << endl;
+  }
+  
   // Timer for ETA
   time_t start = std::time(0);
   time_t last = start;
@@ -135,11 +139,11 @@ int main(int argc, char* argv[]) {
   for (int j = 0; j < n; j++) {
     
     // Update user of progress
-    if (std::time(0) - last > update_interval) {
+    if (nthreads == 1 && std::time(0) - last > update_interval) {
       last = std::time(0);
       time_t eta = start + ((last-start) * n / j);
       cout << "\rFrame: " << j << ", will finish " 
-	   << string(std::ctime(&eta)).substr(0,20);
+    	   << string(std::ctime(&eta)).substr(0,20);
       cout.flush();
     }
     
