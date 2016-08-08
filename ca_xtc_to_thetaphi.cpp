@@ -9,7 +9,7 @@
 //                        VERSION 1.2.5
 //
 // Written by Joshua L. Phillips.
-// Copyright (c) 2012-2015, Joshua L. Phillips.
+// Copyright (c) 2012-2016, Joshua L. Phillips.
 // Check out http://www.cs.mtsu.edu/~jphillips/software.html for more
 // information.
 //
@@ -97,7 +97,7 @@ int main(int argc, char* argv[]) {
   float prec = 0.001;
   int frames = 0;
   gmx_bool bOK = 1;
-  
+
   // Get number of atoms and allocate data structures
   myfile = open_xtc(xtc_filename.c_str(),"r");
   read_first_xtc(myfile,&natoms, &step, &time, box, &mycoords, &prec, &bOK);

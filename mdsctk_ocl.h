@@ -8,7 +8,7 @@
 // 
 //                        VERSION 1.2.5
 // Written by Joshua L. Phillips.
-// Copyright (c) 2012-2015, Joshua L. Phillips.
+// Copyright (c) 2012-2016, Joshua L. Phillips.
 // Check out http://www.cs.mtsu.edu/~jphillips/software.html for more
 // information.
 //
@@ -19,8 +19,8 @@
 // 
 // If you want to redistribute modifications, please consider that
 // derived work must not be called official MDSCTK. Details are found
-// in the README & COPYING files - if they are missing, get the
-// official version at cnls.lanl.gov/~jphillips/.
+// in the README & LICENSE files - if they are missing, get the
+// official version at github.com/douradopalmares/mdsctk/.
 // 
 // To help us fund MDSCTK development, we humbly ask that you cite the
 // papers on the package - you can find them in the top README file.

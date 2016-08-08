@@ -8,7 +8,7 @@
 // 
 //                        VERSION 1.2.5
 // Written by Joshua L. Phillips.
-// Copyright (c) 2012-2015, Joshua L. Phillips.
+// Copyright (c) 2012-2016, Joshua L. Phillips.
 // Check out http://www.cs.mtsu.edu/~jphillips/software.html for more
 // information.
 //
@@ -39,7 +39,6 @@ int main(int argc, char* argv[])
 
   const char* program_name = "decomp_sparse_nystrom";
   bool optsOK = true;
-  gmx::initForCommandLine(&argc,&argv);
   copyright(program_name);
   cout << "   Reads the symmetric CSC format sparse matrix from" << endl;
   cout << "   input-file, and computes the number of requested" << endl;
