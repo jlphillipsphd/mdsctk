@@ -34,7 +34,7 @@
 #include "config.h"
 #include "mdsctk.h"
 
-const double RAD2DEG = 180.0 / M_PI;
+// const double RAD2DEG = 180.0 / M_PI;
 const size_t update_interval = 3;
 
 CSC_matrix::CSC_matrix() {

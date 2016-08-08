@@ -61,7 +61,7 @@
 #include <gromacs/trajectoryanalysis.h>
 #include <gromacs/fileio/tpxio.h>
 #include <gromacs/fileio/xtcio.h>
-#include <gromacs/legacyheaders/index.h>
+#include <gromacs/topology/index.h>
 #include <gromacs/math/do_fit.h>
 
 // GROMACS internal function that I would like to use...
@@ -84,7 +84,7 @@ typedef ::real (*coord_array)[3];
 namespace po = boost::program_options;
 using namespace std;
 
-extern const double RAD2DEG;
+// extern const double RAD2DEG;
 extern const size_t update_interval;
 
 // Edges struct, comparison, and sorting routines
