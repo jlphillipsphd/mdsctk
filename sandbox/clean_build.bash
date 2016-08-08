@@ -3,7 +3,7 @@
 ## Scripts and text files
 rm MDSCTK.bash
 rm config.h
-rm mdsctk.r
+rm config.r
 rm Makefile
 
 ## Executables
