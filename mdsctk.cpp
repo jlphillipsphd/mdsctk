@@ -565,6 +565,10 @@ void entropic_affinity_sigmas(int n, int k, double K,
 }
 
 int compare_edge(Db *db, const Dbt *key1, const Dbt *key2) {
+  return compare_edge(db, key1, key2, NULL);
+}
+
+int compare_edge(Db *db, const Dbt *key1, const Dbt *key2, size_t* locp = NULL) {
   edge e1,e2;
 
   memcpy(&e1,key1->get_data(),sizeof(edge));

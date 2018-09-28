@@ -224,6 +224,7 @@ void entropic_affinity_sigmas(int n, int k, double K,
 void split_edges(int current_index, Dbc *cursor,
 		 vector<int> &indices, vector<double> &distances);
 int compare_edge(Db *db, const Dbt *key1, const Dbt *key2);
+int compare_edge(Db *db, const Dbt *key1, const Dbt *key2, size_t* locp);
 
 // Math
 ::real theta(::real pos1[], ::real pos2[], ::real pos3[],
