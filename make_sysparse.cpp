@@ -154,21 +154,21 @@ int main(int argc, char *argv[]) {
   sym_distances.open(sd_filename.str().c_str(),ios::out | ios::binary);
   if (!sym_distances.good()) {
     cout << "***ERROR***" << endl;
-    cout << "Could not open file: " << sd_filename << endl;
+    cout << "Could not open file: " << sd_filename.str() << endl;
     cout << endl;
     return -1;
   }
   sym_row_indices.open(sr_filename.str().c_str(),ios::out | ios::binary);
   if (!sym_row_indices.good()) {
     cout << "***ERROR***" << endl;
-    cout << "Could not open file: " << sr_filename << endl;
+    cout << "Could not open file: " << sr_filename.str() << endl;
     cout << endl;
     return -1;
   }
   sym_col_indices.open(sc_filename.str().c_str(),ios::out | ios::binary);
   if (!sym_col_indices.good()) {
     cout << "***ERROR***" << endl;
-    cout << "Could not open file: " << sc_filename << endl;
+    cout << "Could not open file: " << sc_filename.str() << endl;
     cout << endl;
     return -1;
   }

@@ -156,21 +156,21 @@ int main(int argc, char *argv[]) {
   nonsym_distances.open(nsd_filename.str().c_str(),ios::out | ios::binary);
   if (!nonsym_distances.good()) {
     cout << "***ERROR***" << endl;
-    cout << "Could not open file: " << nsd_filename << endl;
+    cout << "Could not open file: " << nsd_filename.str() << endl;
     cout << endl;
     return -1;
   }
   nonsym_row_indices.open(nsr_filename.str().c_str(),ios::out | ios::binary);
   if (!nonsym_row_indices.good()) {
     cout << "***ERROR***" << endl;
-    cout << "Could not open file: " << nsr_filename << endl;
+    cout << "Could not open file: " << nsr_filename.str() << endl;
     cout << endl;
     return -1;
   }
   nonsym_col_indices.open(nsc_filename.str().c_str(),ios::out | ios::binary);
   if (!nonsym_col_indices.good()) {
     cout << "***ERROR***" << endl;
-    cout << "Could not open file: " << nsc_filename << endl;
+    cout << "Could not open file: " << nsc_filename.str() << endl;
     cout << endl;
     return -1;
   }
