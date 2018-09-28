@@ -66,8 +66,8 @@ angles_to_sincos \
     -o trp-cage-unsmoothed-sincos.dat
 
 echo "Computing distances between all point pairs..."
-#${MDSCTK_HOME}/knn_data_ocl -k ${KNN} -v ${DIM} \
-${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -v ${DIM} \
+#${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -v ${DIM} \
+${MDSCTK_HOME}/knn_data_ocl -k ${KNN} -v ${DIM} \
     -r trp-cage-unsmoothed-sincos.dat \
     -d trp-cage-unsmoothed-distances.dat \
     -i trp-cage-unsmoothed-indices.dat
@@ -91,8 +91,8 @@ angles_to_sincos \
     -o trp-cage-smoothed-sincos.dat
 
 echo "Computing distances between all point pairs..."
-#${MDSCTK_HOME}/knn_data_ocl -k ${KNN} -v ${DIM} \
-${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -v ${DIM} \
+#${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -v ${DIM} \
+${MDSCTK_HOME}/knn_data_ocl -k ${KNN} -v ${DIM} \
     -r trp-cage-smoothed-sincos.dat \
     -d trp-cage-smoothed-distances.dat \
     -i trp-cage-smoothed-indices.dat

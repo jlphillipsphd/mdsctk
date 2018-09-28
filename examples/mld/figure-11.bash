@@ -37,7 +37,7 @@ if [[ -z "${MDSCTK_HOME}" ]]; then
     exit 1
 fi  
 
-NTHREADS=2    ## Number of threads to use
+NTHREADS=8    ## Number of threads to use
 KNN=1024      ## Number of nearest neighbors to keep
 LENGTH=16     ## Length of the protein (number of AAs)
 NANGLES=$((2*${LENGTH}-2))

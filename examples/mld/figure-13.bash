@@ -66,8 +66,8 @@ angles_to_sincos \
     -o nsp1-unsmoothed-sincos.dat
 
 echo "Computing distances between all point pairs..."
-#${MDSCTK_HOME}/knn_data_ocl -k ${KNN} -v ${DIM} \
-${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -v ${DIM} \
+#${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -v ${DIM} \
+${MDSCTK_HOME}/knn_data_ocl -k ${KNN} -v ${DIM} \
     -r nsp1-unsmoothed-sincos.dat \
     -d nsp1-unsmoothed-distances.dat \
     -i nsp1-unsmoothed-indices.dat
@@ -91,8 +91,8 @@ angles_to_sincos \
     -o nsp1-smoothed-sincos.dat
 
 echo "Computing distances between all point pairs..."
-#${MDSCTK_HOME}/knn_data_ocl -k ${KNN} -v ${DIM} \
-${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -v ${DIM} \
+#${MDSCTK_HOME}/knn_data -t ${NTHREADS} -k ${KNN} -v ${DIM} \
+${MDSCTK_HOME}/knn_data_ocl -k ${KNN} -v ${DIM} \
     -r nsp1-smoothed-sincos.dat \
     -d nsp1-smoothed-distances.dat \
     -i nsp1-smoothed-indices.dat
