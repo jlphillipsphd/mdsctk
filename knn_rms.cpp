@@ -237,6 +237,7 @@ int main(int argc, char* argv[]) {
     for (int ref_frame = 0; ref_frame < ref_coords->size(); ref_frame++) {
       memcpy(ref,(*ref_coords)[ref_frame],sizeof(rvec)*natoms);
       fits[frame].data[ref_frame] = distance(natoms,weights,ref,fit,!nofit);
+      fits[frame].indices.push_back(frame);
     }
     if (sort)
       fits[frame].sort(k1);
@@ -258,10 +259,12 @@ int main(int argc, char* argv[]) {
     // Update user of progress
     if (std::time(0) - last > update_interval) {
       last = std::time(0);
-      time_t eta = start + ((last-start) * fit_coords->size() / fit_frame);
-      cout << "\rFrame: " << fit_frame << ", will finish " 
+      if (fit_frame != 0) {
+          time_t eta = start + ((last-start) * fit_coords->size() / fit_frame);
+          cout << "\rFrame: " << fit_frame << ", will finish " 
 	   << string(std::ctime(&eta)).substr(0,20);
-      cout.flush();
+          cout.flush();
+      }
     }
     
     // Do Work
@@ -273,6 +276,7 @@ int main(int argc, char* argv[]) {
       for (int ref_frame = 0; ref_frame < ref_coords->size(); ref_frame++) {
 	memcpy(ref,(*ref_coords)[ref_frame],sizeof(rvec)*natoms);
 	fits[frame].data[ref_frame] = distance(natoms,weights,ref,fit,!nofit);
+	fits[frame].indices.push_back(frame);
       }
       if (sort)
 	fits[frame].sort(k1);
