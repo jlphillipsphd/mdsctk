@@ -229,6 +229,8 @@ int main(int argc, char* argv[]) {
 	//   contact[(i*gnx2)+j] = d;
 	if (d < eps)
 	  contact[(i*gnx2)+j] = 1.0;
+	else if (eps <= 0.0)
+	  contact[(i*gnx2)+j] += d;
       } // j
     } // i
 

@@ -77,7 +77,7 @@ int main(int argc, char* argv[]) {
     ("knn,k", po::value<int>(&k), "Input:  K-nearest neighbors (int)")
     ("sort,s",po::value<bool>(&sort)->default_value(true),"Input:  Find K-nn,false=full distance matix (bool)")
     ("nofit,n",po::value<bool>(&nofit)->default_value(false),"Input:  DO NOT rotate+fit before RMSD calculation (bool)")
-      ("block-size,b", po::value<int>(&blksize)->default_value(128), "Input:  Workgroup block size in # frames (int)")
+    ("block-size,b", po::value<int>(&blksize)->default_value(128), "Input:  Workgroup block size in # frames (int)")
     ("topology-file,p", po::value<string>(&top_filename)->default_value("topology.pdb"), "Input:  Topology file [.pdb,.gro,.tpr] (string:filename)")
     ("reference-file,r", po::value<string>(&ref_filename)->default_value("reference.xtc"), "Input:  Reference [.xtc] file (string:filename)")
     ("fit-file,f", po::value<string>(&fit_filename), "Input:  Fitting [.xtc] file (string:filename)")
