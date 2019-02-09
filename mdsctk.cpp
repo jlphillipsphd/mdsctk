@@ -1045,3 +1045,12 @@ int gmx_calc_com(t_topology *top, rvec x[], int nrefat, int index[], rvec xout)
   xout[2] /= total_mass;
   return 0;
 }
+
+
+#if (GMX_VERSION < 20180000)
+gmx_bool read_tps_conf(const char *infile, t_topology *top, int *ePBC,
+                       rvec **x, rvec **v, matrix box, gmx_bool requireMasses) {
+  char buf[256];
+  return read_tps_conf(infile, buf, top, ePBC, x, v, box, requireMasses);
+}
+#endif

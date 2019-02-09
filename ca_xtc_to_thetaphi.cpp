@@ -91,7 +91,7 @@ int main(int argc, char* argv[]) {
   ofstream output;
   
   // Used when reading XTC files...
-  long int step = 1;
+  step_type step = 1;
   float time = 0.0;
   matrix box;
   float prec = 0.001;

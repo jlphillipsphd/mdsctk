@@ -72,9 +72,22 @@
 #include <gromacs/fileio/confio.h>
 #include <gromacs/math/do_fit.h>
 
-// GROMACS internal function that I would like to use...
 // Calculate a single center of mass.
 int gmx_calc_com(t_topology *top, rvec x[], int nrefat, int index[], rvec xout);
+
+#if (GMX_VERSION < 20180000)
+// External function in older GMX doesn't match the new version...
+// Add prototype for new version which will be implemented in terms
+// of the 
+gmx_bool read_tps_conf(const char *infile, t_topology *top, int *ePBC,
+                       rvec **x, rvec **v, matrix box, gmx_bool requireMasses);
+#endif
+
+#if (GMX_VERSION >= 20160000)
+typedef long int step_type;
+#else
+typedef int step_type;
+#endif
 
 // Berkeley DB
 #include <db_cxx.h>
@@ -144,7 +157,6 @@ private:
   t_topology top;
   int ePBC;
   matrix box;
-  // char buf[256];
 
   void read_topology();
 };
@@ -165,7 +177,7 @@ public:
 private:
   string filename;
   t_fileio *file;
-  long int step;
+  step_type step;
   float time;
   matrix box;
   float prec;

@@ -120,11 +120,11 @@ int main(int argc, char* argv[]) {
   cout << endl;
   
   // Local vars
-  long int step = 1;
+  step_type step = 1;
   float time = 0.0;
   matrix box;
   float prec = 0.001;
-  // char buf[256];
+  char buf[256];
   t_topology top;
   int ePBC;
   int natoms = 0;
