@@ -69,11 +69,12 @@
 #endif
 #include <gromacs/fileio/tpxio.h>
 #include <gromacs/fileio/xtcio.h>
+#include <gromacs/fileio/confio.h>
 #include <gromacs/math/do_fit.h>
 
 // GROMACS internal function that I would like to use...
 // Calculate a single center of mass.
-extern int gmx_calc_com(t_topology *top, rvec x[], int nrefat, atom_id index[], rvec xout);
+int gmx_calc_com(t_topology *top, rvec x[], int nrefat, int index[], rvec xout);
 
 // Berkeley DB
 #include <db_cxx.h>
@@ -132,7 +133,7 @@ public:
   coord_array get_frame_ptr();
   void center(coord_array frame);
   ::real rmsd(coord_array ref_frame, coord_array fit_frame);
-  void com(coord_array frame, int n, atom_id index[], rvec com);
+  void com(coord_array frame, int n, int index[], rvec com);
   void get_index(const string ndx_filename, int &ndx_n, int* &ndx_index, char* &ndx_group);
   
 private:
@@ -143,7 +144,7 @@ private:
   t_topology top;
   int ePBC;
   matrix box;
-  char buf[256];
+  // char buf[256];
 
   void read_topology();
 };
@@ -164,7 +165,7 @@ public:
 private:
   string filename;
   t_fileio *file;
-  int step;
+  long int step;
   float time;
   matrix box;
   float prec;

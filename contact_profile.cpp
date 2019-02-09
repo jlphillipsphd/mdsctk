@@ -103,11 +103,11 @@ int main(int argc, char* argv[]) {
   cout << endl;
   
   // Local vars
-  int step = 1;
+  long int step = 1;
   float time = 0.0;
   matrix box;
   float prec = 0.001;
-  char buf[256];
+  // char buf[256];
   t_topology top;
   int ePBC;
   int natoms = 0;
@@ -120,7 +120,7 @@ int main(int argc, char* argv[]) {
   vector<coord_array> *ref_coords = NULL;
   ::real *weights = NULL;
   int        gnx1,gnx2;
-  atom_id    *index1,*index2;
+  int        *index1,*index2;
   char       *grpname1,*grpname2;
   ofstream   index;
   ofstream   data;
@@ -134,7 +134,7 @@ int main(int argc, char* argv[]) {
 
   // Get number of atoms and check xtc
   cout << "Reading topology information from " << top_filename << " ... ";
-  read_tps_conf(top_filename.c_str(), buf, &top, &ePBC, &mycoords,
+  read_tps_conf(top_filename.c_str(), &top, &ePBC, &mycoords,
 		NULL, box, TRUE);
   cout << "done." << endl;
   delete [] mycoords;

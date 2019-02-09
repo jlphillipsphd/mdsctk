@@ -82,7 +82,7 @@ int main(int argc, char* argv[]) {
   rvec* mycoords = NULL;
 
   // Used when reading XTC files...
-  int step = 1;
+  long int step = 1;
   float time = 0.0;
   float start_time = 0.0;
   matrix box;

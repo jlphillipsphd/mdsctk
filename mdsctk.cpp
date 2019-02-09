@@ -196,7 +196,7 @@ void TOP_file::center(coord_array frame) {
   return rmsdev(natoms,mass,ref_frame,fit_frame) * 10.0;
 }
 
-void TOP_file::com(coord_array frame, int n, atom_id index[], rvec com) {
+void TOP_file::com(coord_array frame, int n, int index[], rvec com) {
   gmx_calc_com(&top,frame,n,index,com);
 }
 
@@ -209,7 +209,7 @@ void TOP_file::get_index(const string ndx_filename, int &ndx_n, int* &ndx_index,
 
 
 void TOP_file::read_topology() {
-  read_tps_conf(filename.c_str(), buf, &top, &ePBC, &frame,
+  read_tps_conf(filename.c_str(), &top, &ePBC, &frame,
 		NULL, box, TRUE);
 }
 
@@ -224,7 +224,7 @@ XTC_file::XTC_file(const string init_filename) : filename(init_filename),
 						 frame(NULL)
 {
   file = open_xtc(filename.c_str(),"r");
-  read_first_xtc(file,&natoms, &step, &time, box, &frame, &prec, &bOK);
+  read_first_xtc(file, &natoms, &step, &time, box, &frame, &prec, &bOK);
   close_xtc(file);
   if (natoms > 0) {
     file = open_xtc(filename.c_str(),"r");
@@ -1022,3 +1022,26 @@ int runARPACK2(int nev, CSC_matrix &A, double* &d, double* &Z) {
   return ido;
 }
 
+int gmx_calc_com(t_topology *top, rvec x[], int nrefat, int index[], rvec xout)
+{
+  float                mass, total_mass;
+  
+  if (!top) {
+    cerr << "No masses available but mass weighting was requested [COM CALCULATION FAILURE!]" << endl;
+    return -1;
+  }
+  xout[0] = xout[1] = xout[2] = 0.0;
+  total_mass = 0.0;
+  for (int i = 0; i < nrefat; i++) {
+    int ai = index[i];
+    mass = top->atoms.atom[ai].m;
+    for (int j = 0; j < 3; ++j) {
+      xout[j] += mass * x[ai][j];
+    }
+    total_mass += mass;
+  }
+  xout[0] /= total_mass;
+  xout[1] /= total_mass;
+  xout[2] /= total_mass;
+  return 0;
+}

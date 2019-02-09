@@ -30,11 +30,12 @@
 # 
 #
 
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 3.1)
 project (MDSCTK)
 # The version number.
 set (MDSCTK_VERSION_MAJOR 1)
 set (MDSCTK_VERSION_MINOR 2)
+set (CMAKE_CXX_STANDARD 11)
 
 # Cmake modules/macros are in a subdirectory to keep this file cleaner
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
