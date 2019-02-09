@@ -1047,7 +1047,7 @@ int gmx_calc_com(t_topology *top, rvec x[], int nrefat, int index[], rvec xout)
 }
 
 
-#if (GMX_VERSION < 20180000)
+#if (GMX_VERSION < 20160000)
 gmx_bool read_tps_conf(const char *infile, t_topology *top, int *ePBC,
                        rvec **x, rvec **v, matrix box, gmx_bool requireMasses) {
   char buf[256];

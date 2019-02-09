@@ -75,18 +75,15 @@
 // Calculate a single center of mass.
 int gmx_calc_com(t_topology *top, rvec x[], int nrefat, int index[], rvec xout);
 
-#if (GMX_VERSION < 20180000)
+#if (GMX_VERSION < 20160000)
 // External function in older GMX doesn't match the new version...
 // Add prototype for new version which will be implemented in terms
 // of the 
 gmx_bool read_tps_conf(const char *infile, t_topology *top, int *ePBC,
                        rvec **x, rvec **v, matrix box, gmx_bool requireMasses);
-#endif
-
-#if (GMX_VERSION >= 20160000)
-typedef long int step_type;
-#else
 typedef int step_type;
+#else
+typedef long int step_type;
 #endif
 
 // Berkeley DB
